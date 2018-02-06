@@ -1,0 +1,38 @@
+# Built application files
+FlashbackMusic/build/
+FlashbackMusic/app/app.iml
+# Crashlytics configuations
+FlashbackMusic/com_crashlytics_export_strings.xml
+
+# Local configuration file (sdk path, etc)
+FlashbackMusic/local.properties
+
+# Gradle generated files
+FlashbackMusic/.gradle/
+
+# Signing files
+FlashbackMusic/.signing/
+
+# User-specific configurations
+FlashbackMusic/.idea/libraries/
+FlashbackMusic/.idea/workspace.xml
+FlashbackMusic/.idea/tasks.xml
+FlashbackMusic/.idea/.name
+FlashbackMusic/.idea/compiler.xml
+FlashbackMusic/.idea/copyright/profiles_settings.xml
+FlashbackMusic/.idea/encodings.xml
+FlashbackMusic/.idea/misc.xml
+FlashbackMusic/.idea/modules.xml
+FlashbackMusic/.idea/scopes/scope_settings.xml
+FlashbackMusic/.idea/vcs.xml
+FlashbackMusic/*.iml
+.idea/
+
+# OS-specific files
+FlashbackMusic/.DS_Store
+FlashbackMusic/.DS_Store?
+FlashbackMusic/._*
+FlashbackMusic/.Spotlight-V100
+FlashbackMusic/.Trashes
+FlashbackMusic/ehthumbs.db
+FlashbackMusic/Thumbs.db
