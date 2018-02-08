@@ -20,7 +20,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mTextMessage;
+    //private TextView mTextMessage;
     private Map<String,Album> albums;
     private List<Song> songs;
     private TextView text;
@@ -32,20 +32,15 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_songs:
-                    mTextMessage.setText(R.string.title_songs);
                     return true;
                 case R.id.navigation_albums:
-                    mTextMessage.setText(R.string.title_albums);
                     return true;
                 case R.id.navigation_flashback:
-                    mTextMessage.setText(R.string.title_flashback);
                     return true;
             }
             return false;
         }
     };
-
-    String[] dummySongs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,13 +55,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        dummySongs = new String[3];
-        int i = 0;
-        for (Song s : songs) {
-            dummySongs[i++] = s.getName();
-        }
-
-        mTextMessage = (TextView) findViewById(R.id.message);
+        //mTextMessage = (TextView) findViewById(R.id.message);
         //mTextMessage.setText(songs.get(0).getName());
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -78,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
-
 
         Field[] fields=R.raw.class.getFields();
 
