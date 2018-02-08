@@ -1,5 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelatativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:orientation="vertical">
+
+    <TableRow
+        android:id="@+id/song_name_row"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/song_text"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:layout_gravity="left"
+            android:layout_weight="1"
+            android:layout_marginLeft="10dp">
+        </TextView>
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/artist_text"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:padding="5dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp">
+        </TextView>
+
+        <TextView
+            android:id="@+id/album_text"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:textSize="15sp"
+            android:layout_gravity="left"
+            android:padding="5dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp">
+        </TextView>
+
+    </TableRow>
+
+
+</TableLayout>
+
+
+<!--<RelatativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
     android:layout_width="match_parent">
 
@@ -21,4 +72,4 @@
         android:padding="10dp"
         android:text="artist">
     </TextView>
-</RelatativeLayout>
+</RelatativeLayout>-->

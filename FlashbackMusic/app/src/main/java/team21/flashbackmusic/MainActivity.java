@@ -31,18 +31,21 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.navigation_home:
+                case R.id.navigation_songs:
                     mTextMessage.setText(R.string.title_songs);
                     return true;
-                case R.id.navigation_dashboard:
+                case R.id.navigation_albums:
                     mTextMessage.setText(R.string.title_albums);
+                    return true;
+                case R.id.navigation_flashback:
+                    mTextMessage.setText(R.string.title_flashback);
                     return true;
             }
             return false;
         }
     };
 
-    String[] dummySongs = {"song1", "song2", "song3", "song4", "song5"};
+    String[] dummySongs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,12 +60,18 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        dummySongs = new String[3];
+        int i = 0;
+        for (Song s : songs) {
+            dummySongs[i++] = s.getName();
+        }
+
         mTextMessage = (TextView) findViewById(R.id.message);
         //mTextMessage.setText(songs.get(0).getName());
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, dummySongs);
+        SongAdapter adapter = new SongAdapter(this, R.layout.activity_listview, songs);
 
         ListView listView = (ListView) findViewById(R.id.song_list);
         listView.setAdapter(adapter);
@@ -87,7 +96,9 @@ public class MainActivity extends AppCompatActivity {
             if (albums.get(album)==null) {
                 albums.put(album, new Album(album, artist,img));
             }
-            Song song = new Song(fields[count].getName(), artist,img);
+
+            Album a = albums.get(album);
+            Song song = new Song(fields[count].getName(), artist,img, a.getName());
             albums.get(album).addSong(song);
             songs.add(song);
         }

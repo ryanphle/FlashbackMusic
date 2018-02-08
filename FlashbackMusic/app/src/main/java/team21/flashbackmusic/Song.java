@@ -7,12 +7,14 @@ package team21.flashbackmusic;
 public class Song {
     String name;
     String artist;
+    String album;
     byte[] img;
 
-    public Song(String name, String artist, byte[] img){
+    public Song(String name, String artist, byte[] img, String album){
         this.name = name;
         this.artist = artist;
         this.img = img;
+        this.album = album;
     }
     public String getName(){
         return this.name;
@@ -23,4 +25,5 @@ public class Song {
     public String getArtist(){
         return this.artist;
     }
+    public String getAlbum() { return this.album; }
 }
