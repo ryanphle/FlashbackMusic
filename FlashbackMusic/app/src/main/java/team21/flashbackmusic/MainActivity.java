@@ -26,37 +26,12 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    //private TextView mTextMessage;
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
     private ArrayList<Song> songs;
     private Fragment fragment;
     private FragmentManager fragmentManager;
     private BottomNavigationView bottomNavigationView;
-
-    /*private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener;
-    {
-        mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.navigation_songs:
-                        fragment = new SongsFragment();
-                        break;
-                    case R.id.navigation_albums:
-                        fragment = new AlbumsFragment();
-                        break;
-                    case R.id.navigation_flashback:
-                        fragment = new FlashbackFragment();
-                        break;
-                }
-                final FragmentTransaction transaction = fragmentManager.beginTransaction();
-                transaction.replace(R.id.main_container, fragment).commit();
-                return true;
-            }
-        };
-    }*/
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -70,12 +45,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         albumList = new ArrayList<Album>(albums.values());
         SongAdapter adapter = new SongAdapter(this, R.layout.activity_listview, songs);
 
-        //BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        //navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
+        bottomNavigationView = findViewById(R.id.navigation);
 
         fragmentManager = getSupportFragmentManager();
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -102,15 +76,6 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction transaction1 = fragmentManager.beginTransaction();
         transaction1.replace(R.id.main_container, fragment).commit();
 
-        /*fragment = new SongsFragment();
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("adapter", adapter);
-        fragment.setArguments(bundle);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.main_container, fragment).commit();*/
-
-        //((SongsFragment)fragment).setListView(adapter);
-
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
@@ -127,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
             String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             byte[] img = retriever.getEmbeddedPicture();
-            //Log.i("Raw Songs name: ", fields[count].getName()+ "  album:"+ album+ "   artist  "+artist);
 
             if (albums.get(album)==null) {
                 albums.put(album, new Album(album, artist,img));
