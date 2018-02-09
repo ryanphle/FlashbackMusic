@@ -1,5 +1,11 @@
 package team21.flashbackmusic;
 
+//import android.app.Fragment;
+import android.support.v4.app.Fragment;
+//import android.app.FragmentManager;
+import android.support.v4.app.FragmentManager;
+//import android.app.FragmentTransaction;
+import android.support.v4.app.FragmentTransaction;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,26 +30,36 @@ public class MainActivity extends AppCompatActivity {
     private Map<String,Album> albums;
     private List<Song> songs;
     private TextView text;
+    private Fragment fragment;
+    private FragmentManager fragmentManager;
+    private BottomNavigationView bottomNavigationView;
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
+    /*private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener;
+    {
+        mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_songs:
-                    return true;
-                case R.id.navigation_albums:
-                    return true;
-                case R.id.navigation_flashback:
-                    return true;
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.navigation_songs:
+                        fragment = new SongsFragment();
+                        break;
+                    case R.id.navigation_albums:
+                        fragment = new AlbumsFragment();
+                        break;
+                    case R.id.navigation_flashback:
+                        fragment = new FlashbackFragment();
+                        break;
+                }
+                final FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.main_container, fragment).commit();
+                return true;
             }
-            return false;
-        }
-    };
+        };
+    }*/
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         albums = new HashMap<>();
@@ -54,16 +70,46 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        //mTextMessage = (TextView) findViewById(R.id.message);
-        //mTextMessage.setText(songs.get(0).getName());
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
         SongAdapter adapter = new SongAdapter(this, R.layout.activity_listview, songs);
 
-        ListView listView = (ListView) findViewById(R.id.song_list);
-        listView.setAdapter(adapter);
+        //BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        //navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
+
+        fragmentManager = getSupportFragmentManager();
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.navigation_songs:
+                        fragment = new SongsFragment();
+                        break;
+                    case R.id.navigation_albums:
+                        fragment = new AlbumsFragment();
+                        break;
+                    case R.id.navigation_flashback:
+                        fragment = new FlashbackFragment();
+                        break;
+                }
+                final FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.main_container, fragment).commit();
+                return true;
+            }
+        });
+
+        fragment = new SongsFragment();
+        FragmentTransaction transaction1 = fragmentManager.beginTransaction();
+        transaction1.replace(R.id.main_container, fragment).commit();
+
+        /*fragment = new SongsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("adapter", adapter);
+        fragment.setArguments(bundle);
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.main_container, fragment).commit();*/
+
+        //((SongsFragment)fragment).setListView(adapter);
+
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {

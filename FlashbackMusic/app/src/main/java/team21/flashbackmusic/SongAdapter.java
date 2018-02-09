@@ -7,13 +7,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by ryanle on 2/7/18.
  */
 
-public class SongAdapter extends ArrayAdapter<Song> {
+public class SongAdapter extends ArrayAdapter<Song> implements Serializable {
     public SongAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
     }
