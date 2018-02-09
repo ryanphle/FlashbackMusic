@@ -14,7 +14,7 @@ import java.util.List;
  * Created by ryanle on 2/7/18.
  */
 
-public class SongAdapter extends ArrayAdapter<Song> implements Serializable {
+public class SongAdapter extends ArrayAdapter<Song>{
     public SongAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
     }

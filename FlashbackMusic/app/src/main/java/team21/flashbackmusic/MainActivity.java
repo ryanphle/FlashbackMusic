@@ -28,8 +28,8 @@ public class MainActivity extends AppCompatActivity {
 
     //private TextView mTextMessage;
     private Map<String,Album> albums;
-    private List<Song> songs;
-    private TextView text;
+    private ArrayList<Album> albumList;
+    private ArrayList<Song> songs;
     private Fragment fragment;
     private FragmentManager fragmentManager;
     private BottomNavigationView bottomNavigationView;
@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        albumList = new ArrayList<Album>(albums.values());
         SongAdapter adapter = new SongAdapter(this, R.layout.activity_listview, songs);
 
         //BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -82,10 +83,10 @@ public class MainActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.navigation_songs:
-                        fragment = new SongsFragment();
+                        setSongFragment();
                         break;
                     case R.id.navigation_albums:
-                        fragment = new AlbumsFragment();
+                        setAlbumFragment();
                         break;
                     case R.id.navigation_flashback:
                         fragment = new FlashbackFragment();
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        fragment = new SongsFragment();
+        setSongFragment();
         FragmentTransaction transaction1 = fragmentManager.beginTransaction();
         transaction1.replace(R.id.main_container, fragment).commit();
 
@@ -137,4 +138,19 @@ public class MainActivity extends AppCompatActivity {
             songs.add(song);
         }
     }
+
+    private void setSongFragment() {
+        fragment = new SongsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList("songs", songs);
+        fragment.setArguments(bundle);
+    }
+
+    private void setAlbumFragment() {
+        fragment = new AlbumsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList("albums", albumList);
+        fragment.setArguments(bundle);
+    }
 }
+
