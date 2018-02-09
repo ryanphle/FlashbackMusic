@@ -6,6 +6,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:text="@string/album_page_title"
+            android:textSize="35dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#000000"
+            android:textStyle="bold"/>
         <GridView
             android:id="@+id/album_grid"
             android:layout_width="match_parent"
@@ -13,7 +22,7 @@
             android:gravity="center"
             android:columnWidth="100dp"
             android:numColumns="auto_fit"
-            android:verticalSpacing="20dp"
+            android:verticalSpacing="15dp"
             android:stretchMode="spacingWidthUniform" />
     </LinearLayout>
 </FrameLayout>

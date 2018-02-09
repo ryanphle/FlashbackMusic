@@ -6,12 +6,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="10dp">>
+        android:layout_marginTop="5dp">>
         <ImageView
             android:id="@+id/album_art"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginTop="10dp"/>
+            android:layout_marginTop="7dp"/>
         <TextView
             android:id="@+id/album_title"
             android:layout_width="wrap_content"

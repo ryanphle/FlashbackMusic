@@ -15,7 +15,8 @@
             android:textSize="20sp"
             android:layout_gravity="left"
             android:layout_weight="1"
-            android:layout_marginLeft="10dp">
+            android:layout_marginLeft="10dp"
+            android:textColor="#2b2b2a">
         </TextView>
     </TableRow>
 
@@ -30,7 +31,7 @@
             android:textSize="15sp"
             android:padding="5dp"
             android:layout_weight="1"
-            android:layout_marginLeft="5dp">
+            android:layout_marginLeft="8dp">
         </TextView>
 
         <TextView
@@ -41,7 +42,7 @@
             android:layout_gravity="left"
             android:padding="5dp"
             android:layout_weight="1"
-            android:layout_marginLeft="5dp">
+            android:layout_marginLeft="8dp">
         </TextView>
     </TableRow>
 </TableLayout>
