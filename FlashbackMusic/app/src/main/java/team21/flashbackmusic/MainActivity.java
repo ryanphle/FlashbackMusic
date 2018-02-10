@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -22,13 +23,13 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private MediaPlayer mediaPlayer;
-    private static final int MEDIA_RES_ID = R.raw.xzq;
     private Map<String,Album> albums;
     private List<Song> songs;
-    private List<Integer> res_ids;
+    private List<Uri> res_uri;
     private static int index = 0;
 
-    public void loadMedia() {
+    public void loadMedia(Uri uri) {
+
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
@@ -39,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
+        //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
-            mediaPlayer.setDataSource(assetFileDescriptor);
+            mediaPlayer.setDataSource(this, uri);
             mediaPlayer.prepareAsync();
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         albums = new HashMap<>();
         songs = new ArrayList<>();
-        res_ids = new ArrayList<>();
+        res_uri = new ArrayList<>();
 
         setContentView(R.layout.activity_main);
         try {
@@ -62,40 +63,44 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        Button prevButton = (Button) findViewById(R.id.prev);
-        prevButton.setOnClickListener(new View.OnClickListener() {
+        Button playButton = (Button) findViewById(R.id.play);
+        playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mediaPlayer.reset();
-                if (index == 0)
-                    index = res_ids.size() - 1;
-                else
-                    index--;
-                loadMedia();
+                loadMedia(res_uri.get(index));
                 mediaPlayer.start();
             }
         });
+
         Button nextButton = (Button) findViewById(R.id.next);
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mediaPlayer.reset();
-                if (index == res_ids.size() - 1)
+                if (index == res_uri.size() - 1)
                     index = 0;
                 else
                     index++;
-                loadMedia();
+                loadMedia(res_uri.get(index));
                 mediaPlayer.start();
             }
         });
-        Button playButton = (Button) findViewById(R.id.play);
-        playButton.setOnClickListener(new View.OnClickListener() {
+
+        Button prevButton = (Button) findViewById(R.id.prev);
+        prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loadMedia();
+                if (mediaPlayer.isPlaying())
+                    mediaPlayer.reset();
+                if (index == 0)
+                    index = res_uri.size() - 1;
+                else
+                    index--;
+                loadMedia(res_uri.get(index));
                 mediaPlayer.start();
             }
         });
+
         Button stopButton = (Button) findViewById(R.id.stop);
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         mediaPlayer.release();
     }
+
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
 
 
@@ -133,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
             String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             byte[] img = retriever.getEmbeddedPicture();
-            //Log.i("Raw Songs name: ", fields[count].getName()+ "  album:"+ album+ "   artist  "+artist);
 
             if (albums.get(album)==null) {
                 albums.put(album, new Album(album, artist, img));
@@ -141,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
             Song song = new Song(fields[count].getName(), artist, img);
             albums.get(album).addSong(song);
             songs.add(song);
-            res_ids.add(resourceID);
+            res_uri.add(myUri);
         }
     }
 
