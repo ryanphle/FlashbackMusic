@@ -1,7 +1,9 @@
 package team21.flashbackmusic;
 
+import android.os.Parcelable;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.net.Uri;
 
 /**
  * Created by petternarvhus on 07/02/2018.
@@ -12,13 +14,17 @@ public class Song implements Parcelable {
     String artist;
     String album;
     byte[] img;
+    Uri uri;
 
-    public Song(String name, String artist, byte[] img, String album){
+
+    public Song(String name, String artist,Uri uri, byte[] img, String album){
         this.name = name;
         this.artist = artist;
         this.img = img;
+        this.uri = uri;
         this.album = album;
     }
+
     public String getName(){
         return this.name;
     }
@@ -28,6 +34,7 @@ public class Song implements Parcelable {
     public String getArtist(){
         return this.artist;
     }
+
     public String getAlbum() { return this.album; }
 
     @Override
@@ -39,4 +46,7 @@ public class Song implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
 
     }
+
+    public Uri getUri(){return this.uri;}
+
 }

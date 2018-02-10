@@ -85,24 +85,29 @@ public class MainActivity extends AppCompatActivity {
         for(int count=0; count < fields.length; count++){
 
             int resourceID = fields[count].getInt(fields[count]);
-            Uri myUri = Uri.parse("android.resource://team21.flashbackmusic/" + resourceID);
+            Uri uri = Uri.parse("android.resource://team21.flashbackmusic/" + resourceID);
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-            retriever.setDataSource(this, myUri);
+            retriever.setDataSource(this, uri);
+
             String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             byte[] img = retriever.getEmbeddedPicture();
+
+            Log.i("Raw Songs name: ", title+ "  album:"+ album+ "   artist  "+artist+" uri "+uri);
 
             if (albums.get(album)==null) {
                 albums.put(album, new Album(album, artist,img));
             }
 
             Album a = albums.get(album);
-            Song song = new Song(title, artist,img, a.getName());
+            Song song = new Song(title, artist, uri, img, a.getName());
+
             albums.get(album).addSong(song);
             songs.add(song);
         }
     }
+
 
     private void setSongFragment() {
         fragment = new SongsFragment();
@@ -117,5 +122,8 @@ public class MainActivity extends AppCompatActivity {
         bundle.putParcelableArrayList("albums", albumList);
         fragment.setArguments(bundle);
     }
+
+    public List<Song> getSongs(){return songs;}
+
 }
 

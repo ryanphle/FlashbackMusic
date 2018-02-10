@@ -14,13 +14,14 @@ public class Album implements Parcelable {
 
     String name;
     String artist;
-    List<Song> songs = new ArrayList<>();
+    List<Song> songs;
     byte[] img;
 
     public Album(String name, String artist, byte[] img){
         this.name = name;
         this.artist = artist;
         this.img = img;
+        songs = new ArrayList<>();
     }
 
     public void addSong(Song song){
@@ -49,4 +50,7 @@ public class Album implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
 
     }
+
+    public List<Song> getSongs(){return songs;}
+
 }
