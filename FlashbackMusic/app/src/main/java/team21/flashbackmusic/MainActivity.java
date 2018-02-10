@@ -1,6 +1,7 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentManager;
@@ -14,7 +15,9 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import java.util.List;
@@ -32,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
     private Fragment fragment;
     private FragmentManager fragmentManager;
     private BottomNavigationView bottomNavigationView;
+    private List<Uri> res_uri;
+    private static int index = 0;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -39,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         albums = new HashMap<>();
         songs = new ArrayList<>();
+        res_uri = new ArrayList<>();
 
         try {
             loadSongs();
@@ -76,11 +83,94 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction transaction1 = fragmentManager.beginTransaction();
         transaction1.replace(R.id.main_container, fragment).commit();
 
+        Button playButton = (Button) findViewById(R.id.play);
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                loadMedia(res_uri.get(index));
+                mediaPlayer.start();
+            }
+        });
+
+        Button nextButton = (Button) findViewById(R.id.next);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mediaPlayer.reset();
+                if (index == res_uri.size() - 1)
+                    index = 0;
+                else
+                    index++;
+                loadMedia(res_uri.get(index));
+                mediaPlayer.start();
+            }
+        });
+
+        Button prevButton = (Button) findViewById(R.id.prev);
+        prevButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mediaPlayer.isPlaying())
+                    mediaPlayer.reset();
+                if (index == 0)
+                    index = res_uri.size() - 1;
+                else
+                    index--;
+                loadMedia(res_uri.get(index));
+                mediaPlayer.start();
+            }
+        });
+
+        Button stopButton = (Button) findViewById(R.id.stop);
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                }
+            }
+        });
+
+    }
+
+    public void loadMedia(Uri uri) {
+
+        if (mediaPlayer == null) {
+            mediaPlayer = new MediaPlayer();
+        }
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.start();
+            }
+        });
+
+        //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
+        try {
+            mediaPlayer.setDataSource(this, uri);
+            mediaPlayer.prepareAsync();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (isChangingConfigurations() && mediaPlayer.isPlaying()) {
+            ; // do nothing
+        }
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mediaPlayer.release();
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
 
         Field[] fields=R.raw.class.getFields();
+        Log.d("Size of fields", Integer.toString(fields.length));
 
         for(int count=0; count < fields.length; count++){
 
@@ -105,9 +195,9 @@ public class MainActivity extends AppCompatActivity {
 
             albums.get(album).addSong(song);
             songs.add(song);
+            res_uri.add(uri);
         }
     }
-
 
     private void setSongFragment() {
         fragment = new SongsFragment();

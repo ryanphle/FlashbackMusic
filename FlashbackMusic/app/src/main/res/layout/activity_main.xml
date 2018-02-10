@@ -6,13 +6,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="team21.flashbackmusic.MainActivity">
-    <FrameLayout
-        android:id="@+id/main_container"
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/navigation"
-        android:layout_alignParentTop="true">
-    </FrameLayout>
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:id="@+id/fragment_holder"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:orientation="vertical">
+            <FrameLayout
+                android:id="@+id/main_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/navigation"
+                android:layout_alignParentTop="true"
+                >
+            </FrameLayout>
+        </LinearLayout>
+
+        <include
+            layout="@layout/button_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/fragment_holder"/>
+    </RelativeLayout>
+
+
+
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
         android:layout_width="0dp"
