@@ -86,4 +86,7 @@ public class MainActivity extends AppCompatActivity {
             songs.add(song);
         }
     }
+
+    public List<Song> getSongs(){return songs;}
+
 }
