@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
 
 import java.util.ArrayList;
@@ -28,6 +29,15 @@ public class AlbumsFragment extends Fragment {
         adapter = new AlbumAdapter(getActivity(), R.layout.album_gridview, albums);
         GridView gridView = view.findViewById(R.id.album_grid);
         gridView.setAdapter(adapter);
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Album a = (Album) parent.getAdapter().getItem(position);
+                Song s = a.getSongs().get(0);
+                ((MainActivity)getActivity()).playSelectedSong(s);
+            }
+        });
 
         return view;
     }

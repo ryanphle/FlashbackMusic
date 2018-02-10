@@ -43,7 +43,6 @@ public class SongsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song s = (Song) parent.getAdapter().getItem(position);
                 ((MainActivity)getActivity()).playSelectedSong(s);
-
             }
         });
 
