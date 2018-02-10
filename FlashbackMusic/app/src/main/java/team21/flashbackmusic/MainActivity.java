@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
                 switch (item.getItemId()) {
                     case R.id.navigation_songs:
                         setSongFragment();
-
                         break;
                     case R.id.navigation_albums:
                         setAlbumFragment();
@@ -144,7 +143,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void playSelectedSong(Uri uri) {
+    public void playSelectedSong(Song s) {
+        Uri uri = s.getUri();
+        index = res_uri.indexOf(uri);
+
         mediaPlayer.reset();
         loadMedia(uri);
         mediaPlayer.start();
@@ -160,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
             mediaPlayer.setDataSource(this, uri);
-            mediaPlayer.prepareAsync();
+            mediaPlayer.prepare();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
