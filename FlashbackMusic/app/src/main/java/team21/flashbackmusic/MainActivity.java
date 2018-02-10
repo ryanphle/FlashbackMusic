@@ -73,15 +73,16 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = Uri.parse("android.resource://team21.flashbackmusic/" + resourceID);
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
             retriever.setDataSource(this, uri);
+            String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             byte[] img = retriever.getEmbeddedPicture();
-            Log.i("Raw Songs name: ", fields[count].getName()+ "  album:"+ album+ "   artist  "+artist+" uri "+uri);
+            Log.i("Raw Songs name: ", title+ "  album:"+ album+ "   artist  "+artist+" uri "+uri);
 
             if (albums.get(album)==null) {
                 albums.put(album, new Album(album, artist,img));
             }
-            Song song = new Song(fields[count].getName(), artist,uri,img);
+            Song song = new Song(title, artist,uri,img);
             albums.get(album).addSong(song);
             songs.add(song);
         }
