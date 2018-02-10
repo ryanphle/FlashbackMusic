@@ -5,9 +5,11 @@ import android.support.v4.app.Fragment;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.lang.reflect.Field;
@@ -32,9 +34,17 @@ public class SongsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_songs, container, false);
         ListView listView = rootView.findViewById(R.id.song_list);
 
-        ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
+        final ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Song s = (Song) parent.getAdapter().getItem(position);
+                ((MainActivity)getActivity()).playSelectedSong(s.getUri());
+            }
+        });
 
         return rootView;
     }

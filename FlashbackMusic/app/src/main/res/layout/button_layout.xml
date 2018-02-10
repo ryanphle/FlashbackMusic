@@ -28,7 +28,7 @@
         android:id="@+id/play"
         android:layout_width="@dimen/icon_size"
         android:layout_height="@dimen/icon_size"
-        android:background="@drawable/ic_playing"
+        android:background="@drawable/ic_stopping"
         />
     <Space
         android:layout_width="0dp"
@@ -39,7 +39,7 @@
         android:id="@+id/stop"
         android:layout_width="@dimen/icon_size"
         android:layout_height="@dimen/icon_size"
-        android:background="@drawable/ic_stopping"
+        android:background="@drawable/ic_playing"
         />
     <Space
         android:layout_width="0dp"

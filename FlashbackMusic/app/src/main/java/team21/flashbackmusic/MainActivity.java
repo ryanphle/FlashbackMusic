@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -53,6 +54,15 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        loadMedia(res_uri.get(index));
+
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.start();
+            }
+        });
+
         albumList = new ArrayList<Album>(albums.values());
         SongAdapter adapter = new SongAdapter(this, R.layout.activity_listview, songs);
 
@@ -65,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (item.getItemId()) {
                     case R.id.navigation_songs:
                         setSongFragment();
+
                         break;
                     case R.id.navigation_albums:
                         setAlbumFragment();
@@ -133,17 +144,18 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void playSelectedSong(Uri uri) {
+        mediaPlayer.reset();
+        loadMedia(uri);
+        mediaPlayer.start();
+    }
+
     public void loadMedia(Uri uri) {
 
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                mediaPlayer.start();
-            }
-        });
+
 
         //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
