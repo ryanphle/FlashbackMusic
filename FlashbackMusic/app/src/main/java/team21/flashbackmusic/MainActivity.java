@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
                         setAlbumFragment();
                         break;
                     case R.id.navigation_flashback:
-                        fragment = new FlashbackFragment();
+                        setFlashbackFragment();
                         break;
                 }
                 final FragmentTransaction transaction = fragmentManager.beginTransaction();
@@ -111,6 +111,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void setSongFragment() {
         fragment = new SongsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList("songs", songs);
+        fragment.setArguments(bundle);
+    }
+
+    private void setFlashbackFragment() {
+        fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
         fragment.setArguments(bundle);

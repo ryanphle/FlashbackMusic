@@ -12,6 +12,7 @@ FlashbackMusic/.gradle/
 
 # Signing files
 FlashbackMusic/.signing/
+FlashbackMusic/app/src/main/res/raw/
 
 # User-specific configurations
 FlashbackMusic/.idea/libraries/
@@ -37,6 +38,7 @@ FlashbackMusic/.Trashes
 FlashbackMusic/ehthumbs.db
 FlashbackMusic/Thumbs.db
 .DS_Store
+**/.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
