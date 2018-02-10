@@ -991,11 +991,11 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:pathData="M156.8,310.7l94.7,-54.7l-94.7,-54.7z">
+    <path android:pathData="M158.6,307.1l94.7,-54.7l-94.7,-54.7z">
         <aapt:attr name="android:fillColor">
-            <gradient android:endX="109627.1872"
-                android:endY="150192.6912" android:startX="71385.7536"
-                android:startY="111951.3088" android:type="linear">
+            <gradient android:endX="110575.0016"
+                android:endY="148366.7968" android:startX="72333.6192"
+                android:startY="110125.3632" android:type="linear">
                 <item android:color="#FFFFFFFF" android:offset="0.0"/>
                 <item android:color="#FFF6F7F7" android:offset="0.2793"/>
                 <item android:color="#FFDFE2E2" android:offset="0.7292"/>
@@ -1003,23 +1003,11 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:pathData="M288.9,200.8h-30.6c-2,0 -3.6,1.6 -3.6,3.6v103.2c0,2 1.6,3.6 3.6,3.6h30.6c2,0 3.6,-1.6 3.6,-3.6V204.4C292.5,202.4 290.9,200.8 288.9,200.8z">
+    <path android:pathData="M348,252.4l-94.7,-54.7l0,54.7l0,54.7z">
         <aapt:attr name="android:fillColor">
-            <gradient android:endX="158530.6624"
-                android:endY="149505.024" android:startX="121664.5632"
-                android:startY="112638.976" android:type="linear">
-                <item android:color="#FFFFFFFF" android:offset="0.0"/>
-                <item android:color="#FFF6F7F7" android:offset="0.2793"/>
-                <item android:color="#FFDFE2E2" android:offset="0.7292"/>
-                <item android:color="#FFCDD2D3" android:offset="1.0"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M351.6,200.8h-30.6c-2,0 -3.6,1.6 -3.6,3.6v103.2c0,2 1.6,3.6 3.6,3.6h30.6c2,0 3.6,-1.6 3.6,-3.6V204.4C355.2,202.4 353.6,200.8 351.6,200.8z">
-        <aapt:attr name="android:fillColor">
-            <gradient android:endX="190638.7968"
-                android:endY="149505.024" android:startX="153772.6976"
-                android:startY="112638.976" android:type="linear">
+            <gradient android:endX="159063.1936"
+                android:endY="148366.7968" android:startX="120821.76"
+                android:startY="110125.3632" android:type="linear">
                 <item android:color="#FFFFFFFF" android:offset="0.0"/>
                 <item android:color="#FFF6F7F7" android:offset="0.2793"/>
                 <item android:color="#FFDFE2E2" android:offset="0.7292"/>

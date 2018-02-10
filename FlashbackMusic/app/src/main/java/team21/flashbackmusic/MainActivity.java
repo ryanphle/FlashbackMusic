@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Uri> res_uri;
     private static int index = 0;
     private MediaPlayer mediaPlayer;
+    private Button stopButton;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -93,15 +94,6 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction transaction1 = fragmentManager.beginTransaction();
         transaction1.replace(R.id.main_container, fragment).commit();
 
-        Button playButton = (Button) findViewById(R.id.play);
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                loadMedia(res_uri.get(index));
-                mediaPlayer.start();
-            }
-        });
-
         Button nextButton = (Button) findViewById(R.id.next);
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     index++;
                 loadMedia(res_uri.get(index));
                 mediaPlayer.start();
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
         });
 
@@ -120,23 +113,29 @@ public class MainActivity extends AppCompatActivity {
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mediaPlayer.isPlaying())
-                    mediaPlayer.reset();
+                mediaPlayer.reset();
                 if (index == 0)
                     index = res_uri.size() - 1;
                 else
                     index--;
                 loadMedia(res_uri.get(index));
                 mediaPlayer.start();
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
         });
 
-        Button stopButton = (Button) findViewById(R.id.stop);
+        stopButton = (Button) findViewById(R.id.play);
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
+                    view.setBackgroundResource(R.drawable.ic_stopping);
+                }
+                else {
+                    loadMedia(res_uri.get(index));
+                    mediaPlayer.start();
+                    view.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
         });
@@ -146,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
         index = res_uri.indexOf(uri);
-
+        stopButton.setBackgroundResource(R.drawable.ic_playing);
         mediaPlayer.reset();
         loadMedia(uri);
         mediaPlayer.start();

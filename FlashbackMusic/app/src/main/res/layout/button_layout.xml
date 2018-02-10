@@ -30,17 +30,7 @@
         android:layout_height="@dimen/icon_size"
         android:background="@drawable/ic_stopping"
         />
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_weight="1"/>
 
-    <Button
-        android:id="@+id/stop"
-        android:layout_width="@dimen/icon_size"
-        android:layout_height="@dimen/icon_size"
-        android:background="@drawable/ic_playing"
-        />
     <Space
         android:layout_width="0dp"
         android:layout_height="1dp"
