@@ -7,14 +7,17 @@
     android:layout_height="match_parent"
     tools:context="team21.flashbackmusic.MainActivity">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
         <LinearLayout
             android:id="@+id/fragment_holder"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
             <FrameLayout
                 android:id="@+id/main_container"
                 android:layout_width="match_parent"
@@ -29,8 +32,8 @@
             layout="@layout/button_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/fragment_holder"/>
-    </RelativeLayout>
+            android:layout_marginBottom="60dp"/>
+    </LinearLayout>
 
 
 
