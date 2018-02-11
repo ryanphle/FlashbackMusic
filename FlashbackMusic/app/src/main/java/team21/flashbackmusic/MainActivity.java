@@ -203,6 +203,10 @@ public class MainActivity extends AppCompatActivity {
                 artist = "No title found";
             byte[] img = retriever.getEmbeddedPicture();
 
+            if (title == null) { title = "No title found"; }
+            if (album == null) { album = "No album found"; }
+            if (artist == null) { artist = "No artist found"; }
+
             Log.i("Raw Songs name: ", title+ "  album:"+ album+ "   artist  "+artist+" uri "+uri);
 
             if (albums.get(album)==null) {
