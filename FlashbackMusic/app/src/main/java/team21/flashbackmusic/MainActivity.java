@@ -193,8 +193,14 @@ public class MainActivity extends AppCompatActivity {
             retriever.setDataSource(this, uri);
 
             String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            if (title == null)
+                title = "No title found";
             String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+            if (album == null)
+                album = "No title found";
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            if (artist == null)
+                artist = "No title found";
             byte[] img = retriever.getEmbeddedPicture();
 
             Log.i("Raw Songs name: ", title+ "  album:"+ album+ "   artist  "+artist+" uri "+uri);
