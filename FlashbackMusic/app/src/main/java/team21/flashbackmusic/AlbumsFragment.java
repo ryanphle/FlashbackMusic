@@ -41,4 +41,6 @@ public class AlbumsFragment extends Fragment {
 
         return view;
     }
+
+    public void updateSongUI(Song s) {}
 }

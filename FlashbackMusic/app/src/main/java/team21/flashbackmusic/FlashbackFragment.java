@@ -31,4 +31,6 @@ public class FlashbackFragment extends Fragment {
 
         return rootView;
     }
+
+    public void updateSongUI(Song s) {}
 }

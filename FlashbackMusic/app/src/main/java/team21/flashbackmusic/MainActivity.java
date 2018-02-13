@@ -21,6 +21,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private static int index = 0;
     private MediaPlayer mediaPlayer;
     private Button stopButton;
+    private int frag = 0;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -55,8 +58,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        loadMedia(res_uri.get(index));
-
+        mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
@@ -73,26 +75,38 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                String tag = "";
                 switch (item.getItemId()) {
                     case R.id.navigation_songs:
                         setSongFragment();
+                        tag = "songs";
+                        frag = 0;
                         break;
                     case R.id.navigation_albums:
                         setAlbumFragment();
+                        tag = "albums";
+                        frag = 1;
                         break;
                     case R.id.navigation_flashback:
                         setFlashbackFragment();
+                        tag = "flashback";
+                        frag = 2;
                         break;
                 }
                 final FragmentTransaction transaction = fragmentManager.beginTransaction();
-                transaction.replace(R.id.main_container, fragment).commit();
+                transaction.replace(R.id.main_container, fragment, tag).commit();
                 return true;
             }
         });
 
         setSongFragment();
         FragmentTransaction transaction1 = fragmentManager.beginTransaction();
-        transaction1.replace(R.id.main_container, fragment).commit();
+        transaction1.replace(R.id.main_container, fragment, "songs").commit();
+
+        loadMedia(songs.get(0));
+
+        Toast.makeText(MainActivity.this,
+                getSupportFragmentManager().getFragments().toString(),Toast.LENGTH_SHORT).show();
 
         Button nextButton = (Button) findViewById(R.id.next);
         nextButton.setOnClickListener(new View.OnClickListener() {
@@ -103,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 0;
                 else
                     index++;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -118,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                     index = res_uri.size() - 1;
                 else
                     index--;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -133,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(res_uri.get(index));
+                    loadMedia(songs.get(index));
                     mediaPlayer.start();
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -147,20 +161,37 @@ public class MainActivity extends AppCompatActivity {
         index = res_uri.indexOf(uri);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         mediaPlayer.reset();
-        loadMedia(uri);
+        loadMedia(s);
         mediaPlayer.start();
     }
 
-    public void loadMedia(Uri uri) {
+    public void loadMedia(Song song) {
 
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
 
+       /*switch (frag) {
+            case 0:
+                SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);
+                fragmentSong.updateSongUI(song);
+                break;
+            case 1:
+                AlbumsFragment fragmentAlbum = (AlbumsFragment)
+                        getSupportFragmentManager().getFragments().get(0);
+                fragmentAlbum.updateSongUI(song);
+                break;
+            case 2:
+                FlashbackFragment fragmentFlash = (FlashbackFragment)
+                        getSupportFragmentManager().getFragments().get(0);
+                fragmentFlash.updateSongUI(song);
+                break;
+       }*/
+
 
         //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
-            mediaPlayer.setDataSource(this, uri);
+            mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -221,6 +252,8 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
         fragment.setArguments(bundle);
+
+
     }
 
     private void setFlashbackFragment() {
