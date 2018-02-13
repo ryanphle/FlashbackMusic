@@ -1,6 +1,7 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
@@ -21,6 +22,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.google.gson.Gson;
+
+import java.time.Clock;
+import java.time.ZoneId;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -55,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        loadMedia(res_uri.get(index));
+        loadMedia(songs.get(index));
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -103,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 0;
                 else
                     index++;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -115,10 +121,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 mediaPlayer.reset();
                 if (index == 0)
-                    index = res_uri.size() - 1;
+                    index = songs.size() - 1;
                 else
                     index--;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -133,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(res_uri.get(index));
+                    loadMedia(songs.get(index));
                     mediaPlayer.start();
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -144,14 +150,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
-        index = res_uri.indexOf(uri);
+        index = songs.indexOf(s);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         mediaPlayer.reset();
-        loadMedia(uri);
+        loadMedia(s);
         mediaPlayer.start();
     }
 
-    public void loadMedia(Uri uri) {
+    public void loadMedia(Song song) {
 
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
@@ -160,11 +166,21 @@ public class MainActivity extends AppCompatActivity {
 
         //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
-            mediaPlayer.setDataSource(this, uri);
+            mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
+        storePlayInformation(song);
+    }
+
+    private void storePlayInformation(Song song){
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Play play = new Play();
+        Gson gson = new Gson();
+        String json = gson.toJson(play);
+        editor.putString(song.getName(), json);
     }
 
     @Override
@@ -212,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
 
             albums.get(album).addSong(song);
             songs.add(song);
-            res_uri.add(uri);
+            //res_uri.add(uri);
         }
     }
 

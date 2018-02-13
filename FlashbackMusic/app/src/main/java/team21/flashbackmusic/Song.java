@@ -10,11 +10,11 @@ import android.net.Uri;
  */
 
 public class Song implements Parcelable {
-    String name;
-    String artist;
-    String album;
-    byte[] img;
-    Uri uri;
+    private String name;
+    private String artist;
+    private String album;
+    private byte[] img;
+    private Uri uri;
 
 
     public Song(String name, String artist,Uri uri, byte[] img, String album){
