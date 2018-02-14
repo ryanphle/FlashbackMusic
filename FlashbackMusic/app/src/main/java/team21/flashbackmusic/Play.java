@@ -1,13 +1,23 @@
 package team21.flashbackmusic;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.support.v4.content.ContextCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 
 /**
@@ -16,49 +26,59 @@ import java.time.ZoneId;
 
 public class Play {
     private static Clock clock = Clock.systemDefaultZone();
-    private static ZoneId zoneId = ZoneId.systemDefault();
     Location location;
     String timeOfDay;
-    LocalTime time;
+    Timestamp time;
+    Context activity;
     private final LocalTime morning = LocalTime.parse("08:00:00");
     private final LocalTime afternoon = LocalTime.parse("16:00:00");
-    private final LocalTime night = LocalTime.parse("00:00:00");
-    //private FusedLocationProviderClient fusedLocationProviderClient;
+    private FusedLocationProviderClient mFusedLocationClient;
 
 
-    public Play(){
-      //  this.location = location;
-        this.time = now().toLocalTime();
-        //setLastLocation();
+    public Play(Context activity){
+        this.activity = activity;
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
+        setLastLocation();
+        setTimeOfDay();
+        long miliTime = System.currentTimeMillis();
+        time = new Timestamp(miliTime);
     }
 
     public static LocalDateTime now() {
         return LocalDateTime.now(getClock());
     }
 
-    //private void setLastLocation(){
-    //String locationProvider = LocationManager.GPS_PROVIDER;
-    //LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-   // Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
-   // }
+    public void setLastLocation() {
+        if (ContextCompat.checkSelfPermission(activity,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(activity,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
 
-
-    public static void useSystemDefaultZoneClock(){
-        clock = Clock.systemDefaultZone();
+        location = mFusedLocationClient.getLastLocation().getResult();
     }
 
     private static Clock getClock() {
         return clock;
     }
-    private void setTimeOfDay(){
+
+    public Location getLocation() { return location; }
+
+    public String getTimeOfDay() { return timeOfDay; }
+
+    public Timestamp getTime() { return time; }
+
+    private void setTimeOfDay() {
         LocalTime currentTime = now().toLocalTime();
-        if (currentTime.isBefore(morning)){
+        if (currentTime.isBefore(morning)) {
             this.timeOfDay = "Night";
-        } else if (currentTime.isBefore(afternoon)){
+        } else if (currentTime.isBefore(afternoon)) {
             this.timeOfDay = "Morning";
         } else {
             this.timeOfDay = "Afternoon";
         }
-
     }
 }

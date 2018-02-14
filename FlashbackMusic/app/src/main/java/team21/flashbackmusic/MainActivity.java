@@ -23,6 +23,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 
 import java.time.Clock;
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Song> songs;
     private Fragment fragment;
     private FragmentManager fragmentManager;
+    private FusedLocationProviderClient mFusedLocationClient;
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
     private static int index = 0;
@@ -177,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
     private void storePlayInformation(Song song){
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Play play = new Play();
+        Play play = new Play(this);
         Gson gson = new Gson();
         String json = gson.toJson(play);
         editor.putString(song.getName(), json);
