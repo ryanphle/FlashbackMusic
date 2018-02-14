@@ -5,6 +5,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.net.Uri;
 
+import java.sql.Timestamp;
+
 /**
  * Created by petternarvhus on 07/02/2018.
  */
@@ -15,6 +17,9 @@ public class Song implements Parcelable {
     String album;
     byte[] img;
     Uri uri;
+    int score;
+    int favorite;
+    Timestamp timeStemp;
 
 
     public Song(String name, String artist,Uri uri, byte[] img, String album){
@@ -23,6 +28,9 @@ public class Song implements Parcelable {
         this.img = img;
         this.uri = uri;
         this.album = album;
+        this.score = 0;
+        this.favorite = 0;
+        this.timeStemp.setTime(0);
     }
 
     public String getName(){
@@ -34,8 +42,22 @@ public class Song implements Parcelable {
     public String getArtist(){
         return this.artist;
     }
+    public int getFavorite() {
+        return this.favorite;
+    }
+    public Timestamp getTimeStemp(){
+        return this.timeStemp;
+    }
 
     public String getAlbum() { return this.album; }
+    public int getScore() { return this.score; }
+    public void setScore(int score) {this.score = score; }
+    public  void setFavorite(int favorite) {
+        this.favorite = favorite;
+    }
+    public void setTimeStemp(Timestamp timeStemp){
+        this.timeStemp = timeStemp;
+    }
 
     @Override
     public int describeContents() {

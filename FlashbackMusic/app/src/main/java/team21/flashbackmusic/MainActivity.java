@@ -1,6 +1,7 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
@@ -21,12 +22,20 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+
+import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private static int index = 0;
     private MediaPlayer mediaPlayer;
     private Button stopButton;
+    private Map<String, Play> flashback_song;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -48,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         albums = new HashMap<>();
         songs = new ArrayList<>();
         res_uri = new ArrayList<>();
+        flashback_song = new HashMap<>();
 
         try {
             loadSongs();
@@ -193,14 +204,8 @@ public class MainActivity extends AppCompatActivity {
             retriever.setDataSource(this, uri);
 
             String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            if (title == null)
-                title = "No title found";
             String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-            if (album == null)
-                album = "No title found";
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            if (artist == null)
-                artist = "No title found";
             byte[] img = retriever.getEmbeddedPicture();
 
             if (title == null) { title = "No title found"; }
@@ -232,7 +237,8 @@ public class MainActivity extends AppCompatActivity {
     private void setFlashbackFragment() {
         fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList("songs", songs);
+        ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences());
+        bundle.putParcelableArrayList("songs", sorted_songs);
         fragment.setArguments(bundle);
     }
 
@@ -244,6 +250,77 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public List<Song> getSongs(){return songs;}
+
+    public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
+        Gson gson = new Gson();
+        ArrayList<Song> sorted_songs = new ArrayList<Song>();
+        Map<String, ?> allEntries = sharedPreferences.getAll();
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            String json = sharedPreferences.getString(entry.getKey(), "");
+            flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
+        }
+        for (int i = 0; i < songs.size(); i++) {
+            if(songs.get(i).getFavorite() == -1)
+                continue;
+            sorted_songs.add(songs.get(i));
+            String name = sorted_songs.get(i).getName();
+            final Play play = flashback_song.get(name);
+
+            int score = 0;
+            if(play.getLocation  == currentLocation){
+                score++;
+            }
+
+            songs.get(i).setTimeStemp(play.getTime());
+            //Timestamp tsTemp = new Timestamp(songs.get(i).getTimeStemp());
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(play.getTime().getTime());
+            c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+            int dayofWeek = c.get(Calendar.DAY_OF_WEEK);
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+
+            c.setTimeInMillis(System.currentTimeMillis());
+            int currentDay = c.get(Calendar.DAY_OF_WEEK);
+            int currentHour = c.get(Calendar.HOUR_OF_DAY);
+            if( hour <= 10 && hour > 2 && currentHour <= 10 && currentHour > 2){
+                score++;
+            }
+            else if( hour <= 18 && hour > 10 && currentHour <= 18 && currentHour > 10){
+                score++;
+            }
+            else if((hour <= 2 && hour > 18) && (currentHour <= 2 && currentHour > 18)){
+                score++;
+            }
+            if( dayofWeek == currentDay){
+                score++;
+            }
+
+            sorted_songs.get(i).setScore(score);
+
+
+        }
+        Collections.sort(sorted_songs, new Comparator<Song>() {
+            @Override
+            public int compare(Song lhs, Song rhs) {
+                if (lhs.score > rhs.score)
+                    return -1;
+                if (lhs.score < rhs.score)
+                    return 1;
+                if (lhs.getFavorite() > rhs.getFavorite())
+                    return  -1;
+                if (lhs.getFavorite() < rhs.getFavorite())
+                    return 1;
+                if (lhs.getTimeStemp().after( rhs.getTimeStemp())){
+                    return -1;
+                }
+                if (lhs.getTimeStemp().before( rhs.getTimeStemp())){
+                    return 1;
+                }
+                return 0;
+            }
+        });
+        return sorted_songs;
+    }
 
 }
 
