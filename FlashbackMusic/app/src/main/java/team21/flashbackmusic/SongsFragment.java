@@ -3,6 +3,8 @@ package team21.flashbackmusic;
 //import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -12,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -50,6 +53,27 @@ public class SongsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song s = (Song) parent.getAdapter().getItem(position);
                 ((MainActivity)getActivity()).playSelectedSong(s);
+                updateSongUI(s);
+            }
+        });
+
+        Button next = rootView.findViewById(R.id.songs_hidden_next);
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int index = ((MainActivity)getActivity()).index;
+                Song s = songs.get(index);
+                updateSongUI(s);
+            }
+        });
+
+        Button prev = rootView.findViewById(R.id.songs_hidden_prev);
+        prev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int index = ((MainActivity)getActivity()).index;
+                Song s = songs.get(index);
+                updateSongUI(s);
             }
         });
 

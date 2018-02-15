@@ -2,8 +2,10 @@ package team21.flashbackmusic;
 
 //import android.app.Fragment;
 import android.media.MediaPlayer;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 //import android.app.FragmentTransaction;
 import android.support.v4.app.FragmentTransaction;
@@ -35,13 +37,17 @@ public class MainActivity extends AppCompatActivity {
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
     private ArrayList<Song> songs;
-    private Fragment fragment;
+    private Fragment fragmentSong;
+    private Fragment fragmentAlbums;
+    private Fragment fragmentFlashback;
     private FragmentManager fragmentManager;
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
-    private static int index = 0;
-    private MediaPlayer mediaPlayer;
-    private Button stopButton;
+    protected static int index = 0;
+    protected MediaPlayer mediaPlayer;
+    protected Button stopButton;
+    protected Button prevButton;
+    protected Button nextButton;
     private int frag = 0;
 
     @Override
@@ -62,7 +68,17 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.reset();
+                if (index == res_uri.size() - 1)
+                    index = 0;
+                else
+                    index++;
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
+
+                Button updateUI = findViewById(R.id.songs_hidden_next);
+                updateUI.performClick();
             }
         });
 
@@ -76,39 +92,67 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 String tag = "";
-                switch (item.getItemId()) {
-                    case R.id.navigation_songs:
-                        setSongFragment();
-                        tag = "songs";
-                        frag = 0;
+                final android.support.v4.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+                switch(frag) {
+                    case 0:
+                        transaction.hide(fragmentSong);
                         break;
-                    case R.id.navigation_albums:
-                        setAlbumFragment();
-                        tag = "albums";
-                        frag = 1;
+                    case 1:
+                        transaction.hide(fragmentAlbums);
                         break;
-                    case R.id.navigation_flashback:
-                        setFlashbackFragment();
-                        tag = "flashback";
-                        frag = 2;
+                    case 2:
+                        transaction.hide(fragmentFlashback);
                         break;
                 }
-                final FragmentTransaction transaction = fragmentManager.beginTransaction();
-                transaction.replace(R.id.main_container, fragment, tag).commit();
+
+                switch (item.getItemId()) {
+                    case R.id.navigation_songs:
+                        frag = 0;
+                        transaction.show(fragmentSong);
+                        break;
+                    case R.id.navigation_albums:
+                        frag = 1;
+                        transaction.show(fragmentAlbums);
+                        break;
+                    case R.id.navigation_flashback:
+                        frag = 2;
+                        transaction.show(fragmentFlashback);
+                        break;
+                }
+
+                transaction.commit();
+                //transaction.replace(R.id.main_container, fragment, tag).commit();
+                transaction.addToBackStack(tag);
                 return true;
             }
         });
 
         setSongFragment();
-        FragmentTransaction transaction1 = fragmentManager.beginTransaction();
-        transaction1.replace(R.id.main_container, fragment, "songs").commit();
+        setAlbumFragment();
+        setFlashbackFragment();
+        android.support.v4.app.FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
+        transaction1.add(R.id.main_container, fragmentSong, "songs");
+        transaction1.add(R.id.main_container, fragmentAlbums, "songs");
+        transaction1.add(R.id.main_container, fragmentFlashback, "songs");
+        transaction1.hide(fragmentAlbums);
+        transaction1.hide(fragmentFlashback);
+        transaction1.commit();
+        //transaction1.replace(R.id.main_container, fragment, "songs").commit();
+        //transaction1.addToBackStack("songs");
+
+
+        /*if (fragmentManager.getFragments().size() == 0) {
+            Toast.makeText(MainActivity.this,
+                    "NULL",Toast.LENGTH_SHORT).show();
+        }*/
 
         loadMedia(songs.get(0));
 
-        Toast.makeText(MainActivity.this,
-                getSupportFragmentManager().getFragments().toString(),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this,
+          //      getSupportFragmentManager().getFragments().toString(),Toast.LENGTH_SHORT).show();
 
-        Button nextButton = (Button) findViewById(R.id.next);
+        nextButton = (Button) findViewById(R.id.next);
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -120,10 +164,13 @@ public class MainActivity extends AppCompatActivity {
                 loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
+
+                Button updateUI = findViewById(R.id.songs_hidden_next);
+                updateUI.performClick();
             }
         });
 
-        Button prevButton = (Button) findViewById(R.id.prev);
+        prevButton = (Button) findViewById(R.id.prev);
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -135,6 +182,9 @@ public class MainActivity extends AppCompatActivity {
                 loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
+
+                Button updateUI = findViewById(R.id.songs_hidden_prev);
+                updateUI.performClick();
             }
         });
 
@@ -171,25 +221,25 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer = new MediaPlayer();
         }
 
-       /*switch (frag) {
-            case 0:
-                SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);
-                fragmentSong.updateSongUI(song);
-                break;
-            case 1:
-                AlbumsFragment fragmentAlbum = (AlbumsFragment)
-                        getSupportFragmentManager().getFragments().get(0);
-                fragmentAlbum.updateSongUI(song);
-                break;
-            case 2:
-                FlashbackFragment fragmentFlash = (FlashbackFragment)
-                        getSupportFragmentManager().getFragments().get(0);
-                fragmentFlash.updateSongUI(song);
-                break;
-       }*/
+        /*switch (frag) {
+             case 0:
+                 //SongsFragment fragmentSong = (SongsFragment) fragmentManager.getFragments().get(0);
+                 //SongsFragment fragmentSong = (SongsFragment) fragmentManager.findFragmentByTag("songs");
+                 //fragmentSong.updateSongUI(song);
+                 break;
+             case 1:
+                 AlbumsFragment fragmentAlbum = (AlbumsFragment)
+                         getSupportFragmentManager().getFragments().get(0);
+                 fragmentAlbum.updateSongUI(song);
+                 break;
+             case 2:
+                 FlashbackFragment fragmentFlash = (FlashbackFragment)
+                         getSupportFragmentManager().getFragments().get(0);
+                 fragmentFlash.updateSongUI(song);
+                 break;
+        }*/
 
-
-        //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
+       //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
             mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
@@ -248,26 +298,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setSongFragment() {
-        fragment = new SongsFragment();
+        fragmentSong = new SongsFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
-        fragment.setArguments(bundle);
-
-
+        fragmentSong.setArguments(bundle);
     }
 
     private void setFlashbackFragment() {
-        fragment = new FlashbackFragment();
+        fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
-        fragment.setArguments(bundle);
+        fragmentFlashback.setArguments(bundle);
     }
 
     private void setAlbumFragment() {
-        fragment = new AlbumsFragment();
+        fragmentAlbums = new AlbumsFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("albums", albumList);
-        fragment.setArguments(bundle);
+        fragmentAlbums.setArguments(bundle);
     }
 
     public List<Song> getSongs(){return songs;}
