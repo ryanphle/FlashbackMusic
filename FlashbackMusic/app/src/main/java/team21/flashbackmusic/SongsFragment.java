@@ -3,6 +3,8 @@ package team21.flashbackmusic;
 //import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -12,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -32,12 +35,12 @@ public class SongsFragment extends Fragment {
     private SongAdapter adapter;
     public View rootView;
     public ListView listView;
+    public TextView artistAlbumInfo;
 
     public SongsFragment(){}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceStat) {
-
         rootView = inflater.inflate(R.layout.fragment_songs, container, false);
         listView = rootView.findViewById(R.id.song_list);
 
@@ -51,6 +54,7 @@ public class SongsFragment extends Fragment {
                 Song s = (Song) parent.getAdapter().getItem(position);
                 ((MainActivity)getActivity()).playSelectedSong(s);
                 updateSongUI(s);
+                ((MainActivity)getActivity()).songLoaded = true;
             }
         });
 
@@ -58,15 +62,19 @@ public class SongsFragment extends Fragment {
     }
 
    public void updateSongUI(Song s) {
-
         Log.i("Song update: ", s.getName());
-        /*ImageView albumImage = (ImageView) getActivity().findViewById(R.id.small_album_art);
-        TextView songName = (TextView) getActivity().findViewById(R.id.small_song_name);
-        TextView artistAlbumInfo = (TextView) getActivity().findViewById(R.id.small_artist_album_name);*/
 
-       ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
-       TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
-       TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
+        ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
+        TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
+        artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
+        artistAlbumInfo.setSelected(false);
+
+        artistAlbumInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                scroll(v);
+            }
+        });
 
         Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
         albumImage.setImageBitmap(bmp);
@@ -74,6 +82,11 @@ public class SongsFragment extends Fragment {
         songName.setText(s.getName());
         String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
         artistAlbumInfo.setText(artistAndAlbumStr);
+    }
+
+    public void scroll(View view) {
+        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
+        artistAlbumInfo.setSelected(true);
     }
 
 }
