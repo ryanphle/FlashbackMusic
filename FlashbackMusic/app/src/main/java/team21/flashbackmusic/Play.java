@@ -26,29 +26,39 @@ import java.util.TimeZone;
 
 public class Play {
     private static Clock clock = Clock.systemDefaultZone();
-    Location location;
-    String timeOfDay;
-    Timestamp time;
-    Context activity;
+    private Location location;
+    private String timeOfDay;
+    private Timestamp time;
+    private transient Context activity;
     private final LocalTime morning = LocalTime.parse("08:00:00");
     private final LocalTime afternoon = LocalTime.parse("16:00:00");
-    private FusedLocationProviderClient mFusedLocationClient;
+    private transient FusedLocationProviderClient mFusedLocationClient;
 
+    public Play(){};
 
-    public Play(Context activity){
+    public Play( Context activity ) {
+
         this.activity = activity;
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
-        setLastLocation();
         setTimeOfDay();
-        long miliTime = System.currentTimeMillis();
-        time = new Timestamp(miliTime);
+        setTime();
+        setLastLocation();
     }
 
     public static LocalDateTime now() {
         return LocalDateTime.now(getClock());
     }
 
-    public void setLastLocation() {
+    public void setFusedLocationClient(MainActivity mainActivity) {
+        this.activity = activity;
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
+    }
+
+    private void setTime() {
+        long miliTime = System.currentTimeMillis();
+        time = new Timestamp(miliTime);
+    }
+
+    private void setLastLocation() {
         if (ContextCompat.checkSelfPermission(activity,
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED &&
