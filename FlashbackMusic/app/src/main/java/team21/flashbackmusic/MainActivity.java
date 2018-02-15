@@ -290,8 +290,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Button updateUI = (Button) findViewById(R.id.flashback_hidden_update);
-                updateUI.performClick();
+                //Button updateUI = (Button) findViewById(R.id.flashback_hidden_update);
+                //updateUI.performClick();
 
 
             }

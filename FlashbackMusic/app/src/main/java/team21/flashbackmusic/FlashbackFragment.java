@@ -36,6 +36,23 @@ public class FlashbackFragment extends Fragment {
         listView.setAdapter(adapter);
 
 
+
+        ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
+        TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
+        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
+        TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
+        TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+
+        Bitmap bmp = BitmapFactory.decodeByteArray(songs.get(0).getImg(), 0, songs.get(0).getImg().length);
+        albumImage.setImageBitmap(bmp);
+
+        songName.setText(songs.get(0).getName());
+        String artistAndAlbumStr = songs.get(0).getArtist() + " - " + songs.get(0).getAlbum();
+        artistAlbumInfo.setText(artistAndAlbumStr);
+
+
+
+
         Button next = rootView.findViewById(R.id.flashback_hidden_next);
         next.setOnClickListener(new View.OnClickListener() {
             @Override
