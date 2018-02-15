@@ -50,6 +50,7 @@ public class SongsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song s = (Song) parent.getAdapter().getItem(position);
                 ((MainActivity)getActivity()).playSelectedSong(s);
+                updateSongUI(s);
             }
         });
 
@@ -59,9 +60,13 @@ public class SongsFragment extends Fragment {
    public void updateSongUI(Song s) {
 
         Log.i("Song update: ", s.getName());
-        ImageView albumImage = (ImageView) getActivity().findViewById(R.id.small_album_art);
+        /*ImageView albumImage = (ImageView) getActivity().findViewById(R.id.small_album_art);
         TextView songName = (TextView) getActivity().findViewById(R.id.small_song_name);
-        TextView artistAlbumInfo = (TextView) getActivity().findViewById(R.id.small_artist_album_name);
+        TextView artistAlbumInfo = (TextView) getActivity().findViewById(R.id.small_artist_album_name);*/
+
+       ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
+       TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
+       TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
 
         Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
         albumImage.setImageBitmap(bmp);

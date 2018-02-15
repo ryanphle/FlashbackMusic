@@ -117,8 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 0;
                 else
                     index++;
-                loadMedia(songs.get(index));
-                mediaPlayer.start();
+                newSong();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
         });
@@ -132,8 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     index = res_uri.size() - 1;
                 else
                     index--;
-                loadMedia(songs.get(index));
-                mediaPlayer.start();
+                newSong();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
         });
@@ -147,8 +145,7 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(songs.get(index));
-                    mediaPlayer.start();
+                    newSong();
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
@@ -171,7 +168,24 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer = new MediaPlayer();
         }
 
-       /*switch (frag) {
+        //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
+        try {
+            mediaPlayer.setDataSource(this, song.getUri());
+            mediaPlayer.prepare();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+
+    public void newSong() {
+        loadMedia(songs.get(index));
+        mediaPlayer.start();
+        updateSongMetaData(index);
+    }
+
+    public void updateSongMetaData(int index) {
+        Song song = songs.get(index);
+        switch (frag) {
             case 0:
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);
                 fragmentSong.updateSongUI(song);
@@ -186,15 +200,6 @@ public class MainActivity extends AppCompatActivity {
                         getSupportFragmentManager().getFragments().get(0);
                 fragmentFlash.updateSongUI(song);
                 break;
-       }*/
-
-
-        //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
-        try {
-            mediaPlayer.setDataSource(this, song.getUri());
-            mediaPlayer.prepare();
-        } catch (Exception e) {
-            System.out.println(e.toString());
         }
     }
 
@@ -252,8 +257,6 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
         fragment.setArguments(bundle);
-
-
     }
 
     private void setFlashbackFragment() {
