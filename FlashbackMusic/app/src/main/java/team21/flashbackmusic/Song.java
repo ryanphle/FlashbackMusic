@@ -12,15 +12,14 @@ import java.sql.Timestamp;
  */
 
 public class Song implements Parcelable {
-    String name;
-    String artist;
-    String album;
-    byte[] img;
-    Uri uri;
-    int score;
-    int favorite;
-    Timestamp timeStemp;
-
+    private String name;
+    private String artist;
+    private String album;
+    private byte[] img;
+    private Uri uri;
+    private int score;
+    private int favorite;
+    private Timestamp timeStemp;
 
     public Song(String name, String artist,Uri uri, byte[] img, String album){
         this.name = name;
