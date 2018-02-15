@@ -25,6 +25,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -50,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
     protected Button nextButton;
     private int frag = 0;
 
+    protected static int flash_index = 0;
+    private ArrayList<Song> random_songs;
+    private Fragment random_fragmentFlashback;
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
         albums = new HashMap<>();
         songs = new ArrayList<>();
         res_uri = new ArrayList<>();
+
+        random_songs = new ArrayList<>();
+
 
         try {
             loadSongs();
@@ -68,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                mediaPlayer.reset();
+                /*mediaPlayer.reset();
                 if (index == res_uri.size() - 1)
                     index = 0;
                 else
@@ -78,7 +87,34 @@ public class MainActivity extends AppCompatActivity {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
 
                 Button updateUI = findViewById(R.id.songs_hidden_next);
-                updateUI.performClick();
+                updateUI.performClick();*/
+                if(frag != 2) {
+                    mediaPlayer.reset();
+                    if (index == res_uri.size() - 1)
+                        index = 0;
+                    else
+                        index++;
+                    loadMedia(songs.get(index));
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+
+                    Button updateUI = findViewById(R.id.songs_hidden_next);
+                    updateUI.performClick();
+                }
+                else {
+                    mediaPlayer.reset();
+                    if (flash_index == res_uri.size() - 1)
+                        flash_index = 0;
+                    else
+                        flash_index++;
+                    loadMedia(songs.get(flash_index));
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+
+                    Button updateUI = findViewById(R.id.flashback_hidden_next);
+                    updateUI.performClick();
+
+                }
             }
         });
 
@@ -102,7 +138,12 @@ public class MainActivity extends AppCompatActivity {
                         transaction.hide(fragmentAlbums);
                         break;
                     case 2:
-                        transaction.hide(fragmentFlashback);
+                        if(item.getItemId() != R.id.navigation_flashback) {
+                            flash_index = 0;
+                            mediaPlayer.reset();
+                            loadMedia(songs.get(index));
+                            transaction.remove(random_fragmentFlashback);
+                        }
                         break;
                 }
 
@@ -116,30 +157,52 @@ public class MainActivity extends AppCompatActivity {
                         transaction.show(fragmentAlbums);
                         break;
                     case R.id.navigation_flashback:
-                        frag = 2;
-                        transaction.show(fragmentFlashback);
+                        if(frag != 2) {
+                            frag = 2;
+                            mediaPlayer.reset();
+                            Collections.shuffle(random_songs);
+                            random_setFlashbackFragment();
+                            loadMedia(random_songs.get(flash_index));
+                            mediaPlayer.start();
+
+                            transaction.add(R.id.main_container, random_fragmentFlashback, "flash_songs");
+                        }
                         break;
                 }
 
                 transaction.commit();
+
                 //transaction.replace(R.id.main_container, fragment, tag).commit();
                 transaction.addToBackStack(tag);
+                if(frag == 2){
+                    Toast.makeText(MainActivity.this,
+                           getSupportFragmentManager().getFragments().toString(),Toast.LENGTH_SHORT).show();
+                   Button updateUI =  findViewById(R.id.main_hidden_update);
+                   updateUI.performClick();
+                   //FlashbackFragment flash_frag = (FlashbackFragment) getSupportFragmentManager().findFragmentByTag("flash_songs");
+                   //flash_frag.updateSongUI(random_songs.get(flash_index));
+                }
                 return true;
             }
         });
 
         setSongFragment();
         setAlbumFragment();
-        setFlashbackFragment();
+        //setFlashbackFragment();
         android.support.v4.app.FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
         transaction1.add(R.id.main_container, fragmentSong, "songs");
-        transaction1.add(R.id.main_container, fragmentAlbums, "songs");
-        transaction1.add(R.id.main_container, fragmentFlashback, "songs");
+        transaction1.addToBackStack("songs");
+
+        transaction1.add(R.id.main_container, fragmentAlbums, "albums");
+        transaction1.addToBackStack("albums");
+
+        //transaction1.add(R.id.main_container, fragmentFlashback, "songs");
         transaction1.hide(fragmentAlbums);
-        transaction1.hide(fragmentFlashback);
+        //transaction1.hide(fragmentFlashback);
         transaction1.commit();
         //transaction1.replace(R.id.main_container, fragment, "songs").commit();
         //transaction1.addToBackStack("songs");
+
 
 
         /*if (fragmentManager.getFragments().size() == 0) {
@@ -149,24 +212,40 @@ public class MainActivity extends AppCompatActivity {
 
         loadMedia(songs.get(0));
 
-        //Toast.makeText(MainActivity.this,
-          //      getSupportFragmentManager().getFragments().toString(),Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this,
+               getSupportFragmentManager().getFragments().toString(),Toast.LENGTH_SHORT).show();
 
         nextButton = (Button) findViewById(R.id.next);
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mediaPlayer.reset();
-                if (index == res_uri.size() - 1)
-                    index = 0;
-                else
-                    index++;
-                loadMedia(songs.get(index));
-                mediaPlayer.start();
-                stopButton.setBackgroundResource(R.drawable.ic_playing);
+                if(frag != 2) {
+                    mediaPlayer.reset();
+                    if (index == res_uri.size() - 1)
+                        index = 0;
+                    else
+                        index++;
+                    loadMedia(songs.get(index));
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
 
-                Button updateUI = findViewById(R.id.songs_hidden_next);
-                updateUI.performClick();
+                    Button updateUI = findViewById(R.id.songs_hidden_next);
+                    updateUI.performClick();
+                }
+                else {
+                    mediaPlayer.reset();
+                    if (flash_index == res_uri.size() - 1)
+                        flash_index = 0;
+                    else
+                        flash_index++;
+                    loadMedia(songs.get(flash_index));
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+
+                    Button updateUI = findViewById(R.id.flashback_hidden_next);
+                    updateUI.performClick();
+
+                }
             }
         });
 
@@ -174,17 +253,19 @@ public class MainActivity extends AppCompatActivity {
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mediaPlayer.reset();
-                if (index == 0)
-                    index = res_uri.size() - 1;
-                else
-                    index--;
-                loadMedia(songs.get(index));
-                mediaPlayer.start();
-                stopButton.setBackgroundResource(R.drawable.ic_playing);
+                if(frag != 2) {
+                    mediaPlayer.reset();
+                    if (index == 0)
+                        index = res_uri.size() - 1;
+                    else
+                        index--;
+                    loadMedia(songs.get(index));
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
 
-                Button updateUI = findViewById(R.id.songs_hidden_prev);
-                updateUI.performClick();
+                    Button updateUI = findViewById(R.id.songs_hidden_prev);
+                    updateUI.performClick();
+                }
             }
         });
 
@@ -204,6 +285,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button updateButton = (Button) findViewById(R.id.main_hidden_update);
+        updateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Button updateUI = (Button) findViewById(R.id.flashback_hidden_update);
+                updateUI.performClick();
+
+
+            }
+        });
     }
 
     public void playSelectedSong(Song s) {
@@ -294,6 +386,8 @@ public class MainActivity extends AppCompatActivity {
             albums.get(album).addSong(song);
             songs.add(song);
             res_uri.add(uri);
+
+            random_songs.add(song);
         }
     }
 
@@ -310,6 +404,14 @@ public class MainActivity extends AppCompatActivity {
         bundle.putParcelableArrayList("songs", songs);
         fragmentFlashback.setArguments(bundle);
     }
+
+    private void random_setFlashbackFragment() {
+        random_fragmentFlashback = new FlashbackFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList("random_songs", random_songs);
+        random_fragmentFlashback.setArguments(bundle);
+    }
+
 
     private void setAlbumFragment() {
         fragmentAlbums = new AlbumsFragment();
