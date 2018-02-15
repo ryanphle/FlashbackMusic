@@ -2,6 +2,7 @@ package team21.flashbackmusic;
 
 //import android.app.Fragment;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         albums = new HashMap<>();
         songs = new ArrayList<>();
         res_uri = new ArrayList<>();
-        flashback_song = new HashMap<>();
+        flashback_song = new HashMap<String, Play>();
 
         try {
             loadSongs();
@@ -267,6 +268,9 @@ public class MainActivity extends AppCompatActivity {
             final Play play = flashback_song.get(name);
 
             int score = 0;
+            float [] distance = new float[1];
+            Location.distanceBetween(lat1, lon1, lat2, lon2, distance);
+
             if(play.getLocation  == currentLocation){
                 score++;
             }
