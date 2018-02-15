@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
     private void setFlashbackFragment() {
         fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
-        ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences());
+        ArrayList<Song> sorted_songs = sort_songs();
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragment.setArguments(bundle);
     }
@@ -268,12 +268,15 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
+    public ArrayList<Song> sort_songs() {
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        Play play = new Play(this);
         Gson gson = new Gson();
+        String json = gson.toJson(play);
         ArrayList<Song> sorted_songs = new ArrayList<Song>();
         Map<String, ?> allEntries = sharedPreferences.getAll();
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-            String json = sharedPreferences.getString(entry.getKey(), "");
+            json = sharedPreferences.getString(entry.getKey(), "");
             flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
         }
         for (int i = 0; i < songs.size(); i++) {
@@ -281,10 +284,10 @@ public class MainActivity extends AppCompatActivity {
                 continue;
             sorted_songs.add(songs.get(i));
             String name = sorted_songs.get(i).getName();
-            final Play play = flashback_song.get(name);
+            play = flashback_song.get(name);
 
             int score = 0;
-            if(play.getLocation  == currentLocation){
+            if(play.getLocation()  == ){
                 score++;
             }
 
@@ -319,9 +322,9 @@ public class MainActivity extends AppCompatActivity {
         Collections.sort(sorted_songs, new Comparator<Song>() {
             @Override
             public int compare(Song lhs, Song rhs) {
-                if (lhs.score > rhs.score)
+                if (lhs.getScore() > rhs.getScore())
                     return -1;
-                if (lhs.score < rhs.score)
+                if (lhs.getScore() < rhs.getScore())
                     return 1;
                 if (lhs.getFavorite() > rhs.getFavorite())
                     return  -1;
