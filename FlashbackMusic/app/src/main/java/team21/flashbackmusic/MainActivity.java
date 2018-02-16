@@ -1,7 +1,10 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
@@ -13,6 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -22,6 +26,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -273,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
         Play play = new Play(this);
         Gson gson = new Gson();
         String json = gson.toJson(play);
+        Location currentLocation;
         ArrayList<Song> sorted_songs = new ArrayList<Song>();
         Map<String, ?> allEntries = sharedPreferences.getAll();
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
@@ -287,7 +293,22 @@ public class MainActivity extends AppCompatActivity {
             play = flashback_song.get(name);
 
             int score = 0;
-            if(play.getLocation()  == ){
+
+            if (ContextCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
+
+                Toast.makeText(getApplicationContext(), "Permission Denied for location", Toast.LENGTH_SHORT).show();
+                break;
+            }
+
+            currentLocation = mFusedLocationClient.getLastLocation().getResult();
+
+            // 304.8 m = 1000 foot
+            if(play.getLocation().distanceTo(currentLocation)  < 304.8 ){
                 score++;
             }
 
@@ -319,6 +340,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
+
         Collections.sort(sorted_songs, new Comparator<Song>() {
             @Override
             public int compare(Song lhs, Song rhs) {
