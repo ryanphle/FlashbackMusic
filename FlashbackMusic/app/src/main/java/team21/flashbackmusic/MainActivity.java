@@ -180,14 +180,14 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer = new MediaPlayer();
         }
 
-
-        //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
             mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
+
         } catch (Exception e) {
             System.out.println(e.toString());
         }
+
         storePlayInformation(song);
     }
 
@@ -198,6 +198,12 @@ public class MainActivity extends AppCompatActivity {
         Gson gson = new Gson();
         String json = gson.toJson(play);
         editor.putString(song.getName(), json);
+        editor.apply();
+
+        String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(),"");
+        Play samePlay = gson.fromJson(json2, Play.class);
+        System.out.print("time: "+samePlay.getTime().getTime()+" time of day: "+samePlay.getTimeOfDay());
+
     }
 
     @Override
