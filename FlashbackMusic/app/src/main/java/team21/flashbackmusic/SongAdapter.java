@@ -5,7 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.Serializable;
 import java.util.List;
@@ -34,12 +36,31 @@ public class SongAdapter extends ArrayAdapter<Song>{
             v = vi.inflate(R.layout.activity_listview, null);
         }
 
-        Song s = getItem(position);
+        final Song s = getItem(position);
 
         if (s != null) {
-            TextView songName = (TextView) v.findViewById(R.id.song_text);
+            final TextView songName = (TextView) v.findViewById(R.id.song_text);
             TextView artistName = (TextView) v.findViewById(R.id.artist_text);
             TextView albumName = (TextView) v.findViewById(R.id.album_text);
+            final Button likeDislikeButton = (Button) v.findViewById(R.id.likeDislikeButton);
+
+            likeDislikeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (s.getFavorite() == 0) {
+                        s.setFavorite(1);
+                        likeDislikeButton.setBackgroundResource(R.drawable.ic_like);
+                    }
+                    else if (s.getFavorite() == 1) {
+                        s.setFavorite(-1);
+                        likeDislikeButton.setBackgroundResource(R.drawable.ic_dislike);
+                    }
+                    else {
+                        s.setFavorite(0);
+                        likeDislikeButton.setBackgroundResource(R.drawable.ic_neutral);
+                    }
+                }
+            });
 
             if (songName != null) {
                 songName.setText(s.getName().trim());
