@@ -14,6 +14,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -25,6 +26,7 @@ public class AlbumsFragment extends Fragment {
     private AlbumAdapter adapter;
     private View rootView;
     private GridView gridView;
+    protected Album a;
 
     public AlbumsFragment(){}
 
@@ -41,9 +43,17 @@ public class AlbumsFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Album a = (Album) parent.getAdapter().getItem(position);
+                a = (Album) parent.getAdapter().getItem(position);
                 Song s = a.getSongs().get(0);
                 ((MainActivity)getActivity()).playSelectedSong(s);
+                updateSongUI(s);
+                ((MainActivity)getActivity()).currAlbum = a;
+                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).ALBUM_FRAG;
+                ((MainActivity)getActivity()).album_index = 0;
+                ((MainActivity)getActivity()).currSongIdx = 0;
+                ((MainActivity)getActivity()).songLoaded = true;
+                ((MainActivity)getActivity()).currSong = s;
+
             }
         });
 
@@ -52,6 +62,8 @@ public class AlbumsFragment extends Fragment {
 
     public void updateSongUI(Song s) {
         Log.i("Song update: ", s.getName());
+
+        if (s==null) return;
 
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);

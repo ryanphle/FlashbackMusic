@@ -50,15 +50,20 @@ public class MainActivity extends AppCompatActivity {
     protected Button stopButton;
     protected Button prevButton;
     protected Button nextButton;
-    private int frag = 0;
+    private static int frag = 0;
+    protected static int songPlayingFrag = 0;
+    protected static int currSongIdx = 0;
+    protected static Album currAlbum;
+    protected static Song currSong;
 
     protected static int flash_index = 0;
+    protected static int album_index = 0;
     private ArrayList<Song> random_songs;
     private Fragment random_fragmentFlashback;
 
-    private static final int SONG_FRAG = 0;
-    private static final int ALBUM_FRAG = 1;
-    private static final int FLASHBACK_FRAG = 2;
+    protected static final int SONG_FRAG = 0;
+    protected static final int ALBUM_FRAG = 1;
+    protected static final int FLASHBACK_FRAG = 2;
 
     protected boolean songLoaded;
 
@@ -90,13 +95,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
 
-                if(frag != FLASHBACK_FRAG) {
+                if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
                     if (index == res_uri.size() - 1)
                         index = 0;
                     else
                         index++;
                     loadMedia(songs.get(index));
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+                }
+                else if (songPlayingFrag == ALBUM_FRAG) {
+                    mediaPlayer.reset();
+                    if (album_index == currAlbum.getSongs().size() - 1)
+                        album_index = 0;
+                    else
+                        album_index++;
+                    loadMedia(currAlbum.getSongs().get(index));
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -133,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer.reset();
                             loadMedia(songs.get(index));
                             transaction.remove(random_fragmentFlashback);
+                            songPlayingFrag = SONG_FRAG;
                         }
                         break;
                 }
@@ -145,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
                         prevButton.setVisibility(View.VISIBLE);
                         transaction.show(fragmentSong);
                         frag = SONG_FRAG;
+                        if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
                         break;
 
                     case R.id.navigation_albums:
@@ -154,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
                         frag = ALBUM_FRAG;
                         prevButton.setVisibility(View.VISIBLE);
                         transaction.show(fragmentAlbums);
+                        if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
                         break;
 
                     case R.id.navigation_flashback:
@@ -169,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                             transaction.add(R.id.main_container, random_fragmentFlashback, "flash_songs");
                         }
                         frag = FLASHBACK_FRAG;
+                        songPlayingFrag = FLASHBACK_FRAG;
                         break;
                 }
 
@@ -183,13 +202,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 songLoaded = true;
-                if(frag != FLASHBACK_FRAG) {
+                if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
                     if (index == res_uri.size() - 1)
                         index = 0;
                     else
                         index++;
-                    newSong(index, false);
+                    newSong(index, songPlayingFrag);
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+                }
+                else if (songPlayingFrag == ALBUM_FRAG) {
+                    mediaPlayer.reset();
+                    if (album_index == currAlbum.getSongs().size() - 1)
+                        album_index = 0;
+                    else
+                        album_index++;
+                    newSong(album_index, songPlayingFrag);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
                 else {
@@ -198,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
                         flash_index = 0;
                     else
                         flash_index++;
-                    newSong(flash_index, true);
+                    newSong(flash_index, frag);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
@@ -209,13 +237,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 songLoaded = true;
-                if(frag != FLASHBACK_FRAG) {
+                if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
                     if (index == 0)
                         index = res_uri.size() - 1;
                     else
                         index--;
-                    newSong(index, false);
+                    newSong(index, songPlayingFrag);
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+                }
+                else if (songPlayingFrag == ALBUM_FRAG) {
+                    mediaPlayer.reset();
+                    if (album_index == 0)
+                        album_index = currAlbum.getSongs().size() - 1;
+                    else
+                        album_index--;
+                    newSong(album_index, songPlayingFrag);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
@@ -231,9 +268,14 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    int currIdx = frag == FLASHBACK_FRAG ? flash_index : index;
-                    newSong(currIdx, frag == FLASHBACK_FRAG);
-                    updateSongMetaData(currIdx, frag == FLASHBACK_FRAG);
+                    int currIdx = 0;
+
+                    if (songPlayingFrag == SONG_FRAG) currIdx = index;
+                    if (songPlayingFrag == ALBUM_FRAG) currIdx = album_index;
+                    if (songPlayingFrag == FLASHBACK_FRAG) currIdx = flash_index;
+
+                    newSong(currIdx, songPlayingFrag);
+                    //updateSongMetaData(currIdx, frag);
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
@@ -260,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
         Uri uri = s.getUri();
         index = res_uri.indexOf(uri);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
+        currSongIdx = index;
         mediaPlayer.reset();
         loadMedia(s);
         mediaPlayer.start();
@@ -278,24 +321,38 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void newSong(int index, boolean flashback) {
+    public void newSong(int index, int mode) {
         ArrayList<Song> songList = songs;
+        songPlayingFrag = mode;
+        currSongIdx = index;
 
-        if (flashback)
+        if (mode == FLASHBACK_FRAG)
             songList = random_songs;
+        if (mode == ALBUM_FRAG) {
+            songList = (ArrayList) currAlbum.getSongs();
+        }
+
+        currSong = songList.get(index);
 
         loadMedia(songList.get(index));
         mediaPlayer.start();
-        updateSongMetaData(index, flashback);
+        updateSongMetaData(index, mode, true);
     }
 
-    public void updateSongMetaData(int index, boolean flashback) {
+    public void updateSongMetaData(int index, int mode, boolean songChange) {
         ArrayList<Song> songList = songs;
 
-        if (flashback)
+        if (mode == FLASHBACK_FRAG)
             songList = random_songs;
+        if (mode == ALBUM_FRAG)
+            songList = (ArrayList<Song>) currAlbum.getSongs();
 
-        Song song = songList.get(index);
+        Song song  = songList.get(index);
+
+        if (!songChange) {
+            song = currSong;
+        }
+
         switch (frag) {
             case SONG_FRAG:
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);

@@ -55,6 +55,8 @@ public class SongsFragment extends Fragment {
                 ((MainActivity)getActivity()).playSelectedSong(s);
                 updateSongUI(s);
                 ((MainActivity)getActivity()).songLoaded = true;
+                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).SONG_FRAG;
+                ((MainActivity)getActivity()).currSong = s;
             }
         });
 

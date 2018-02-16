@@ -40,6 +40,8 @@ public class FlashbackFragment extends Fragment {
 
         updateSongUI(songs.get(0));
 
+        ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).FLASHBACK_FRAG;
+
         return rootView;
     }
 
