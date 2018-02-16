@@ -17,12 +17,15 @@ import java.util.List;
  */
 
 public class SongAdapter extends ArrayAdapter<Song>{
+    private Context context;
     public SongAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
+        this.context = context;
     }
 
     public SongAdapter(Context context, int resource, List<Song> items) {
         super(context, resource, items);
+        this.context = context;
     }
 
     @Override
@@ -44,6 +47,16 @@ public class SongAdapter extends ArrayAdapter<Song>{
             TextView albumName = (TextView) v.findViewById(R.id.album_text);
             final Button likeDislikeButton = (Button) v.findViewById(R.id.likeDislikeButton);
 
+            if (s.getFavorite() == 0) {
+                likeDislikeButton.setBackgroundResource(R.drawable.ic_neutral);
+            }
+            else if (s.getFavorite() == 1) {
+                likeDislikeButton.setBackgroundResource(R.drawable.ic_like);
+            }
+            else {
+                likeDislikeButton.setBackgroundResource(R.drawable.ic_dislike);
+            }
+
             likeDislikeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -52,8 +65,12 @@ public class SongAdapter extends ArrayAdapter<Song>{
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_like);
                     }
                     else if (s.getFavorite() == 1) {
+                        Song currentSong = ((MainActivity)context).currSong;
                         s.setFavorite(-1);
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_dislike);
+                        if (((MainActivity)context).mediaPlayer.isPlaying() && s.equals(currentSong)) {
+                            ((MainActivity) context).nextSong(true);
+                        }
                     }
                     else {
                         s.setFavorite(0);

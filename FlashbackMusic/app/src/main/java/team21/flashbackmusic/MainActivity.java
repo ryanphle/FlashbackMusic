@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
                         index = 0;
                     else
                         index++;
-                    newSong(index, songPlayingFrag);
+                    newSong(index, songPlayingFrag, true);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
                 else if (songPlayingFrag == ALBUM_FRAG) {
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
                         album_index = 0;
                     else
                         album_index++;
-                    newSong(album_index, songPlayingFrag);
+                    newSong(album_index, songPlayingFrag, true);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
                 else {
@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
                         flash_index = 0;
                     else
                         flash_index++;
-                    newSong(flash_index, frag);
+                    newSong(flash_index, frag, true);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
@@ -243,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
                         index = res_uri.size() - 1;
                     else
                         index--;
-                    newSong(index, songPlayingFrag);
+                    newSong(index, songPlayingFrag, false);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
                 else if (songPlayingFrag == ALBUM_FRAG) {
@@ -252,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
                         album_index = currAlbum.getSongs().size() - 1;
                     else
                         album_index--;
-                    newSong(album_index, songPlayingFrag);
+                    newSong(album_index, songPlayingFrag, false);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                     if (songPlayingFrag == ALBUM_FRAG) currIdx = album_index;
                     if (songPlayingFrag == FLASHBACK_FRAG) currIdx = flash_index;
 
-                    newSong(currIdx, songPlayingFrag);
+                    newSong(currIdx, songPlayingFrag, false);
                     //updateSongMetaData(currIdx, frag);
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -321,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void newSong(int index, int mode) {
+    public void newSong(int index, int mode, boolean next) {
         ArrayList<Song> songList = songs;
         songPlayingFrag = mode;
         currSongIdx = index;
@@ -333,6 +333,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         currSong = songList.get(index);
+
+        Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
+
+        if (currSong.getFavorite() == -1) {
+            nextSong(next);
+            return;
+        }
 
         loadMedia(songList.get(index));
         mediaPlayer.start();
@@ -454,6 +461,13 @@ public class MainActivity extends AppCompatActivity {
             TextView artistAlbumInfo = (TextView) view.findViewById(R.id.small_artist_album_name);
             artistAlbumInfo.setSelected(true);
         }
+    }
+
+    public void nextSong(boolean next) {
+        if (next)
+            nextButton.performClick();
+        else
+            prevButton.performClick();
     }
 
     public List<Song> getSongs(){return songs;}

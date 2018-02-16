@@ -59,4 +59,8 @@ public class Song implements Parcelable {
         favorite = state;
     }
 
+    public boolean equals(Song s) {
+        return s.getName().equals(name);
+    }
+
 }
