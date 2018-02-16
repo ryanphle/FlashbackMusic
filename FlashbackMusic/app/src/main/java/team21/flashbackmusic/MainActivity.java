@@ -2,6 +2,7 @@ package team21.flashbackmusic;
 
 //import android.app.Fragment;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.support.v4.app.Fragment;
@@ -14,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -28,6 +30,12 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.gson.Gson;
+
+import java.time.Clock;
+import java.time.ZoneId;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -45,12 +53,15 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Song> songs;
     private Fragment fragment;
     private FragmentManager fragmentManager;
+    private FusedLocationProviderClient mFusedLocationClient;
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
     private static int index = 0;
     private MediaPlayer mediaPlayer;
     private Button stopButton;
     private Map<String, Play> flashback_song;
+    private Location currentLocation;
+    private FusedLocationProviderClient myFusedLocationClient;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -59,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         albums = new HashMap<>();
         songs = new ArrayList<>();
         res_uri = new ArrayList<>();
-        flashback_song = new HashMap<String, Play>();
+        flashback_song = new HashMap<>();
 
         try {
             loadSongs();
@@ -177,6 +188,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             System.out.println(e.toString());
         }
+        storePlayInformation(song);
+    }
+
+    private void storePlayInformation(Song song){
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Play play = new Play(this);
+        Gson gson = new Gson();
+        String json = gson.toJson(play);
+        editor.putString(song.getName(), json);
     }
 
     @Override
@@ -255,11 +276,13 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
         Gson gson = new Gson();
         ArrayList<Song> sorted_songs = new ArrayList<Song>();
+
         Map<String, ?> allEntries = sharedPreferences.getAll();
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
             String json = sharedPreferences.getString(entry.getKey(), "");
             flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
         }
+
         for (int i = 0; i < songs.size(); i++) {
             if(songs.get(i).getFavorite() == -1)
                 continue;
@@ -267,11 +290,17 @@ public class MainActivity extends AppCompatActivity {
             String name = sorted_songs.get(i).getName();
             final Play play = flashback_song.get(name);
 
-            int score = 0;
-            float [] distance = new float[1];
-            Location.distanceBetween(lat1, lon1, lat2, lon2, distance);
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(MainActivity.this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                currentLocation = myFusedLocationClient.getLastLocation().getResult();
+            }
 
-            if(play.getLocation  == currentLocation){
+            int score = 0;
+            if (play.getLocation().distanceTo(currentLocation) < 100){
                 score++;
             }
 
@@ -306,9 +335,9 @@ public class MainActivity extends AppCompatActivity {
         Collections.sort(sorted_songs, new Comparator<Song>() {
             @Override
             public int compare(Song lhs, Song rhs) {
-                if (lhs.score > rhs.score)
+                if (lhs.getScore() > rhs.getScore())
                     return -1;
-                if (lhs.score < rhs.score)
+                if (lhs.getScore() < rhs.getScore())
                     return 1;
                 if (lhs.getFavorite() > rhs.getFavorite())
                     return  -1;
