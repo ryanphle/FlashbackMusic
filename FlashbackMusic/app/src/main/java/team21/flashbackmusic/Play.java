@@ -41,6 +41,7 @@ public class Play {
         this.activity = activity;
         setTimeOfDay();
         setTime();
+        setFusedLocationClient();
         setLastLocation();
     }
 
@@ -48,8 +49,8 @@ public class Play {
         return LocalDateTime.now(getClock());
     }
 
-    public void setFusedLocationClient(MainActivity mainActivity) {
-        this.activity = activity;
+    public void setFusedLocationClient() {
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
     }
 

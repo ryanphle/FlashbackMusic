@@ -19,7 +19,7 @@ public class Song implements Parcelable {
     private Uri uri;
     private int score;
     private int favorite;
-    private Timestamp timeStemp;
+    private Timestamp timeStamp;
 
     public Song(String name, String artist,Uri uri, byte[] img, String album){
         this.name = name;
@@ -29,7 +29,7 @@ public class Song implements Parcelable {
         this.album = album;
         this.score = 0;
         this.favorite = 0;
-        this.timeStemp.setTime(0);
+        this.timeStamp = new Timestamp(0);
     }
 
     public String getName(){
@@ -44,8 +44,8 @@ public class Song implements Parcelable {
     public int getFavorite() {
         return this.favorite;
     }
-    public Timestamp getTimeStemp(){
-        return this.timeStemp;
+    public Timestamp getTimeStamp(){
+        return this.timeStamp;
     }
 
     public String getAlbum() { return this.album; }
@@ -54,8 +54,8 @@ public class Song implements Parcelable {
     public  void setFavorite(int favorite) {
         this.favorite = favorite;
     }
-    public void setTimeStemp(Timestamp timeStemp){
-        this.timeStemp = timeStemp;
+    public void setTimeStamp(Timestamp timeStemp){
+        this.timeStamp = timeStemp;
     }
 
     @Override

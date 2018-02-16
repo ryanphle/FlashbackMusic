@@ -34,6 +34,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 
 import java.time.Clock;
@@ -55,12 +57,13 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Song> songs;
     private Fragment fragment;
     private FragmentManager fragmentManager;
-    private FusedLocationProviderClient mFusedLocationClient;
+    private transient FusedLocationProviderClient mFusedLocationClient;
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
     private static int index = 0;
     private MediaPlayer mediaPlayer;
     private Button stopButton;
+    private Location currentLocation;
     private Map<String, Play> flashback_song;
 
     @Override
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         songs = new ArrayList<>();
         res_uri = new ArrayList<>();
         flashback_song = new HashMap<>();
+
 
         try {
             loadSongs();
@@ -172,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.reset();
         loadMedia(s);
         mediaPlayer.start();
+        storePlayInformation(s);
     }
 
     public void loadMedia(Song song) {
@@ -188,8 +193,9 @@ public class MainActivity extends AppCompatActivity {
             System.out.println(e.toString());
         }
 
-        storePlayInformation(song);
+
     }
+
 
     private void storePlayInformation(Song song){
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
@@ -247,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             Album a = albums.get(album);
+
             Song song = new Song(title, artist, uri, img, a.getName());
 
             albums.get(album).addSong(song);
@@ -263,8 +270,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setFlashbackFragment() {
+
         fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+            Toast.makeText(getApplicationContext(), "Permission Denied for location", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            currentLocation = location;
+                        }
+                    }
+                });
+
         ArrayList<Song> sorted_songs = sort_songs();
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragment.setArguments(bundle);
@@ -280,45 +311,38 @@ public class MainActivity extends AppCompatActivity {
     public List<Song> getSongs(){return songs;}
 
     public ArrayList<Song> sort_songs() {
+
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
-        Play play = new Play(this);
+        Play play;
         Gson gson = new Gson();
-        String json = gson.toJson(play);
-        Location currentLocation;
+
         ArrayList<Song> sorted_songs = new ArrayList<Song>();
-        Map<String, ?> allEntries = sharedPreferences.getAll();
+        //Map<String, ?> allEntries = sharedPreferences.getAll();
+
+        /*Log.i("Raw Songs name: ", "  pass  ");
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
             json = sharedPreferences.getString(entry.getKey(), "");
             flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
-        }
+        }*/
+
         for (int i = 0; i < songs.size(); i++) {
             if(songs.get(i).getFavorite() == -1)
                 continue;
             sorted_songs.add(songs.get(i));
             String name = sorted_songs.get(i).getName();
-            play = flashback_song.get(name);
+            String json = sharedPreferences.getString(name,"");
+            play = gson.fromJson(json,Play.class);
 
             int score = 0;
 
-            if (ContextCompat.checkSelfPermission(this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this,
-                            android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                            != PackageManager.PERMISSION_GRANTED) {
-
-                Toast.makeText(getApplicationContext(), "Permission Denied for location", Toast.LENGTH_SHORT).show();
-                break;
-            }
-
-            currentLocation = mFusedLocationClient.getLastLocation().getResult();
-
+            Log.i("Raw Songs name: ",currentLocation.toString());
+            Log.i("Raw Songs name: ", play.getLocation().toString());
             // 304.8 m = 1000 foot
             if(play.getLocation().distanceTo(currentLocation)  < 304.8 ){
                 score++;
             }
 
-            songs.get(i).setTimeStemp(play.getTime());
+            songs.get(i).setTimeStamp(play.getTime());
             //Timestamp tsTemp = new Timestamp(songs.get(i).getTimeStemp());
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(play.getTime().getTime());
@@ -344,6 +368,7 @@ public class MainActivity extends AppCompatActivity {
 
             sorted_songs.get(i).setScore(score);
 
+            Log.i("Raw Songs name: ", sorted_songs.get(i).getName()+ " score "+ sorted_songs.get(i).getScore());
 
         }
 
@@ -358,10 +383,10 @@ public class MainActivity extends AppCompatActivity {
                     return  -1;
                 if (lhs.getFavorite() < rhs.getFavorite())
                     return 1;
-                if (lhs.getTimeStemp().after( rhs.getTimeStemp())){
+                if (lhs.getTimeStamp().after( rhs.getTimeStamp())){
                     return -1;
                 }
-                if (lhs.getTimeStemp().before( rhs.getTimeStemp())){
+                if (lhs.getTimeStamp().before( rhs.getTimeStamp())){
                     return 1;
                 }
                 return 0;
