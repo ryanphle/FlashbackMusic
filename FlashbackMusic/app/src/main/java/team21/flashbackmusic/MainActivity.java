@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        loadMedia(res_uri.get(index));
+        loadMedia(songs.get(index));
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 0;
                 else
                     index++;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                     index = res_uri.size() - 1;
                 else
                     index--;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(res_uri.get(index));
+                    loadMedia(songs.get(index));
                     mediaPlayer.start();
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -175,19 +175,19 @@ public class MainActivity extends AppCompatActivity {
         index = res_uri.indexOf(uri);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         mediaPlayer.reset();
-        loadMedia(uri);
+        loadMedia(s);
         mediaPlayer.start();
         storePlayInformation(s);
     }
 
-    public void loadMedia(Uri uri) {
+    public void loadMedia(Song song) {
 
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
 
         try {
-            mediaPlayer.setDataSource(this, uri);
+            mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
 
         } catch (Exception e) {
@@ -275,30 +275,8 @@ public class MainActivity extends AppCompatActivity {
         fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-
-            Toast.makeText(getApplicationContext(), "Permission Denied for location", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            currentLocation = location;
-                        }
-                    }
-                });
-
         ArrayList<Song> sorted_songs = sort_songs();
+        //ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragment.setArguments(bundle);
