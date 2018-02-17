@@ -68,6 +68,6 @@ public class Song implements Parcelable {
 
     }
 
-    public Uri getUri(){return this.uri;}
+    public Uri getUri() {return this.uri;}
 
 }

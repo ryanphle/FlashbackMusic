@@ -63,8 +63,9 @@ public class MainActivity extends AppCompatActivity {
     private static int index = 0;
     private MediaPlayer mediaPlayer;
     private Button stopButton;
-    private Location currentLocation;
     private Map<String, Play> flashback_song;
+    private Location currentLocation;
+    private FusedLocationProviderClient myFusedLocationClient;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        loadMedia(songs.get(index));
+        loadMedia(res_uri.get(index));
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 0;
                 else
                     index++;
-                loadMedia(songs.get(index));
+                loadMedia(res_uri.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -142,10 +143,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 mediaPlayer.reset();
                 if (index == 0)
-                    index = songs.size() - 1;
+                    index = res_uri.size() - 1;
                 else
                     index--;
-                loadMedia(songs.get(index));
+                loadMedia(res_uri.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -160,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(songs.get(index));
+                    loadMedia(res_uri.get(index));
                     mediaPlayer.start();
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -171,22 +172,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
-        index = songs.indexOf(s);
+        index = res_uri.indexOf(uri);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         mediaPlayer.reset();
-        loadMedia(s);
+        loadMedia(uri);
         mediaPlayer.start();
         storePlayInformation(s);
     }
 
-    public void loadMedia(Song song) {
+    public void loadMedia(Uri uri) {
 
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
 
         try {
-            mediaPlayer.setDataSource(this, song.getUri());
+            mediaPlayer.setDataSource(this, uri);
             mediaPlayer.prepare();
 
         } catch (Exception e) {
@@ -258,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
 
             albums.get(album).addSong(song);
             songs.add(song);
-            //res_uri.add(uri);
+            res_uri.add(uri);
         }
     }
 
@@ -273,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
 
         fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -297,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         ArrayList<Song> sorted_songs = sort_songs();
+
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragment.setArguments(bundle);
     }
@@ -310,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
+
     public ArrayList<Song> sort_songs() {
 
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
@@ -319,11 +323,19 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Song> sorted_songs = new ArrayList<Song>();
         //Map<String, ?> allEntries = sharedPreferences.getAll();
 
-        /*Log.i("Raw Songs name: ", "  pass  ");
+        /*
+    public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
+        Gson gson = new Gson();
+        ArrayList<Song> sorted_songs = new ArrayList<Song>();
+
+        Map<String, ?> allEntries = sharedPreferences.getAll();
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-            json = sharedPreferences.getString(entry.getKey(), "");
+            String json = sharedPreferences.getString(entry.getKey(), "");
             flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
+
         }*/
+
+
 
         for (int i = 0; i < songs.size(); i++) {
             if(songs.get(i).getFavorite() == -1)
@@ -339,6 +351,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("Raw Songs name: ", play.getLocation().toString());
             // 304.8 m = 1000 foot
             if(play.getLocation().distanceTo(currentLocation)  < 304.8 ){
+
                 score++;
             }
 
