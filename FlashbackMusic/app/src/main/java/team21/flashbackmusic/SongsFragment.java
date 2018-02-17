@@ -67,7 +67,7 @@ public class SongsFragment extends Fragment {
     }
 
    public void updateSongUI(Song s) {
-        Log.i("Song update: ", s.getName());
+       // Log.i("Song update: ", s.getName());
 
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);

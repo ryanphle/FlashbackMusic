@@ -38,7 +38,7 @@ public class FlashbackFragment extends Fragment {
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
-        updateSongUI(songs.get(0));
+        updateSongUI(((MainActivity)getActivity()).currSong);
 
         ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).FLASHBACK_FRAG;
 
