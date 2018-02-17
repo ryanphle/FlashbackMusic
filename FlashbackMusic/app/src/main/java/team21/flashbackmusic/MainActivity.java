@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        loadMedia(res_uri.get(index));
+        loadMedia(songs.get(index));
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                     index = 0;
                 else
                     index++;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                     index = res_uri.size() - 1;
                 else
                     index--;
-                loadMedia(res_uri.get(index));
+                loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
             }
@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(res_uri.get(index));
+                    loadMedia(songs.get(index));
                     mediaPlayer.start();
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -170,11 +170,11 @@ public class MainActivity extends AppCompatActivity {
         index = res_uri.indexOf(uri);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         mediaPlayer.reset();
-        loadMedia(uri);
+        loadMedia(s);
         mediaPlayer.start();
     }
 
-    public void loadMedia(Uri uri) {
+    public void loadMedia(Song song) {
 
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
 
         //AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(res_ids.get(index));
         try {
-            mediaPlayer.setDataSource(this, uri);
+            mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
     private void setFlashbackFragment() {
         fragment = new FlashbackFragment();
         Bundle bundle = new Bundle();
-        ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences());
+        ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragment.setArguments(bundle);
     }
