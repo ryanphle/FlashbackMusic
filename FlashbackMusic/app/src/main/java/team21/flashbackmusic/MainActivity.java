@@ -1,6 +1,11 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -14,6 +19,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -64,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
     protected static final int SONG_FRAG = 0;
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
+    private Location lastLocation;
+
 
     protected boolean songLoaded;
 
@@ -280,6 +288,26 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+        BroadcastReceiver locationReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle b = intent.getBundleExtra("Location");
+                lastLocation = (Location) b.getParcelable("Location");
+                Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
+
+
+            }
+        };
+
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
+
     }
 
     public void initialFragSetup() {
@@ -457,6 +485,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public List<Song> getSongs(){return songs;}
+
 
 }
 
