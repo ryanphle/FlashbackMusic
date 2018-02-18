@@ -1,8 +1,13 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.provider.Telephony;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,8 +19,13 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by ryanle on 2/8/18.
@@ -34,7 +44,13 @@ public class FlashbackFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_flashback, container, false);
         listView = rootView.findViewById(R.id.flashback_list);
 
-        final ArrayList<Song> songs = getArguments().getParcelableArrayList("random_songs");
+        final ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
+        if( songs == null) {
+            Log.i("Song size", "songs is null");
+        }
+        else {
+            Log.i("song size", "" + songs.size());
+        }
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
@@ -53,6 +69,7 @@ public class FlashbackFragment extends Fragment {
         TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
         TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
         TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        Calendar calendar;
 
         Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
         albumImage.setImageBitmap(bmp);
@@ -60,6 +77,19 @@ public class FlashbackFragment extends Fragment {
         songName.setText(s.getName());
         String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
         artistAlbumInfo.setText(artistAndAlbumStr);
+
+        calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(s.getTimeStamp().getTime());
+        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+
+        Address address = s.getLocation();
+        String addressStr = "";
+        addressStr += address.getAddressLine(0) + ", ";
+        addressStr += address.getAddressLine(1) + ", ";
+        addressStr += address.getAddressLine(2);
+
+        songLocation.setText(addressStr);
+        songTime.setText(calendar.get(Calendar.MONTH) + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
 
     }
 }
