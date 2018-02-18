@@ -671,6 +671,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
+        // Note to self: Can make a little more DRY if have a padding variable instead of ++/--
         if (currSong.getFavorite() == -1) {
             //nextSong(next);
             if(next){
@@ -697,7 +698,6 @@ public class MainActivity extends AppCompatActivity {
                             this.flash_index++;
                         newSong(this.flash_index,mode,next,update);
                         break;
-
 
                 }
 
@@ -814,7 +814,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
-        Field[] fields=R.raw.class.getFields();
+        Field[] fields = R.raw.class.getFields();
         Log.d("Size of fields", Integer.toString(fields.length));
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         Play play;
@@ -913,13 +913,6 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("albums", albumList);
         fragmentAlbums.setArguments(bundle);
-    }
-
-    public void scroll(View view) {
-        if (songLoaded) {
-            TextView artistAlbumInfo = (TextView) view.findViewById(R.id.small_artist_album_name);
-            artistAlbumInfo.setSelected(true);
-        }
     }
 
     public void nextSong(boolean next) {
