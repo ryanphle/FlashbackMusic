@@ -979,7 +979,7 @@ public class MainActivity extends AppCompatActivity {
                 score++;
             }
 
-            sorted_songs.get(i).setTimeStamp(play.getTime());
+            //sorted_songs.get(i).setTimeStamp(play.getTime());
             //Timestamp tsTemp = songs.get(i).getTimeStamp();
             if (play != null) {
                 Calendar c = Calendar.getInstance();
