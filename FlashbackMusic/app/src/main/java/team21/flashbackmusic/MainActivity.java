@@ -2,12 +2,15 @@ package team21.flashbackmusic;
 
 //import android.app.Fragment;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.os.IBinder;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
@@ -95,10 +98,15 @@ public class MainActivity extends AppCompatActivity {
     protected SharedPreferences.Editor like_editor;
 
     private int null_title_offset = 0;
+    protected int album_dislike = 0;
 
     public Location lastLocation;
 
     private BroadcastReceiver locationReceiver;
+
+    private GetLocationService getLocationService;
+    private boolean isBound;
+
 
 
     @Override
@@ -135,6 +143,8 @@ public class MainActivity extends AppCompatActivity {
 
         //Log.d("Fragment mode", Integer.toString(frag));
 
+        Intent intent = new Intent(this,GetLocationService.class);
+        bindService(intent, serviceConnection,Context.BIND_AUTO_CREATE);
 
 
 
@@ -193,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case ALBUM_FRAG:
                         transaction.hide(fragmentAlbums);
+                        album_dislike = 0;
                         break;
                     case FLASHBACK_FRAG:
                         if(item.getItemId() != R.id.navigation_flashback) {
@@ -211,13 +222,7 @@ public class MainActivity extends AppCompatActivity {
                             stopButton.setBackgroundResource(R.drawable.ic_stopping);
                         }
                         prevButton.setVisibility(View.VISIBLE);
-                        //transaction.show(fragmentSong);
-                        //update
-                        transaction.remove(fragmentSong);
-
-                        setSongFragment();
-                        transaction.add(R.id.main_container, fragmentSong, "songs");
-
+                        transaction.show(fragmentSong);
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                         frag = SONG_FRAG;
 
@@ -242,8 +247,8 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer.reset();
                             frag = FLASHBACK_FRAG;
 
-                            loadMedia(random_songs.get(flash_index));
-                            mediaPlayer.start();
+                            //loadMedia(random_songs.get(flash_index));
+                            //mediaPlayer.start();
 
                             //newSong(flash_index, FLASHBACK_FRAG,true,false);
 
@@ -251,6 +256,9 @@ public class MainActivity extends AppCompatActivity {
 
                             Collections.shuffle(random_songs);
                             random_setFlashbackFragment();
+
+                            newSong(flash_index, FLASHBACK_FRAG,true,false);
+
 
                             prevButton.setVisibility(View.INVISIBLE);
                             stopButton.setBackgroundResource(R.drawable.ic_playing);
@@ -289,14 +297,6 @@ public class MainActivity extends AppCompatActivity {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mediaPlayer.reset();
-                if (index == res_uri.size() - 1)
-                    index = 0;
-                else
-                    index++;
-                loadMedia(songs.get(index));
-                mediaPlayer.start();
-                stopButton.setBackgroundResource(R.drawable.ic_playing);
                 songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
@@ -331,14 +331,6 @@ public class MainActivity extends AppCompatActivity {
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mediaPlayer.reset();
-                if (index == 0)
-                    index = songs.size() - 1;
-                else
-                    index--;
-                loadMedia(songs.get(index));
-                mediaPlayer.start();
-                stopButton.setBackgroundResource(R.drawable.ic_playing);
                 songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
@@ -370,8 +362,6 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-                    loadMedia(songs.get(index));
-                    mediaPlayer.start();
                     int currIdx = 0;
 
                     if (songPlayingFrag == SONG_FRAG) currIdx = index;
@@ -391,7 +381,9 @@ public class MainActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 Bundle b = intent.getBundleExtra("Location");
                 lastLocation = (Location) b.getParcelable("Location");
-                Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
+                Song song = (Song)b.getParcelable("Song");
+                storePlayInformation(song);
+                Log.i("RawMainActivity ", "  location in main : "+ lastLocation.toString());
             }
         };
 
@@ -405,8 +397,25 @@ public class MainActivity extends AppCompatActivity {
         //updateSongMetaData(currSongIdx,SONG_FRAG,false);
          */
 
-
     }
+
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            GetLocationService.locationService locationservice = (GetLocationService.locationService) iBinder;
+            getLocationService = locationservice.getService();
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+
+            isBound = false;
+
+        }
+    };
+
 
     public void initialFragSetup(int frag) {
         setSongFragment();
@@ -483,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
         );
         */
 
-        storePlayInformation(s);
+        startLocationService(s);
 
         mediaPlayer.start();
     }
@@ -501,25 +510,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startLocationService(Song song) {
+
+        /*Intent intent = new Intent(MainActivity.this, LocationService.class);
+        Bundle b = new Bundle();
+        b.putParcelable("Song", song);
+        intent.putExtra("Song",b);
+        startService(intent);*/
+
+        getLocationService.getLocation(song);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
+
+
+    }
+
+
     private void storePlayInformation(Song song){
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
 
 
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        while (lastLocation==null){}
-        Play play = new Play(this, lastLocation);
-        Gson gson = new Gson();
-        String json = gson.toJson(play);
-        editor.putString(song.getName(), json);
-        editor.apply();
+        if(lastLocation != null) {
+            Play play = new Play(this, lastLocation);
+            Gson gson = new Gson();
+            String json = gson.toJson(play);
+            editor.putString(song.getName(), json);
+            editor.apply();
 
-        String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(),"");
-        Play samePlay = gson.fromJson(json2, Play.class);
-        System.out.print("time: "+samePlay.getTime().getTime()+" time of day: "+samePlay.getTimeOfDay());
+            String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(), "");
+            Play samePlay = gson.fromJson(json2, Play.class);
+            System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
+        }
 
     }
+
+
+
 
     //public void newSong(int index, int mode) {}
     public void newSong(int index, int mode, boolean next, boolean update) {
@@ -527,10 +556,18 @@ public class MainActivity extends AppCompatActivity {
         songPlayingFrag = mode;
         currSongIdx = index;
 
+        mediaPlayer.reset();
+
         if (mode == FLASHBACK_FRAG)
             songList = random_songs;
         if (mode == ALBUM_FRAG) {
             songList = (ArrayList) currAlbum.getSongs();
+            if(album_dislike == songList.size()){
+                currSong = null;
+                //updateSongMetaData(index, mode, true);
+                stopButton.setBackgroundResource(R.drawable.ic_stopping);
+                return;
+            }
         }
 
         currSong = songList.get(index);
@@ -542,15 +579,25 @@ public class MainActivity extends AppCompatActivity {
             if(next){
                 switch (mode){
                     case SONG_FRAG:
-                        this.index++;
+                        if (this.index == res_uri.size() - 1)
+                            this.index = 0;
+                        else
+                            this.index++;
                         newSong(this.index,mode,next,update);
                         break;
                     case ALBUM_FRAG:
-                        this.album_index++;
+                        if (album_index == currAlbum.getSongs().size() - 1)
+                            album_index = 0;
+                        else
+                            album_index++;
+                        album_dislike++;
                         newSong(this.album_index,mode,next,update);
                         break;
                     case FLASHBACK_FRAG:
-                        this.flash_index++;
+                        if (this.flash_index == res_uri.size() - 1)
+                            this.flash_index = 0;
+                        else
+                            this.flash_index++;
                         newSong(this.flash_index,mode,next,update);
                         break;
 
@@ -561,15 +608,26 @@ public class MainActivity extends AppCompatActivity {
             else{
                 switch (mode){
                 case SONG_FRAG:
-                    this.index--;
+                    if (this.index == 0)
+                        this.index = res_uri.size() - 1;
+                    else
+                        this.index--;
+
                     newSong(this.index,mode,next,update);
                     break;
                 case ALBUM_FRAG:
-                    this.album_index--;
+                    if (this.album_index == 0)
+                        this.album_index = currAlbum.getSongs().size() - 1;
+                    else
+                        this.album_index--;
+                    album_dislike++;
                     newSong(this.album_index,mode,next,update);
                     break;
                 case FLASHBACK_FRAG:
-                    this.flash_index--;
+                    if (this.flash_index == 0)
+                        this.flash_index = res_uri.size() - 1;
+                    else
+                        this.flash_index--;
                     newSong(this.flash_index,mode,next,update);
                     break;
 
@@ -580,8 +638,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        album_dislike = 0;
+
         loadMedia(songList.get(index));
-        storePlayInformation(songList.get(index));
+        startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
@@ -605,22 +665,35 @@ public class MainActivity extends AppCompatActivity {
         //Log.i("currSong", currSong.getName());
 
 
-        switch (frag) {
-            case SONG_FRAG:
-                SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);
-                fragmentSong.updateSongUI(song);
-                break;
-            case ALBUM_FRAG:
-                AlbumsFragment fragmentAlbum = (AlbumsFragment)
-                        getSupportFragmentManager().getFragments().get(1);
-                fragmentAlbum.updateSongUI(song);
-                break;
-            case FLASHBACK_FRAG:
-                FlashbackFragment fragmentFlash = (FlashbackFragment)
-                        getSupportFragmentManager().getFragments().get(2);
-                fragmentFlash.updateSongUI(song);
-                break;
+
+        if(song != null) {
+            switch (frag) {
+                case SONG_FRAG:
+                    //SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);
+                    SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
+
+                    //Log.i("currSongfrag", fragmentSong.toString());
+
+
+                    fragmentSong.updateSongUI(song);
+                    break;
+                case ALBUM_FRAG:
+                    //AlbumsFragment fragmentAlbum = (AlbumsFragment)
+                    //      getSupportFragmentManager().getFragments().get(1);
+                    AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
+                    fragmentAlbum.updateSongUI(song);
+                    break;
+                case FLASHBACK_FRAG:
+                    //FlashbackFragment fragmentFlash = (FlashbackFragment)
+                    //      getSupportFragmentManager().getFragments().get(2);
+                    FlashbackFragment fragmentFlash = (FlashbackFragment) getSupportFragmentManager().findFragmentByTag("flash_songs");
+
+                    fragmentFlash.updateSongUI(song);
+                    break;
+            }
         }
+
+
     }
 
     @Override
