@@ -64,9 +64,9 @@ public class SongAdapter extends ArrayAdapter<Song>{
                 public void onClick(View v) {
                     if (s.getFavorite() == 0) {
                         s.setFavorite(1);
-                        ((MainActivity)context).like_editor.putInt(s.name,s.getFavorite());
+                        ((MainActivity)context).like_editor.putInt(s.getName(),s.getFavorite());
                         ((MainActivity)context).like_editor.apply();
-                        Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.name,-1)));
+                        Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.getName(),-1)));
 
 
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_like);
@@ -75,10 +75,10 @@ public class SongAdapter extends ArrayAdapter<Song>{
                         Song currentSong = ((MainActivity)context).currSong;
                         s.setFavorite(-1);
 
-                        ((MainActivity)context).like_editor.putInt(s.name,s.getFavorite());
+                        ((MainActivity)context).like_editor.putInt(s.getName(),s.getFavorite());
                         ((MainActivity)context).like_editor.apply();
 
-                        Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.name,-1)));
+                        Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.getName(),-1)));
 
 
                         //Log.d("currentSong", s.getName());
@@ -90,7 +90,7 @@ public class SongAdapter extends ArrayAdapter<Song>{
                     }
                     else {
                         s.setFavorite(0);
-                        ((MainActivity)context).like_editor.putInt(s.name,s.getFavorite());
+                        ((MainActivity)context).like_editor.putInt(s.getName(),s.getFavorite());
                         ((MainActivity)context).like_editor.apply();
 
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_neutral);

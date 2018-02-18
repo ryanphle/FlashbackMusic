@@ -664,10 +664,10 @@ public class MainActivity extends AppCompatActivity {
             Album a = albums.get(album);
             Song song = new Song(title, artist, uri, img, a.getName());
 
-            liked = like_setting.getInt(song.name,-2);
+            liked = like_setting.getInt(song.getName(),-2);
             if(liked == -2){
 
-                like_editor.putInt(song.name,0);
+                like_editor.putInt(song.getName(),0);
                 like_editor.apply();
                 Log.d("inital_like_set", Integer.toString(liked));
 
