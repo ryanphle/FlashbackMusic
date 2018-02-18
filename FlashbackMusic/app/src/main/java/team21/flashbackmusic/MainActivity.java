@@ -1,17 +1,14 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.os.Parcelable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
@@ -35,6 +32,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.gson.Gson;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private Fragment fragmentAlbums;
     private Fragment fragmentFlashback;
     private FragmentManager fragmentManager;
+    private FusedLocationProviderClient mFusedLocationClient;
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
     protected static int index = 0;
@@ -75,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
     protected static final int SONG_FRAG = 0;
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
+    //public Location lastLocation;
+    //BroadcastReceiver locationReceiver;
+    Intent locationIntent;
+
 
     protected boolean songLoaded;
 
@@ -91,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int null_title_offset = 0;
 
-    Location lastLocation;
+    public Location lastLocation;
 
     private BroadcastReceiver locationReceiver;
 
@@ -206,7 +211,13 @@ public class MainActivity extends AppCompatActivity {
                             stopButton.setBackgroundResource(R.drawable.ic_stopping);
                         }
                         prevButton.setVisibility(View.VISIBLE);
-                        transaction.show(fragmentSong);
+                        //transaction.show(fragmentSong);
+                        //update
+                        transaction.remove(fragmentSong);
+
+                        setSongFragment();
+                        transaction.add(R.id.main_container, fragmentSong, "songs");
+
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                         frag = SONG_FRAG;
 
@@ -267,41 +278,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
         //frag = 1;
         initialFragSetup(frag);
-
-        locationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle b = intent.getBundleExtra("Location");
-                lastLocation = (Location) b.getParcelable("Location");
-                Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
-
-
-
-
-            }
-        };
-
-        /*
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)!=
-                        PackageManager.PERMISSION_GRANTED){
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},100);
-            Log.d("test1","in");
-            return;
-        }
-*/
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
 
 
 
@@ -311,6 +289,14 @@ public class MainActivity extends AppCompatActivity {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mediaPlayer.reset();
+                if (index == res_uri.size() - 1)
+                    index = 0;
+                else
+                    index++;
+                loadMedia(songs.get(index));
+                mediaPlayer.start();
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
                 songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
@@ -345,6 +331,14 @@ public class MainActivity extends AppCompatActivity {
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mediaPlayer.reset();
+                if (index == 0)
+                    index = songs.size() - 1;
+                else
+                    index--;
+                loadMedia(songs.get(index));
+                mediaPlayer.start();
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
                 songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
@@ -376,6 +370,8 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
+                    loadMedia(songs.get(index));
+                    mediaPlayer.start();
                     int currIdx = 0;
 
                     if (songPlayingFrag == SONG_FRAG) currIdx = index;
@@ -389,8 +385,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
 
+        locationReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle b = intent.getBundleExtra("Location");
+                lastLocation = (Location) b.getParcelable("Location");
+                Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
+            }
+        };
+
+        /*
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
+        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
+         */
 
 
     }
@@ -437,9 +450,9 @@ public class MainActivity extends AppCompatActivity {
 
 
             random_setFlashbackFragment();
-            loadMedia(random_songs.get(flash_index));
-            mediaPlayer.start();
-            //newSong(0,FLASHBACK_FRAG,true,false);
+            //loadMedia(random_songs.get(flash_index));
+            //mediaPlayer.start();
+            newSong(0,FLASHBACK_FRAG,true,false);
 
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
@@ -455,18 +468,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
-        index = res_uri.indexOf(uri);
+        index = songs.indexOf(s);
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         currSongIdx = index;
         mediaPlayer.reset();
         loadMedia(s);
 
+        /*
         Intent intent = new Intent(MainActivity.this, LocationService.class);
         startService(intent);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 locationReceiver, new IntentFilter("LastLocation")
         );
+        */
+
+        storePlayInformation(s);
 
         mediaPlayer.start();
     }
@@ -484,6 +501,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void storePlayInformation(Song song){
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        while (lastLocation==null){}
+        Play play = new Play(this, lastLocation);
+        Gson gson = new Gson();
+        String json = gson.toJson(play);
+        editor.putString(song.getName(), json);
+        editor.apply();
+
+        String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(),"");
+        Play samePlay = gson.fromJson(json2, Play.class);
+        System.out.print("time: "+samePlay.getTime().getTime()+" time of day: "+samePlay.getTimeOfDay());
+
+    }
+
+    //public void newSong(int index, int mode) {}
     public void newSong(int index, int mode, boolean next, boolean update) {
         ArrayList<Song> songList = songs;
         songPlayingFrag = mode;
@@ -542,14 +580,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-
         loadMedia(songList.get(index));
+        storePlayInformation(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
@@ -651,10 +683,10 @@ public class MainActivity extends AppCompatActivity {
             Album a = albums.get(album);
             Song song = new Song(title, artist, uri, img, a.getName());
 
-            liked = like_setting.getInt(song.name,-2);
+            liked = like_setting.getInt(song.getName(),-2);
             if(liked == -2){
 
-                like_editor.putInt(song.name,0);
+                like_editor.putInt(song.getName(),0);
                 like_editor.apply();
                 Log.d("inital_like_set", Integer.toString(liked));
 

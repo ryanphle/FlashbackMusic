@@ -1,6 +1,5 @@
 package team21.flashbackmusic;
 
-
 import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
@@ -16,7 +15,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-
+import java.util.concurrent.Executor;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -43,6 +42,7 @@ public class LocationService extends IntentService {
     }
 
 
+
     @Override
     public int onStartCommand(Intent intent,int flags, int startId){
         Toast.makeText(getBaseContext(), " Service start ", Toast.LENGTH_SHORT).show();
@@ -57,6 +57,7 @@ public class LocationService extends IntentService {
         super.onDestroy();
     }
 
+
     private static void sendMessageBack(Context context,Location L){
         Intent intent = new Intent("LastLocation");
         Bundle b = new Bundle();
@@ -64,7 +65,6 @@ public class LocationService extends IntentService {
         intent.putExtra("Location",b);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
-
 
     /**
      * Starts this service to perform action Foo with the given parameters. If
@@ -98,6 +98,7 @@ public class LocationService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+
         /*if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_FOO.equals(action)) {
