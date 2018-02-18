@@ -1,15 +1,12 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
-<<<<<<< HEAD
 import android.content.SharedPreferences;
-=======
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
->>>>>>> origin/location_service
 import android.media.MediaPlayer;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -33,7 +30,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-<<<<<<< HEAD
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -41,12 +37,10 @@ import com.google.gson.Gson;
 
 import java.time.Clock;
 import java.time.ZoneId;
-=======
 import android.widget.Toast;
 
 import java.util.Collection;
 import java.util.Collections;
->>>>>>> origin/location_service
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -85,7 +79,9 @@ public class MainActivity extends AppCompatActivity {
     protected static final int SONG_FRAG = 0;
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
-    private Location lastLocation;
+    public Location lastLocation;
+    BroadcastReceiver locationReceiver;
+    Intent locationIntent;
 
 
     protected boolean songLoaded;
@@ -108,12 +104,9 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-<<<<<<< HEAD
         loadMedia(songs.get(index));
-=======
         albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
         initialFragSetup();
->>>>>>> origin/location_service
 
         /* Setting up all Listeners */
 
@@ -228,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-<<<<<<< HEAD
                 mediaPlayer.reset();
                 if (index == res_uri.size() - 1)
                     index = 0;
@@ -237,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
                 loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
-=======
                 songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
@@ -266,7 +257,6 @@ public class MainActivity extends AppCompatActivity {
                     newSong(flash_index, frag);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
->>>>>>> origin/location_service
             }
         });
 
@@ -274,7 +264,6 @@ public class MainActivity extends AppCompatActivity {
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-<<<<<<< HEAD
                 mediaPlayer.reset();
                 if (index == 0)
                     index = songs.size() - 1;
@@ -283,7 +272,6 @@ public class MainActivity extends AppCompatActivity {
                 loadMedia(songs.get(index));
                 mediaPlayer.start();
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
-=======
                 songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
@@ -303,7 +291,6 @@ public class MainActivity extends AppCompatActivity {
                     newSong(album_index, songPlayingFrag);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
->>>>>>> origin/location_service
             }
         });
 
@@ -317,10 +304,8 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
-<<<<<<< HEAD
                     loadMedia(songs.get(index));
                     mediaPlayer.start();
-=======
                     int currIdx = 0;
 
                     if (songPlayingFrag == SONG_FRAG) currIdx = index;
@@ -329,21 +314,18 @@ public class MainActivity extends AppCompatActivity {
 
                     newSong(currIdx, songPlayingFrag);
                     //updateSongMetaData(currIdx, frag);
->>>>>>> origin/location_service
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
         });
 
 
-        BroadcastReceiver locationReceiver = new BroadcastReceiver() {
+        locationReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Bundle b = intent.getBundleExtra("Location");
                 lastLocation = (Location) b.getParcelable("Location");
                 Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
-
-
             }
         };
 
@@ -383,10 +365,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadMedia(Song song) {
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/location_service
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
@@ -398,14 +376,17 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             System.out.println(e.toString());
         }
-
-        storePlayInformation(song);
     }
 
     private void storePlayInformation(Song song){
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Play play = new Play(this);
+        while (lastLocation==null){}
+        Play play = new Play(this, lastLocation);
         Gson gson = new Gson();
         String json = gson.toJson(play);
         editor.putString(song.getName(), json);
@@ -431,6 +412,7 @@ public class MainActivity extends AppCompatActivity {
         currSong = songList.get(index);
 
         loadMedia(songList.get(index));
+        storePlayInformation(songList.get(index));
         mediaPlayer.start();
         updateSongMetaData(index, mode, true);
     }
@@ -511,13 +493,10 @@ public class MainActivity extends AppCompatActivity {
 
             albums.get(album).addSong(song);
             songs.add(song);
-<<<<<<< HEAD
             //res_uri.add(uri);
-=======
             res_uri.add(uri);
 
             random_songs.add(song);
->>>>>>> origin/location_service
         }
     }
 
