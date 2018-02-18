@@ -11,10 +11,22 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
+
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
+
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
@@ -27,6 +39,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.content.LocalBroadcastManager;
+
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -38,18 +52,35 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
+
+import java.time.Clock;
+import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
+
+import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,11 +89,16 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Song> songs;
     private Fragment fragmentSong;
     private Fragment fragmentAlbums;
-    private Fragment fragmentFlashback;
     private FragmentManager fragmentManager;
     private FusedLocationProviderClient mFusedLocationClient;
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
+
+
+    private Map<String, Play> flashback_song;
+    private Location currentLocation;
+    private FusedLocationProviderClient myFusedLocationClient;
+
     protected static int index = 0;
     protected MediaPlayer mediaPlayer;
     protected Button stopButton;
@@ -78,10 +114,15 @@ public class MainActivity extends AppCompatActivity {
     protected static int album_index = 0;
     private ArrayList<Song> random_songs;
     private Fragment random_fragmentFlashback;
+    private ArrayList<Song> sorted_songs;
+    private Fragment fragmentFlashback;
 
     protected static final int SONG_FRAG = 0;
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
+    private Location lastLocation;
+
+
     //public Location lastLocation;
     //BroadcastReceiver locationReceiver;
     Intent locationIntent;
@@ -103,12 +144,13 @@ public class MainActivity extends AppCompatActivity {
     private int null_title_offset = 0;
     protected int album_dislike = 0;
 
-    public Location lastLocation;
+    //public Location lastLocation;
 
     private BroadcastReceiver locationReceiver;
 
     private GetLocationService getLocationService;
     private boolean isBound;
+    private boolean enterFlash = false;
 
 
 
@@ -121,6 +163,9 @@ public class MainActivity extends AppCompatActivity {
         songs = new ArrayList<>();
         res_uri = new ArrayList<>();
         random_songs = new ArrayList<>();
+
+        flashback_song = new HashMap<>();
+        sorted_songs = new ArrayList<>();
         fragmentManager = getSupportFragmentManager();
         songLoaded = false;
 
@@ -152,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
+        //initialFragSetup(frag);
 
         /* Setting up all Listeners */
 
@@ -213,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
                             flash_index = 0;
                             mediaPlayer.reset();
                             loadMedia(songs.get(index));
-                            transaction.remove(random_fragmentFlashback);
+                            transaction.remove(fragmentFlashback);
                             songPlayingFrag = SONG_FRAG;
                         }
                         break;
@@ -228,8 +274,6 @@ public class MainActivity extends AppCompatActivity {
                         transaction.show(fragmentSong);
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                         frag = SONG_FRAG;
-
-                        Log.i("currSong", Integer.toString(currSongIdx));
                         if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
                         break;
 
@@ -257,22 +301,20 @@ public class MainActivity extends AppCompatActivity {
 
                             //transaction.remove(random_fragmentFlashback);
 
-                            Collections.shuffle(random_songs);
-                            random_setFlashbackFragment();
+                            //Collections.shuffle(random_songs);
+
+                            setFlashbackFragment();
 
                             newSong(flash_index, FLASHBACK_FRAG,true,false);
 
 
                             prevButton.setVisibility(View.INVISIBLE);
                             stopButton.setBackgroundResource(R.drawable.ic_playing);
-
-                            //transaction.remove(random_fragmentFlashback);
-
-                            transaction.add(R.id.main_container, random_fragmentFlashback, "flash_songs");
+                            transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
                             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 
-
                         }
+                        frag = FLASHBACK_FRAG;
                         songPlayingFrag = FLASHBACK_FRAG;
                         break;
                 }
@@ -290,7 +332,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         //frag = 1;
-        initialFragSetup(frag);
 
 
 
@@ -391,17 +432,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
         locationReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Bundle b = intent.getBundleExtra("Location");
                 lastLocation = (Location) b.getParcelable("Location");
                 Song song = (Song)b.getParcelable("Song");
-                storePlayInformation(song);
-                Log.i("RawMainActivity ", "  location in main : "+ lastLocation.toString());
+                if(!enterFlash) {
+                    storePlayInformation(song);
+                    Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                }
+                else{
+                    enterFlash = false;
+                    Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
+                    initialFragSetup(frag);
+
+                    //sort_songs();
+                }
             }
         };
+
+        //while(getLocationService == null){}
+
+
+
+
+
+
+
 
         /*
         Intent intent = new Intent(MainActivity.this, LocationService.class);
@@ -422,6 +480,20 @@ public class MainActivity extends AppCompatActivity {
             GetLocationService.locationService locationservice = (GetLocationService.locationService) iBinder;
             getLocationService = locationservice.getService();
             isBound = true;
+
+            if(frag == FLASHBACK_FRAG) {
+                enterFlash = true;
+
+                getLocationService.getLocation(songs.get(0));
+
+                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
+                        locationReceiver, new IntentFilter("LastLocation")
+                );
+            }
+            else{
+                initialFragSetup(frag);
+            }
+
         }
 
         @Override
@@ -436,8 +508,6 @@ public class MainActivity extends AppCompatActivity {
     public void initialFragSetup(int frag) {
         setSongFragment();
         setAlbumFragment();
-        //random_setFlashbackFragment();
-
 
         FragmentTransaction initTransaction = getSupportFragmentManager().beginTransaction();
         initTransaction.add(R.id.main_container, fragmentSong, "songs");
@@ -471,17 +541,17 @@ public class MainActivity extends AppCompatActivity {
 
             //initTransaction.remove(random_fragmentFlashback);
 
-            Collections.shuffle(random_songs);
+            //Collections.shuffle(random_songs);
 
 
-            random_setFlashbackFragment();
+            setFlashbackFragment();
             //loadMedia(random_songs.get(flash_index));
             //mediaPlayer.start();
             newSong(0,FLASHBACK_FRAG,true,false);
 
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
-            initTransaction.add(R.id.main_container, random_fragmentFlashback, "flash_songs");
+            initTransaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
             initTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
             bottomNavigationView.getMenu().getItem(FLASHBACK_FRAG).setChecked(true);
 
@@ -551,6 +621,23 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         if(lastLocation != null) {
             Play play = new Play(this, lastLocation);
+            song.setTimeStamp(play.getTime());
+
+            List<Address> myList = new ArrayList<>();
+
+            try{
+
+                Geocoder myLocation = new Geocoder(this, Locale.getDefault());
+                myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(),1);
+
+            }
+            catch( IOException e) {
+
+            }
+
+            Address address = (Address) myList.get(0);
+            song.setLocation(address);
+
             Gson gson = new Gson();
             String json = gson.toJson(play);
             editor.putString(song.getName(), json);
@@ -558,7 +645,7 @@ public class MainActivity extends AppCompatActivity {
 
             String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(), "");
             Play samePlay = gson.fromJson(json2, Play.class);
-            System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
+            //System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
         }
 
     }
@@ -575,7 +662,7 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.reset();
 
         if (mode == FLASHBACK_FRAG)
-            songList = random_songs;
+            songList = sorted_songs;
         if (mode == ALBUM_FRAG) {
             songList = (ArrayList) currAlbum.getSongs();
             if(album_dislike == songList.size()){
@@ -668,7 +755,7 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Song> songList = songs;
 
         if (mode == FLASHBACK_FRAG)
-            songList = random_songs;
+            songList = sorted_songs;
         if (mode == ALBUM_FRAG)
             songList = (ArrayList<Song>) currAlbum.getSongs();
 
@@ -802,17 +889,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setFlashbackFragment() {
+
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList("songs", songs);
-        fragmentFlashback.setArguments(bundle);
-    }
 
-    private void random_setFlashbackFragment() {
-        random_fragmentFlashback = new FlashbackFragment();
-        Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList("random_songs", random_songs);
-        random_fragmentFlashback.setArguments(bundle);
+
+
+        //sort_getLocation();
+        sort_songs();
+        //ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
+
+        bundle.putParcelableArrayList("songs", sorted_songs);
+        fragmentFlashback.setArguments(bundle);
     }
 
     private void setAlbumFragment() {
@@ -838,5 +926,110 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-}
 
+    public void sort_getLocation(){
+
+        enterFlash = true;
+
+        getLocationService.getLocation(songs.get(0));
+
+    }
+
+
+    public void sort_songs() {
+
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        Play play;
+        Gson gson = new Gson();
+
+        //ArrayList<Song> new_songs_list = new ArrayList<Song>();
+        //Map<String, ?> allEntries = sharedPreferences.getAll();
+
+        /*
+         public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
+         Gson gson = new Gson();
+         ArrayList<Song> sorted_songs = new ArrayList<Song>();
+         Map<String, ?> allEntries = sharedPreferences.getAll();
+         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+         String json = sharedPreferences.getString(entry.getKey(), "");
+         flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
+         }*/
+        sorted_songs = new ArrayList<Song>();
+
+        for(int i =0; i< songs.size();i++){
+            if(songs.get(i).getFavorite() == -1)
+                continue;
+
+            sorted_songs.add(songs.get(i));
+        }
+
+        for (int i = 0; i < sorted_songs.size(); i++) {
+
+            String name = sorted_songs.get(i).getName();
+            String json = sharedPreferences.getString(name,"");
+            play = gson.fromJson(json,Play.class);
+
+            int score = 0;
+
+            Log.i("Raw Songs name: ",lastLocation.toString());
+
+            //Log.i("Raw Songs name: ", play.getLocation().toString());
+            // 304.8 m = 1000 foot
+            if(play != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+                score++;
+            }
+
+            sorted_songs.get(i).setTimeStamp(play.getTime());
+            //Timestamp tsTemp = songs.get(i).getTimeStamp();
+            if (play != null) {
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(play.getTime().getTime());
+                c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+                int dayofWeek = c.get(Calendar.DAY_OF_WEEK);
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+
+                c.setTimeInMillis(System.currentTimeMillis());
+                int currentDay = c.get(Calendar.DAY_OF_WEEK);
+                int currentHour = c.get(Calendar.HOUR_OF_DAY);
+                if (hour <= 10 && hour > 2 && currentHour <= 10 && currentHour > 2) {
+                    score++;
+                } else if (hour <= 18 && hour > 10 && currentHour <= 18 && currentHour > 10) {
+                    score++;
+                } else if ((hour <= 2 && hour > 18) && (currentHour <= 2 && currentHour > 18)) {
+                    score++;
+                }
+                if (dayofWeek == currentDay) {
+                    score++;
+                }
+
+            }
+            sorted_songs.get(i).setScore(score);
+
+            Log.i("Raw Songs name: ", sorted_songs.get(i).getName()+ " score "+ sorted_songs.get(i).getScore());
+
+        }
+
+        Collections.sort(sorted_songs, new Comparator<Song>() {
+            @Override
+            public int compare(Song lhs, Song rhs) {
+                if (lhs.getScore() > rhs.getScore())
+                    return -1;
+                if (lhs.getScore() < rhs.getScore())
+                    return 1;
+                if (lhs.getFavorite() > rhs.getFavorite())
+                    return  -1;
+                if (lhs.getFavorite() < rhs.getFavorite())
+                    return 1;
+                if (lhs.getTimeStamp().after( rhs.getTimeStamp())){
+                    return -1;
+                }
+                if (lhs.getTimeStamp().before( rhs.getTimeStamp())){
+                    return 1;
+                }
+                return 0;
+            }
+        });
+        //return sorted_songs;
+    }
+
+}

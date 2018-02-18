@@ -52,7 +52,7 @@ public class SongsFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song s = (Song) parent.getAdapter().getItem(position);
-                if(s.favorite != -1) {
+                if(s.getFavorite() != -1) {
                     ((MainActivity) getActivity()).playSelectedSong(s);
                     updateSongUI(s);
                     ((MainActivity) getActivity()).songLoaded = true;

@@ -58,6 +58,18 @@ public class Play {
         time = new Timestamp(miliTime);
     }
 
+   /* private void setLastLocation() {
+        if (ContextCompat.checkSelfPermission(activity,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(activity,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        location = new Location("dummy");//mFusedLocationClient.getLastLocation().getResult();
+    }*/
 
     private static Clock getClock() {
         return clock;

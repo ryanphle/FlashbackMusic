@@ -41,7 +41,7 @@ public class GetLocationService extends Service {
         Log.i("RawService: ", "  on handle intent ");
 
 
-        if (song != null) {
+        //if (song != null) {
 
             Log.i("RawService: ", "  on handle intent ");
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
@@ -74,7 +74,7 @@ public class GetLocationService extends Service {
                         }
                     });
 
-        }
+       // }
 
     }
 
