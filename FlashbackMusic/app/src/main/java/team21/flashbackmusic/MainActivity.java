@@ -151,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
     private GetLocationService getLocationService;
     private boolean isBound;
     private boolean enterFlash = false;
+    private boolean initialEnter = false;
 
 
 
@@ -439,11 +440,21 @@ public class MainActivity extends AppCompatActivity {
                 lastLocation = (Location) b.getParcelable("Location");
                 Song song = (Song)b.getParcelable("Song");
                 if(!enterFlash) {
-                    storePlayInformation(song);
-                    Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                    if(!initialEnter) {
+                        storePlayInformation(song);
+                        Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                    }
+                    else{
+                        enterFlash = false;
+                        initialEnter = false;
+                        Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
+                        initialFragSetup(frag);
+
+                    }
                 }
                 else{
                     enterFlash = false;
+                    initialEnter = false;
                     Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
                     initialFragSetup(frag);
 
@@ -483,6 +494,7 @@ public class MainActivity extends AppCompatActivity {
 
             if(frag == FLASHBACK_FRAG) {
                 enterFlash = true;
+                initialEnter = true;
 
                 getLocationService.getLocation(songs.get(0));
 
@@ -491,7 +503,15 @@ public class MainActivity extends AppCompatActivity {
                 );
             }
             else{
-                initialFragSetup(frag);
+                //initialFragSetup(frag);
+                enterFlash = false;
+                initialEnter = true;
+
+                getLocationService.getLocation(songs.get(0));
+
+                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
+                        locationReceiver, new IntentFilter("LastLocation")
+                );
             }
 
         }
