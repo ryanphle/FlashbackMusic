@@ -37,7 +37,7 @@ public class AccessSongsTest {
     }
 
     public void songTest(){
-        Song song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes());
+        Song song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
         assertEquals(song.getName(),"hey");
         assertEquals(song.getArtist(),"hello");
         assertEquals(song.getUri(),Uri.parse("android.resource://team21.flashbackmusic/2131558400"));
@@ -45,7 +45,7 @@ public class AccessSongsTest {
     }
 
     public void albumTest(){
-        Song song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes());
+        Song song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(),"album");
         List<Song> albumSongs= new ArrayList<Song>();
         albumSongs.add(song);
         Album album = new Album("album","hello","byte".getBytes());

@@ -1,21 +1,29 @@
 package team21.flashbackmusic;
 
+import android.location.Address;
+import android.location.Location;
 import android.os.Parcelable;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.net.Uri;
+
+import java.sql.Timestamp;
+import java.util.Locale;
 
 /**
  * Created by petternarvhus on 07/02/2018.
  */
 
 public class Song implements Parcelable {
-    String name;
-    String artist;
-    String album;
-    byte[] img;
-    Uri uri;
-
+    private String name;
+    private String artist;
+    private String album;
+    private byte[] img;
+    private Uri uri;
+    private int score;
+    private int favorite;
+    private Timestamp timeStamp;
+    private Address location;
 
     public Song(String name, String artist,Uri uri, byte[] img, String album){
         this.name = name;
@@ -23,6 +31,10 @@ public class Song implements Parcelable {
         this.img = img;
         this.uri = uri;
         this.album = album;
+        this.score = 0;
+        this.favorite = 0;
+        this.timeStamp = new Timestamp(0);
+        this.location = new Address(Locale.getDefault());
     }
 
     public String getName(){
@@ -34,8 +46,28 @@ public class Song implements Parcelable {
     public String getArtist(){
         return this.artist;
     }
+    public int getFavorite() {
+        return this.favorite;
+    }
+    public Timestamp getTimeStamp(){
+        return this.timeStamp;
+    }
+    public Address getLocation() {
+        return this.location;
+    }
 
+    public void setLocation(Address location) {
+        this.location = location;
+    }
     public String getAlbum() { return this.album; }
+    public int getScore() { return this.score; }
+    public void setScore(int score) {this.score = score; }
+    public  void setFavorite(int favorite) {
+        this.favorite = favorite;
+    }
+    public void setTimeStamp(Timestamp timeStemp){
+        this.timeStamp = timeStemp;
+    }
 
     @Override
     public int describeContents() {
@@ -47,6 +79,12 @@ public class Song implements Parcelable {
 
     }
 
-    public Uri getUri(){return this.uri;}
+    public Uri getUri() {return this.uri;}
+
+
+
+    public boolean equals(Song s) {
+        return s.getName().equals(name);
+    }
 
 }

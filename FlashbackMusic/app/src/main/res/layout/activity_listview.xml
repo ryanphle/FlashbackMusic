@@ -4,69 +4,100 @@
     android:layout_width="fill_parent"
     android:orientation="vertical">
 
-    <TableRow
-        android:id="@+id/song_name_row"
+    <LinearLayout
+        android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="20"
-        android:orientation="vertical">
-        <TextView
-            android:id="@+id/song_text"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:layout_gravity="left"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_weight="10">
+            <TableRow
+                android:id="@+id/song_name_row"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="19"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/song_text"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:layout_gravity="left"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="#2b2b2a"
+                    android:lines="1"
+                    android:ellipsize="end"
+                    android:layout_marginTop="5dp">
+                </TextView>
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="15"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+                    <TextView
+                        android:id="@+id/artist_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="left"
+                        android:textSize="15sp"
+                        android:padding="3dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5sp"
+                        android:lines="1"
+                        android:ellipsize="end">
+                    </TextView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.5">
+                    <TextView
+                        android:id="@+id/album_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:layout_gravity="left"
+                        android:padding="3dp"
+                        android:layout_marginRight="5sp"
+                        android:lines="1"
+                        android:ellipsize="end">
+                    </TextView>
+                </LinearLayout>
+            </TableRow>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginLeft="10dp"
-            android:textColor="#2b2b2a"
-            android:lines="1"
-            android:ellipsize="end">
-        </TextView>
-    </TableRow>
-
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="15"
-        android:orientation="vertical">
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-                <TextView
-                    android:id="@+id/artist_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="left"
-                    android:textSize="15sp"
-                    android:padding="5dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginRight="5sp"
-                    android:lines="1"
-                    android:ellipsize="end">
-                </TextView>
-            </LinearLayout>
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5">
-                <TextView
-                    android:id="@+id/album_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:textSize="15sp"
-                    android:layout_gravity="left"
-                    android:padding="5dp"
-                    android:layout_marginRight="5sp"
-                    android:lines="1"
-                    android:ellipsize="end">
-                </TextView>
-            </LinearLayout>
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_marginRight="5dp">
+            <Button
+                android:id="@+id/likeDislikeButton"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginRight="10dp"
+                android:focusable="false"
+                android:layout_gravity="center_vertical"
+                android:focusableInTouchMode="false"
+                android:background="@drawable/ic_neutral"/>
+        </LinearLayout>
 
 
-    </TableRow>
+    </LinearLayout>
+
 </TableLayout>
