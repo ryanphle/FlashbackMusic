@@ -52,11 +52,14 @@ public class SongsFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song s = (Song) parent.getAdapter().getItem(position);
-                ((MainActivity)getActivity()).playSelectedSong(s);
-                updateSongUI(s);
-                ((MainActivity)getActivity()).songLoaded = true;
-                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).SONG_FRAG;
-                ((MainActivity)getActivity()).currSong = s;
+                if(s.favorite != -1) {
+                    ((MainActivity) getActivity()).playSelectedSong(s);
+                    updateSongUI(s);
+                    ((MainActivity) getActivity()).songLoaded = true;
+                    ((MainActivity) getActivity()).songPlayingFrag = ((MainActivity) getActivity()).SONG_FRAG;
+                    ((MainActivity) getActivity()).currSong = s;
+                }
+
             }
         });
 
@@ -64,7 +67,7 @@ public class SongsFragment extends Fragment {
     }
 
    public void updateSongUI(Song s) {
-        Log.i("Song update: ", s.getName());
+       // Log.i("Song update: ", s.getName());
 
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);

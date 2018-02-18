@@ -15,6 +15,7 @@ public class Song implements Parcelable {
     private String album;
     private byte[] img;
     private Uri uri;
+    int favorite;
 
 
     public Song(String name, String artist,Uri uri, byte[] img, String album){
@@ -23,6 +24,7 @@ public class Song implements Parcelable {
         this.img = img;
         this.uri = uri;
         this.album = album;
+        this.favorite = 0;
     }
 
     public String getName(){
@@ -48,5 +50,17 @@ public class Song implements Parcelable {
     }
 
     public Uri getUri(){return this.uri;}
+
+    public int getFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(int state) {
+        favorite = state;
+    }
+
+    public boolean equals(Song s) {
+        return s.getName().equals(name);
+    }
 
 }
