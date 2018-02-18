@@ -279,6 +279,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
 
 
+
+
             }
         };
 
