@@ -44,28 +44,19 @@ public class LocationService extends IntentService {
 
 
 
-    @Override
-    public int onStartCommand(Intent intent,int flags, int startId){
-        Toast.makeText(getBaseContext(), " Service start ", Toast.LENGTH_SHORT).show();
-        return super.onStartCommand(intent,flags, startId);
-    }
 
 
 
-    @Override
-    public void onDestroy(){
-        Toast.makeText(getApplicationContext(),"service stopped",Toast.LENGTH_SHORT).show();
-        super.onDestroy();
-    }
-
-
-    private static void sendMessageBack(Context context,Location L){
-        Intent intent = new Intent("LastLocation");
+    private static void sendMessageBack(Context context,Location L, Intent intent){
+        Intent i = new Intent("LastLocation");
+        Bundle bSong = intent.getBundleExtra("Song");
         Bundle b = new Bundle();
         b.putParcelable("Location", L);
-        intent.putExtra("Location",b);
+        b.putParcelable("Song",bSong.getParcelable("Song"));
+        i.putExtra("Location",b);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
+
     /**
      * Starts this service to perform action Foo with the given parameters. If
      * the service is already performing a task this action will be queued.
@@ -98,8 +89,28 @@ public class LocationService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+
+        //Log.i("RawService: ", "  on handle intent first ");
+
+
+        /*if (intent != null) {
+            final String action = intent.getAction();
+            if (ACTION_FOO.equals(action)) {
+                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
+                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                handleActionFoo(param1, param2);
+            } else if (ACTION_BAZ.equals(action)) {
+                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
+                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
+                handleActionBaz(param1, param2);
+            }
+        }*/
+
+        final Intent i = intent;
+
         if (intent != null) {
 
+            //Log.i("RawService: ", "  on handle intent ");
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -108,7 +119,7 @@ public class LocationService extends IntentService {
                             android.Manifest.permission.ACCESS_COARSE_LOCATION)
                             != PackageManager.PERMISSION_GRANTED) {
 
-                Toast.makeText(getApplicationContext(), "Permission Denied for location", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Permission Denied for location", Toast.LENGTH_SHORT).show();
 
             }
 
@@ -120,16 +131,17 @@ public class LocationService extends IntentService {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
                                 currLocation = location;
-                                Toast.makeText(getApplicationContext(), "location" + location.toString(), Toast.LENGTH_SHORT).show();
-                                Log.i("Raw Songs name: ", "  raw location: "+ location.toString());
-                                Log.i("Raw Songs name: ", "  curr location: "+ currLocation.toString());
-                                sendMessageBack(getApplicationContext(),currLocation);
+                                //Toast.makeText(getApplicationContext(), "location" + location.toString(), Toast.LENGTH_SHORT).show();
+                                //Log.i("RawService: ", "  raw location: "+ location.toString());
+                                //Log.i("RawService: ", "  curr location: "+ currLocation.toString());
+                                sendMessageBack(getApplicationContext(),currLocation, i);
 
                             }
                         }
                     });
 
         }
+
     }
 
     /**

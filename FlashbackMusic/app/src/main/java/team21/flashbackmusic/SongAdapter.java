@@ -80,7 +80,6 @@ public class SongAdapter extends ArrayAdapter<Song>{
 
                         Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.getName(),-1)));
 
-
                         //Log.d("currentSong", s.getName());
 
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_dislike);
