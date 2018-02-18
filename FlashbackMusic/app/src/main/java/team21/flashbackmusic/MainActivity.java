@@ -1,9 +1,17 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.os.Parcelable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
@@ -15,6 +23,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -81,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
     protected SharedPreferences.Editor like_editor;
 
     private int null_title_offset = 0;
+
+    Location lastLocation;
+
+    private BroadcastReceiver locationReceiver;
 
 
     @Override
@@ -258,6 +271,36 @@ public class MainActivity extends AppCompatActivity {
         //frag = 1;
         initialFragSetup(frag);
 
+        locationReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle b = intent.getBundleExtra("Location");
+                lastLocation = (Location) b.getParcelable("Location");
+                Log.i("Raw MainActivity ", "  location in main : "+ lastLocation.toString());
+
+
+            }
+        };
+
+        /*
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)!=
+                        PackageManager.PERMISSION_GRANTED){
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},100);
+            Log.d("test1","in");
+            return;
+        }
+*/
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
+
 
 
 
@@ -415,6 +458,14 @@ public class MainActivity extends AppCompatActivity {
         currSongIdx = index;
         mediaPlayer.reset();
         loadMedia(s);
+
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
+
         mediaPlayer.start();
     }
 
@@ -488,6 +539,13 @@ public class MainActivity extends AppCompatActivity {
 
             return;
         }
+
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
 
         loadMedia(songList.get(index));
         mediaPlayer.start();
