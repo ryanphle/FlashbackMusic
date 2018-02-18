@@ -42,7 +42,7 @@ public class Play {
         setTimeOfDay();
         setTime();
         this.location = location;
-        Log.i("Play_location", location.toString());
+        //Log.i("Play_location", location.toString());
     }
 
     public static LocalDateTime now() {
