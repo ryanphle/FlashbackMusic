@@ -218,10 +218,10 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer.reset();
                             frag = FLASHBACK_FRAG;
 
-                            //loadMedia(random_songs.get(flash_index));
-                            //mediaPlayer.start();
+                            loadMedia(random_songs.get(flash_index));
+                            mediaPlayer.start();
 
-                            newSong(flash_index, FLASHBACK_FRAG,true,false);
+                            //newSong(flash_index, FLASHBACK_FRAG,true,false);
 
                             //transaction.remove(random_fragmentFlashback);
 
@@ -251,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
         nextButton = (Button) findViewById(R.id.next);
         prevButton = (Button) findViewById(R.id.prev);
         stopButton = (Button) findViewById(R.id.play);
+
 
 
 
@@ -391,9 +392,9 @@ public class MainActivity extends AppCompatActivity {
 
 
             random_setFlashbackFragment();
-            //loadMedia(random_songs.get(flash_index));
-            //mediaPlayer.start();
-            newSong(0,FLASHBACK_FRAG,true,false);
+            loadMedia(random_songs.get(flash_index));
+            mediaPlayer.start();
+            //newSong(0,FLASHBACK_FRAG,true,false);
 
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
