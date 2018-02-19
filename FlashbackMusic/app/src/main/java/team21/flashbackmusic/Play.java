@@ -13,6 +13,8 @@ import com.google.android.gms.location.LocationServices;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -31,17 +33,18 @@ public class Play {
     private String timeOfDay;
     private Timestamp time;
     private transient Context activity;
-    private final LocalTime morning = LocalTime.parse("08:00:00");
-    private final LocalTime afternoon = LocalTime.parse("16:00:00");
+    private LocalDateTime morning;
+    private LocalDateTime afternoon;
 
     public Play(){};
 
-    public Play( Context activity, Location location ) {
+
+    public Play( Context activity, Location location, Timestamp time ) {
 
         this.activity = activity;
-        setTimeOfDay();
-        setTime();
+        this.time = time;
         this.location = location;
+        setTimeOfDay(time);
         Log.i("Play_location", location.toString());
     }
 
@@ -81,11 +84,18 @@ public class Play {
 
     public Timestamp getTime() { return time; }
 
-    private void setTimeOfDay() {
-        LocalTime currentTime = now().toLocalTime();
-        if (currentTime.isBefore(morning)) {
+    private void setTimeOfDay(Timestamp time) {
+       long miliTime = time.getTime();
+       Calendar calender = Calendar.getInstance();
+       TimeZone tz = calender.getTimeZone();
+       LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(time.getTime()), tz.toZoneId());
+       Log.i("hour", dateTime.getHour());
+       morning = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 8, 0, 0);
+       afternoon = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 16, 0, 0);
+
+        if (dateTime.isBefore(morning)) {
             this.timeOfDay = "Night";
-        } else if (currentTime.isBefore(afternoon)) {
+        } else if (dateTime.isBefore(afternoon)) {
             this.timeOfDay = "Morning";
         } else {
             this.timeOfDay = "Afternoon";
