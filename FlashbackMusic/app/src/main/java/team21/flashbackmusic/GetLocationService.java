@@ -43,13 +43,6 @@ public class GetLocationService extends Service {
 
     public void getLocation(Song s){
         final Song song = s;
-
-        //Log.i("RawService: ", "  on handle intent ");
-
-
-        //if (song != null) {
-
-            //Log.i("RawService: ", "  on handle intent ");
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -70,11 +63,7 @@ public class GetLocationService extends Service {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
                                 currLocation = location;
-                                //Toast.makeText(getApplicationContext(), "location" + location.toString(), Toast.LENGTH_SHORT).show();
-                                //Log.i("RawService: ", "  raw location: "+ location.toString());
-                                //Log.i("RawService: ", "  curr location: "+ currLocation.toString());
                                 sendMessageBack(getApplicationContext(),currLocation, song);
-
 
                             }
                         }
@@ -94,19 +83,15 @@ public class GetLocationService extends Service {
 
     private static void sendMessageBack(Context context, Location L, Song song){
         Intent i = new Intent("LastLocation");
-        //Bundle bSong = intent.getBundleExtra("Song");
         Bundle b = new Bundle();
         b.putParcelable("Location", L);
         b.putParcelable("Song",song);
         i.putExtra("Location",b);
-        //Log.i("RawService: ", "  sending message: ");
         LocalBroadcastManager.getInstance(context).sendBroadcast(i);
     }
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId){
-        //Toast.makeText(getBaseContext(), " Service start ", Toast.LENGTH_SHORT).show();
-        //Log.i("RawService: ", "  service start");
         return super.onStartCommand(intent,flags, startId);
     }
 
@@ -114,7 +99,6 @@ public class GetLocationService extends Service {
 
     @Override
     public void onDestroy(){
-        //Toast.makeText(getApplicationContext(),"service stopped",Toast.LENGTH_SHORT).show();
         super.onDestroy();
     }
 

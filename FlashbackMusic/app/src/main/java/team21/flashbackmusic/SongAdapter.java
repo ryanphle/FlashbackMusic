@@ -68,7 +68,6 @@ public class SongAdapter extends ArrayAdapter<Song>{
                         ((MainActivity)context).like_editor.apply();
                         Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.getName(),-1)));
 
-
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_like);
                     }
                     else if (s.getFavorite() == 1) {
@@ -79,8 +78,6 @@ public class SongAdapter extends ArrayAdapter<Song>{
                         ((MainActivity)context).like_editor.apply();
 
                         Log.d("currentSong", Integer.toString(((MainActivity)context).like_setting.getInt(s.getName(),-1)));
-
-                        //Log.d("currentSong", s.getName());
 
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_dislike);
                         if (((MainActivity)context).mediaPlayer.isPlaying() && s.equals(currentSong)) {

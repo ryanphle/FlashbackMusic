@@ -48,14 +48,6 @@ public class AlbumsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 a = (Album) parent.getAdapter().getItem(position);
                 Song s = a.getSongs().get(0);
-                /*((MainActivity)getActivity()).playSelectedSong(s);
-                updateSongUI(s);
-                ((MainActivity)getActivity()).currAlbum = a;
-                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).ALBUM_FRAG;
-                ((MainActivity)getActivity()).album_index = 0;
-                ((MainActivity)getActivity()).currSongIdx = 0;
-                ((MainActivity)getActivity()).songLoaded = true;
-                ((MainActivity)getActivity()).currSong = s;*/
 
                 ((MainActivity)getActivity()).songLoaded = true;
                 ((MainActivity)getActivity()).currAlbum = a;
@@ -78,18 +70,6 @@ public class AlbumsFragment extends Fragment {
     public void updateSongUI(Song s) {
         Log.i("Song update: ", s.getName());
 
-        /*if (s==null) return;
-
-        ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
-        TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
-        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
-
-        Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
-        albumImage.setImageBitmap(bmp);
-
-        songName.setText(s.getName());
-        String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
-        artistAlbumInfo.setText(artistAndAlbumStr);*/
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
         TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
