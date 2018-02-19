@@ -675,6 +675,8 @@ public class MainActivity extends AppCompatActivity {
 
         currSong = songList.get(index);
 
+        storePlayInformation(currSong);
+
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
         if (currSong.getFavorite() == -1) {
@@ -893,11 +895,7 @@ public class MainActivity extends AppCompatActivity {
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
-
-
-        //sort_getLocation();
         sort_songs();
-        //ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
@@ -942,25 +940,30 @@ public class MainActivity extends AppCompatActivity {
         Play play;
         Gson gson = new Gson();
 
-        //ArrayList<Song> new_songs_list = new ArrayList<Song>();
-        //Map<String, ?> allEntries = sharedPreferences.getAll();
-
-        /*
-         public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
-         Gson gson = new Gson();
-         ArrayList<Song> sorted_songs = new ArrayList<Song>();
-         Map<String, ?> allEntries = sharedPreferences.getAll();
-         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-         String json = sharedPreferences.getString(entry.getKey(), "");
-         flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
-         }*/
         sorted_songs = new ArrayList<Song>();
 
+        int sorted_song_index = 0;
         for(int i =0; i< songs.size();i++){
             if(songs.get(i).getFavorite() == -1)
                 continue;
 
+            String json = sharedPreferences.getString(songs.get(i).getName(), "");
+            play = gson.fromJson(json, Play.class);
             sorted_songs.add(songs.get(i));
+            if (play != null) {
+                sorted_songs.get(sorted_song_index).setTimeStamp(play.getTime());
+                List<Address> myList = new ArrayList<>();
+
+                try {
+                    Geocoder myLocation = new Geocoder(this, Locale.getDefault());
+                    myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(), 1);
+                }catch (IOException e) {
+
+                }
+                Address address = (Address) myList.get(0);
+                sorted_songs.get(sorted_song_index).setLocation(address);
+            }
+            sorted_song_index++;
         }
 
         for (int i = 0; i < sorted_songs.size(); i++) {
@@ -971,16 +974,11 @@ public class MainActivity extends AppCompatActivity {
 
             int score = 0;
 
-            Log.i("Raw Songs name: ",lastLocation.toString());
-
-            //Log.i("Raw Songs name: ", play.getLocation().toString());
             // 304.8 m = 1000 foot
-            if(play != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+            if(play != null && lastLocation!= null&&play.getLocation().distanceTo(lastLocation)  < 304.8 ){
                 score++;
             }
 
-            //sorted_songs.get(i).setTimeStamp(play.getTime());
-            //Timestamp tsTemp = songs.get(i).getTimeStamp();
             if (play != null) {
                 Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(play.getTime().getTime());
@@ -1029,7 +1027,6 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
         });
-        //return sorted_songs;
     }
 
 }
