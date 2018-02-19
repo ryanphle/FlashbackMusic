@@ -17,9 +17,12 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
+import static java.util.Calendar.FRIDAY;
+import static java.util.Calendar.SUNDAY;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -121,38 +124,67 @@ public class MainActivityTest {
         }
     }
 
-    @UiThreadTest
-    @Test
-    public void initialAlbumsFragSetupTest(){
-
-        mainActivity.getActivity().initialFragSetup(1);
-        List<Fragment> fragments = mainActivity.getActivity().getSupportFragmentManager().getFragments();
-        for (Fragment fragment: fragments){
-            if(fragment.isVisible()){
-                assertEquals("songs",fragment.getTag());
-            }
-        }
-    }
-
-    @UiThreadTest
-    @Test
-    public void initialFlashFragSetupTest(){
-
-        mainActivity.getActivity().initialFragSetup(2);
-        List<Fragment> fragments = mainActivity.getActivity().getSupportFragmentManager().getFragments();
-        for (Fragment fragment: fragments){
-            if(fragment.isVisible()){
-                assertEquals("songs",fragment.getTag());
-            }
-        }
-    }
-
     @Test
     public void numberOfSongsTest(){
         Field[] fields = R.raw.class.getFields();
         assertEquals(songs.size(),fields.length);
     }
 
+    @Test
+    public void sortSongsTest(){
+        List<Song> songs = new ArrayList<>();
+
+        Song song1 = new Song("song1", "artist1", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album1");
+        song1.setFavorite(1);
+        songs.add(song1);
+
+        final Location location = new Location("mockLocation");
+        location.setLatitude(50);
+        location.setLongitude(20);
+
+        Timestamp time = new Timestamp(100000);
+        mainActivity.getActivity().storePlayInformation(song1,location,"test",time);
 
 
+        Song song2 = new Song("song2", "artist2", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album2");
+        song2.setFavorite(1);
+        songs.add(song2);
+        location.setLatitude(30);
+        location.setLongitude(20);
+
+        time = new Timestamp(100000);
+        mainActivity.getActivity().storePlayInformation(song2,location,"test",time);
+
+
+        Song song3 = new Song("song3", "artist3", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album3");
+        song1.setFavorite(1);
+        songs.add(song3);
+        location.setLatitude(30);
+        location.setLongitude(20);
+
+        time = new Timestamp(59235000);
+        mainActivity.getActivity().storePlayInformation(song3,location,"test",time);
+
+
+        Song song4 = new Song("song4", "artist4", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album4");
+        song1.setFavorite(0);
+        songs.add(song4);
+        location.setLatitude(30);
+        location.setLongitude(20);
+
+        time = new Timestamp(59235000);
+        mainActivity.getActivity().storePlayInformation(song3,location,"test",time);
+
+
+        location.setLatitude(50);
+        location.setLongitude(20);
+        int currentDay = SUNDAY;
+        int currentHour = 22;
+        mainActivity.getActivity().sort_songs(songs,"test",currentDay,currentHour,location);
+
+        assertEquals(song1.getName(),mainActivity.getActivity().getSortedSongs().get(0).getName());
+        assertEquals(song2.getName(),mainActivity.getActivity().getSortedSongs().get(1).getName());
+        assertEquals(song3.getName(),mainActivity.getActivity().getSortedSongs().get(2).getName());
+        assertEquals(song4.getName(),mainActivity.getActivity().getSortedSongs().get(3).getName());
+    }
 }

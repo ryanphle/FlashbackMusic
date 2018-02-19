@@ -122,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
     private Location lastLocation;
+    private int currentDay;
+    private int currentHour;
+    private Calendar calendar;
 
 
     //public Location lastLocation;
@@ -169,6 +172,9 @@ public class MainActivity extends AppCompatActivity {
         sorted_songs = new ArrayList<>();
         fragmentManager = getSupportFragmentManager();
         songLoaded = false;
+        calendar = Calendar.getInstance();
+        currentDay = calendar.get(Calendar.DAY_OF_WEEK);
+        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
 
         like_setting = getSharedPreferences("like_setting",MODE_PRIVATE);
         like_editor = like_setting.edit();
@@ -525,6 +531,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else if (frag == ALBUM_FRAG){
             initTransaction.hide(fragmentSong);
+            Log.i("InitFrag", "" + fragmentSong.isVisible());
             //initTransaction.hide(random_fragmentFlashback);
             bottomNavigationView.getMenu().getItem(ALBUM_FRAG).setChecked(true);
             initTransaction.addToBackStack("albums");
@@ -924,10 +931,17 @@ public class MainActivity extends AppCompatActivity {
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
-        sort_songs();
+        updateTime();
+        sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
+    }
+
+    private void updateTime(){
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        currentDay = calendar.get(Calendar.DAY_OF_WEEK);
+        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
     }
 
     private void setAlbumFragment() {
@@ -963,9 +977,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void sort_songs() {
+    public void sort_songs(List<Song> songs,String prefName, int currentDay, int currentHour, Location location ) {
 
-        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(prefName, MODE_PRIVATE);
         Play play;
         Gson gson = new Gson();
         boolean AnySongsPlayed = false;
@@ -1020,7 +1034,7 @@ public class MainActivity extends AppCompatActivity {
 
             //Log.i("Raw Songs name: ", play.getLocation().toString());
             // 304.8 m = 1000 foot
-            if(play != null && lastLocation!=null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+            if(play != null && location!=null && play.getLocation().distanceTo(location)  < 304.8 ){
                 score++;
             }
 
@@ -1031,9 +1045,6 @@ public class MainActivity extends AppCompatActivity {
                 int dayofWeek = c.get(Calendar.DAY_OF_WEEK);
                 int hour = c.get(Calendar.HOUR_OF_DAY);
 
-                c.setTimeInMillis(System.currentTimeMillis());
-                int currentDay = c.get(Calendar.DAY_OF_WEEK);
-                int currentHour = c.get(Calendar.HOUR_OF_DAY);
                 if (hour <= 10 && hour > 2 && currentHour <= 10 && currentHour > 2) {
                     score++;
                 } else if (hour <= 18 && hour > 10 && currentHour <= 18 && currentHour > 10) {
@@ -1072,6 +1083,9 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
         });
+    }
+    public List<Song> getSortedSongs(){
+        return sorted_songs;
     }
 
 }
