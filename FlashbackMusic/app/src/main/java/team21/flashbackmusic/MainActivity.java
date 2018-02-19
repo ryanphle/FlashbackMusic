@@ -86,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
 
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
-    private ArrayList<Song> songs;
-    private Fragment fragmentSong;
-    private Fragment fragmentAlbums;
+    protected ArrayList<Song> songs;
+    protected Fragment fragmentSong;
+    protected Fragment fragmentAlbums;
     private FragmentManager fragmentManager;
     private FusedLocationProviderClient mFusedLocationClient;
-    private BottomNavigationView bottomNavigationView;
+    protected BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
 
 
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
     protected Button stopButton;
     protected Button prevButton;
     protected Button nextButton;
-    private static int frag = 0;
+    protected static int frag = 0;
     protected static int songPlayingFrag = 0;
     protected static int currSongIdx = 0;
     protected static Album currAlbum;
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Song> random_songs;
     private Fragment random_fragmentFlashback;
     private ArrayList<Song> sorted_songs;
-    private Fragment fragmentFlashback;
+    protected Fragment fragmentFlashback;
 
     protected static final int SONG_FRAG = 0;
     protected static final int ALBUM_FRAG = 1;
