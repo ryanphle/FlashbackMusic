@@ -71,26 +71,7 @@ public class SongsFragment extends Fragment {
 
    public void updateSongUI(Song s) {
 
-        adapter.notifyDataSetChanged();
-
-        /*ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
-        TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
-        artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
-        artistAlbumInfo.setSelected(false);
-
-        artistAlbumInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                scroll(v);
-            }
-        });
-
-        Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
-        albumImage.setImageBitmap(bmp);
-
-        songName.setText(s.getName());
-        String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
-        artistAlbumInfo.setText(artistAndAlbumStr);*/
+       adapter.notifyDataSetChanged();
        ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
        TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
