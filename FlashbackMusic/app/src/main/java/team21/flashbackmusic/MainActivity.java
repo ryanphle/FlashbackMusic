@@ -626,7 +626,6 @@ public class MainActivity extends AppCompatActivity {
             List<Address> myList = new ArrayList<>();
 
             try{
-
                 Geocoder myLocation = new Geocoder(this, Locale.getDefault());
                 myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(),1);
 
@@ -971,11 +970,13 @@ public class MainActivity extends AppCompatActivity {
 
             int score = 0;
 
-            Log.i("Raw Songs name: ",lastLocation.toString());
+            if (lastLocation != null) {
+                Log.i("Raw Songs name: ",lastLocation.toString());
+            }
 
             //Log.i("Raw Songs name: ", play.getLocation().toString());
             // 304.8 m = 1000 foot
-            if(play != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+            if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
                 score++;
             }
 
