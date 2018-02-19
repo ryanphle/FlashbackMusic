@@ -122,6 +122,8 @@ public class MainActivity extends AppCompatActivity {
     protected static final int FLASHBACK_FRAG = 2;
     private Location lastLocation;
 
+    private boolean locationExist = false;
+
 
     //public Location lastLocation;
     //BroadcastReceiver locationReceiver;
@@ -151,6 +153,11 @@ public class MainActivity extends AppCompatActivity {
     private GetLocationService getLocationService;
     private boolean isBound;
     private boolean enterFlash = false;
+    private boolean goFlash = false;
+
+    private FragmentTransaction initTransaction;
+    private String tag = "";
+    private android.support.v4.app.FragmentTransaction transaction;
 
 
 
@@ -243,8 +250,8 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                String tag = "";
-                final android.support.v4.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+                transaction = fragmentManager.beginTransaction();
 
                 switch(frag) {
                     case SONG_FRAG:
@@ -257,6 +264,7 @@ public class MainActivity extends AppCompatActivity {
                     case FLASHBACK_FRAG:
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
+                            locationExist = false;
                             mediaPlayer.reset();
                             loadMedia(songs.get(index));
                             transaction.remove(fragmentFlashback);
@@ -272,7 +280,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                         prevButton.setVisibility(View.VISIBLE);
                         transaction.show(fragmentSong);
-                        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        tag = "songs";
+                        //transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                         frag = SONG_FRAG;
                         if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
                         break;
@@ -282,9 +291,10 @@ public class MainActivity extends AppCompatActivity {
                             stopButton.setBackgroundResource(R.drawable.ic_stopping);
                         }
                         frag = ALBUM_FRAG;
+                        tag = "albums";
                         prevButton.setVisibility(View.VISIBLE);
                         transaction.show(fragmentAlbums);
-                        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        //transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
 
                         if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
                         break;
@@ -305,13 +315,17 @@ public class MainActivity extends AppCompatActivity {
 
                             setFlashbackFragment();
 
-                            newSong(flash_index, FLASHBACK_FRAG,true,false);
+                            /*
+                            if(locationExist) {
+                                newSong(flash_index, FLASHBACK_FRAG, true, false);
 
 
-                            prevButton.setVisibility(View.INVISIBLE);
-                            stopButton.setBackgroundResource(R.drawable.ic_playing);
-                            transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
-                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                                prevButton.setVisibility(View.INVISIBLE);
+                                stopButton.setBackgroundResource(R.drawable.ic_playing);
+                                transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
+                                tag = "flash_songs";
+                            }*/
+                            //transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 
                         }
                         frag = FLASHBACK_FRAG;
@@ -319,9 +333,14 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
 
-                transaction.commit();
-                transaction.addToBackStack(tag);
-                return true;
+
+                if(frag != FLASHBACK_FRAG) {
+                    transaction.addToBackStack(tag);
+                    transaction.commit();
+                }
+                    //transaction.addToBackStack(tag);
+                    return true;
+
             }
         });
 
@@ -362,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     mediaPlayer.reset();
-                    if (flash_index == res_uri.size() - 1)
+                    if (flash_index == sorted_songs.size() - 1)
                         flash_index = 0;
                     else
                         flash_index++;
@@ -439,8 +458,29 @@ public class MainActivity extends AppCompatActivity {
                 lastLocation = (Location) b.getParcelable("Location");
                 Song song = (Song)b.getParcelable("Song");
                 if(!enterFlash) {
-                    storePlayInformation(song);
-                    Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                    if(goFlash == true){
+
+                        locationExist = true;
+                        sort_songs();
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelableArrayList("songs", sorted_songs);
+                        fragmentFlashback.setArguments(bundle);
+
+                        newSong(flash_index, FLASHBACK_FRAG, true, false);
+
+
+                        prevButton.setVisibility(View.INVISIBLE);
+                        stopButton.setBackgroundResource(R.drawable.ic_playing);
+                        transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
+                        tag = "flash_songs";
+                        transaction.addToBackStack(tag);
+                        //transaction.commit();
+
+
+                    }else {
+                        storePlayInformation(song);
+                        Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                    }
                 }
                 else{
                     enterFlash = false;
@@ -509,7 +549,7 @@ public class MainActivity extends AppCompatActivity {
         setSongFragment();
         setAlbumFragment();
 
-        FragmentTransaction initTransaction = getSupportFragmentManager().beginTransaction();
+        initTransaction = getSupportFragmentManager().beginTransaction();
         initTransaction.add(R.id.main_container, fragmentSong, "songs");
         initTransaction.addToBackStack("songs");
         initTransaction.add(R.id.main_container, fragmentAlbums, "albums");
@@ -552,7 +592,8 @@ public class MainActivity extends AppCompatActivity {
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
             initTransaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
-            initTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+            initTransaction.addToBackStack("flash_songs");
+            //initTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
             bottomNavigationView.getMenu().getItem(FLASHBACK_FRAG).setChecked(true);
 
         }
@@ -698,7 +739,7 @@ public class MainActivity extends AppCompatActivity {
                         newSong(this.album_index,mode,next,update);
                         break;
                     case FLASHBACK_FRAG:
-                        if (this.flash_index == res_uri.size() - 1)
+                        if (this.flash_index == sorted_songs.size() - 1)
                             this.flash_index = 0;
                         else
                             this.flash_index++;
@@ -728,7 +769,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case FLASHBACK_FRAG:
                     if (this.flash_index == 0)
-                        this.flash_index = res_uri.size() - 1;
+                        this.flash_index = sorted_songs.size() - 1;
                     else
                         this.flash_index--;
                     newSong(this.flash_index,mode,next,update);
@@ -893,14 +934,28 @@ public class MainActivity extends AppCompatActivity {
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
+       if(locationExist == false) {
+           goFlash = true;
 
+           sort_getLocation();
+           LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
+                   locationReceiver, new IntentFilter("LastLocation"));
+       }
+       else{
+           sort_songs();
+           //ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
 
-        //sort_getLocation();
-        sort_songs();
+           bundle.putParcelableArrayList("songs", sorted_songs);
+           fragmentFlashback.setArguments(bundle);
+
+       }
+        //sort_songs();
         //ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
 
-        bundle.putParcelableArrayList("songs", sorted_songs);
-        fragmentFlashback.setArguments(bundle);
+        //bundle.putParcelableArrayList("songs", sorted_songs);
+        //fragmentFlashback.setArguments(bundle);
+
+
     }
 
     private void setAlbumFragment() {
@@ -922,9 +977,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void sort_getLocation(){
 
-        enterFlash = true;
+        //enterFlash = true;
 
         getLocationService.getLocation(songs.get(0));
+
 
     }
 
