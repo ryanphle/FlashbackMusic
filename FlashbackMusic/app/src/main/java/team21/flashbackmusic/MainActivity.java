@@ -3,54 +3,36 @@ package team21.flashbackmusic;
 //import android.app.Fragment;
 import android.Manifest;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import android.content.BroadcastReceiver;
-import android.content.Intent;
-import android.content.IntentFilter;
-
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
-import android.os.IBinder;
-import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
 
 import android.support.v4.app.Fragment;
-//import android.app.FragmentManager;
-import android.support.v4.app.FragmentActivity;
+
 import android.support.v4.app.FragmentManager;
-//import android.app.FragmentTransaction;
 import android.support.v4.app.FragmentTransaction;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+
 import android.widget.Button;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
+
 
 
 import java.io.IOException;
@@ -59,19 +41,10 @@ import java.util.Calendar;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.gson.Gson;
 
-import java.util.Arrays;
-import java.util.Collection;
+
 import java.util.Collections;
 import java.util.Comparator;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.gson.Gson;
 
-import java.time.Clock;
-import java.time.ZoneId;
-import java.util.Collection;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -80,7 +53,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -94,9 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
 
-
     private Map<String, Play> flashback_song;
-    private FusedLocationProviderClient myFusedLocationClient;
+    //private FusedLocationProviderClient myFusedLocationClient;
 
     protected static int index = 0;
     protected MediaPlayer mediaPlayer;
@@ -124,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
     //public Location lastLocation;
     //BroadcastReceiver locationReceiver;
-    Intent locationIntent;
+   // Intent locationIntent;
 
 
     protected boolean songLoaded;
@@ -151,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBound;
     private boolean enterFlash = false;
 
+    private LocationManager locationManager;
+    private String locationProvider;
+    private LocationListener locationListener;
 
 
     @Override
@@ -163,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         res_uri = new ArrayList<>();
         random_songs = new ArrayList<>();
 
-        flashback_song = new HashMap<>();
+        //flashback_song = new HashMap<>();
         sorted_songs = new ArrayList<>();
         fragmentManager = getSupportFragmentManager();
         songLoaded = false;
@@ -190,8 +164,10 @@ public class MainActivity extends AppCompatActivity {
 
         //Log.d("Fragment mode", Integer.toString(frag));
 
+        /*
         Intent intent = new Intent(this,GetLocationService.class);
         bindService(intent, serviceConnection,Context.BIND_AUTO_CREATE);
+        */
 
 
 
@@ -412,6 +388,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        /*
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -422,8 +399,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d("test1","ins");
             //return;
         }
-
-
+        */
+/*
         locationReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -443,8 +420,63 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+        */
 
         //while(getLocationService == null){}
+
+        initialFragSetup(frag);
+
+
+
+
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+                lastLocation = location;
+
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        };
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationProvider = LocationManager.GPS_PROVIDER;
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    100);
+            Log.d("test1","ins");
+            return;
+        }
+
+        lastLocation = locationManager.getLastKnownLocation(locationProvider);
+        locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+        String netLocation = LocationManager.NETWORK_PROVIDER;
+
+
+        Log.d("LastLocation",lastLocation.toString());
 
 
 
@@ -465,7 +497,41 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 100: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                            (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                    }
+
+                    lastLocation = locationManager.getLastKnownLocation(locationProvider);
+                    locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+/*
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -495,7 +561,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
+*/
 
     public void initialFragSetup(int frag) {
         setSongFragment();
@@ -570,7 +636,8 @@ public class MainActivity extends AppCompatActivity {
         );
         */
 
-        startLocationService(s);
+        storePlayInformation(s);
+        //startLocationService(s);
 
         mediaPlayer.start();
     }
@@ -588,6 +655,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
     private void startLocationService(Song song) {
 
         /*Intent intent = new Intent(MainActivity.this, LocationService.class);
@@ -595,7 +663,7 @@ public class MainActivity extends AppCompatActivity {
         b.putParcelable("Song", song);
         intent.putExtra("Song",b);
         startService(intent);*/
-
+/*
         getLocationService.getLocation(song);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -603,7 +671,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
 
-    }
+    }#*/
 
 
     private void storePlayInformation(Song song){
@@ -635,8 +703,8 @@ public class MainActivity extends AppCompatActivity {
             editor.putString(song.getName(), json);
             editor.apply();
 
-            String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(), "");
-            Play samePlay = gson.fromJson(json2, Play.class);
+            //String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(), "");
+            //Play samePlay = gson.fromJson(json2, Play.class);
             //System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
         }
 
@@ -668,7 +736,7 @@ public class MainActivity extends AppCompatActivity {
 
         currSong = songList.get(index);
 
-        storePlayInformation(currSong);
+        //torePlayInformation(currSong);
 
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
@@ -739,7 +807,8 @@ public class MainActivity extends AppCompatActivity {
         album_dislike = 0;
 
         loadMedia(songList.get(index));
-        startLocationService(songList.get(index));
+        storePlayInformation(songList.get(index));
+        //startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
