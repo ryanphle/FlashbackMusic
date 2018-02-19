@@ -96,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Map<String, Play> flashback_song;
-    private Location currentLocation;
     private FusedLocationProviderClient myFusedLocationClient;
 
     protected static int index = 0;
@@ -362,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     mediaPlayer.reset();
-                    if (flash_index == res_uri.size() - 1)
+                    if (flash_index == sorted_songs.size() - 1)
                         flash_index = 0;
                     else
                         flash_index++;
@@ -699,7 +698,7 @@ public class MainActivity extends AppCompatActivity {
                         newSong(this.album_index,mode,next,update);
                         break;
                     case FLASHBACK_FRAG:
-                        if (this.flash_index == res_uri.size() - 1)
+                        if (this.flash_index == sorted_songs.size() - 1)
                             this.flash_index = 0;
                         else
                             this.flash_index++;
@@ -730,7 +729,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case FLASHBACK_FRAG:
                     if (this.flash_index == 0)
-                        this.flash_index = res_uri.size() - 1;
+                        this.flash_index = sorted_songs.size() - 1;
                     else
                         this.flash_index--;
                     newSong(this.flash_index,mode,next,update);
@@ -908,12 +907,12 @@ public class MainActivity extends AppCompatActivity {
         fragmentAlbums.setArguments(bundle);
     }
 
-    public void scroll(View view) {
+    /*public void scroll(View view) {
         if (songLoaded) {
             TextView artistAlbumInfo = (TextView) view.findViewById(R.id.small_artist_album_name);
             artistAlbumInfo.setSelected(true);
         }
-    }
+    }*/
 
     public void nextSong(boolean next) {
         if (next)
@@ -975,7 +974,7 @@ public class MainActivity extends AppCompatActivity {
             int score = 0;
 
             // 304.8 m = 1000 foot
-            if(play != null && lastLocation!= null&&play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+            if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
                 score++;
             }
 
