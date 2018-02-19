@@ -25,6 +25,7 @@ import android.location.Location;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 
 import android.support.v4.app.Fragment;
@@ -54,6 +55,7 @@ import android.widget.Toast;
 
 
 import java.io.IOException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -438,8 +440,9 @@ public class MainActivity extends AppCompatActivity {
                 Bundle b = intent.getBundleExtra("Location");
                 lastLocation = (Location) b.getParcelable("Location");
                 Song song = (Song)b.getParcelable("Song");
+                Timestamp time = new Timestamp(System.currentTimeMillis());
                 if(!enterFlash) {
-                    storePlayInformation(song);
+                    storePlayInformation(song, lastLocation, "plays", time);
                     Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
                 }
                 else{
@@ -614,13 +617,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void storePlayInformation(Song song){
+    public void storePlayInformation(Song song, Location location, String prefName, Timestamp time){
 
 
-        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(prefName, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        if(lastLocation != null) {
-            Play play = new Play(this, lastLocation);
+        if(location != null) {
+            Play play = new Play(this, location , time);
             song.setTimeStamp(play.getTime());
 
             List<Address> myList = new ArrayList<>();
@@ -642,7 +645,7 @@ public class MainActivity extends AppCompatActivity {
             editor.putString(song.getName(), json);
             editor.apply();
 
-            String json2 = getSharedPreferences("plays", MODE_PRIVATE).getString(song.getName(), "");
+            String json2 = getSharedPreferences(prefName, MODE_PRIVATE).getString(song.getName(), "");
             Play samePlay = gson.fromJson(json2, Play.class);
             //System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
         }
