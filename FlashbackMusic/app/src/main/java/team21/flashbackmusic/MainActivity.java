@@ -861,7 +861,16 @@ public class MainActivity extends AppCompatActivity {
 
             String json = sharedPreferences.getString(title,"");
             play = gson.fromJson(json,Play.class);
+            if(play != null){
             song.setTimeStamp(play.getTime());
+            List<Address> mylist = new ArrayList<>();
+            try{
+                Geocoder mylocation = new Geocoder(this,Locale.getDefault());
+                mylist = mylocation.getFromLocation(play.getLocation().getLatitude(),play.getLocation().getLongitude(),1);
+
+            }catch (IOException e){}
+            song.setLocation(mylist.get(0));
+            }
 
 
             liked = like_setting.getInt(song.getName(),-2);
@@ -955,7 +964,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(AnySongsPlayed == false){
             sorted_songs = new ArrayList<Song>();
-            //sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"See you later"));
+            sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
             return;
         }
 
