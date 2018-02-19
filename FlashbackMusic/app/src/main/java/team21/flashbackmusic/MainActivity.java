@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
-    private ArrayList<Song> songs;
+    protected ArrayList<Song> songs;
     private Fragment fragmentSong;
     private Fragment fragmentAlbums;
     private FragmentManager fragmentManager;
@@ -134,8 +134,8 @@ public class MainActivity extends AppCompatActivity {
     byte[] default_album = new byte[100];
 
     //default setting when enter
-    private SharedPreferences pre_setting;
-    private SharedPreferences.Editor pre_editor;
+    protected SharedPreferences pre_setting;
+    protected SharedPreferences.Editor pre_editor;
 
     //like dislike status
     protected SharedPreferences like_setting;
