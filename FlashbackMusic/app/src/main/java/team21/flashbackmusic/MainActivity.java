@@ -88,12 +88,13 @@ public class MainActivity extends AppCompatActivity {
 
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
-    private ArrayList<Song> songs;
+    protected ArrayList<Song> songs;
+
     private Fragment fragmentSong;
     private Fragment fragmentAlbums;
     private FragmentManager fragmentManager;
     private FusedLocationProviderClient mFusedLocationClient;
-    private BottomNavigationView bottomNavigationView;
+    protected BottomNavigationView bottomNavigationView;
     private List<Uri> res_uri;
 
 
@@ -105,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
     protected Button stopButton;
     protected Button prevButton;
     protected Button nextButton;
-    private static int frag = 0;
+    protected static int frag = 0;
     protected static int songPlayingFrag = 0;
     protected static int currSongIdx = 0;
     protected static Album currAlbum;
@@ -122,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
     private Location lastLocation;
+    private int currentDay;
+    private int currentHour;
+    private Calendar calendar;
 
 
     //public Location lastLocation;
@@ -135,8 +139,8 @@ public class MainActivity extends AppCompatActivity {
     byte[] default_album = new byte[100];
 
     //default setting when enter
-    private SharedPreferences pre_setting;
-    private SharedPreferences.Editor pre_editor;
+    protected SharedPreferences pre_setting;
+    protected SharedPreferences.Editor pre_editor;
 
     //like dislike status
     protected SharedPreferences like_setting;
@@ -169,12 +173,16 @@ public class MainActivity extends AppCompatActivity {
         sorted_songs = new ArrayList<>();
         fragmentManager = getSupportFragmentManager();
         songLoaded = false;
+        calendar = Calendar.getInstance();
+        currentDay = calendar.get(Calendar.DAY_OF_WEEK);
+        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
 
         like_setting = getSharedPreferences("like_setting",MODE_PRIVATE);
         like_editor = like_setting.edit();
 
         try {
             loadSongs();
+            Log.i("Oncreate", "Songs loaded");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -213,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         index = 0;
                     else
                         index++;
-                    loadMedia(songs.get(index));
+                    loadMedia(songs.get(index), mediaPlayer);
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -223,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
                         album_index = 0;
                     else
                         album_index++;
-                    loadMedia(currAlbum.getSongs().get(index));
+                    loadMedia(currAlbum.getSongs().get(index), mediaPlayer);
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -233,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                         flash_index = 0;
                     else
                         flash_index++;
-                    loadMedia(songs.get(flash_index));
+                    loadMedia(songs.get(flash_index), mediaPlayer);
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -259,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
                             mediaPlayer.reset();
-                            loadMedia(songs.get(index));
+                            loadMedia(songs.get(index), mediaPlayer);
                             transaction.remove(fragmentFlashback);
                             songPlayingFrag = SONG_FRAG;
                         }
@@ -440,7 +448,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     enterFlash = false;
-
                     initialFragSetup(frag);
                 }
             }
@@ -493,18 +500,23 @@ public class MainActivity extends AppCompatActivity {
         if(frag == SONG_FRAG) {
             initTransaction.hide(fragmentAlbums);
             //initTransaction.hide(random_fragmentFlashback);
+            initTransaction.addToBackStack("songs");
+
 
             bottomNavigationView.getMenu().getItem(SONG_FRAG).setChecked(true);
 
-            loadMedia(songs.get(0));
+            loadMedia(songs.get(0),this.mediaPlayer);
 
         }
         else if (frag == ALBUM_FRAG){
             initTransaction.hide(fragmentSong);
+            Log.i("InitFrag", "" + fragmentSong.isVisible());
             //initTransaction.hide(random_fragmentFlashback);
             bottomNavigationView.getMenu().getItem(ALBUM_FRAG).setChecked(true);
+            initTransaction.addToBackStack("albums");
 
-            loadMedia(songs.get(0));
+
+            loadMedia(songs.get(0),this.mediaPlayer);
 
         }
         else{
@@ -526,6 +538,8 @@ public class MainActivity extends AppCompatActivity {
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
             initTransaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
+            initTransaction.addToBackStack("albums");
+
             initTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
             bottomNavigationView.getMenu().getItem(FLASHBACK_FRAG).setChecked(true);
 
@@ -541,7 +555,7 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         currSongIdx = index;
         mediaPlayer.reset();
-        loadMedia(s);
+        loadMedia(s,mediaPlayer);
 
         /*
         Intent intent = new Intent(MainActivity.this, LocationService.class);
@@ -557,11 +571,16 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.start();
     }
 
-    public void loadMedia(Song song) {
+    public void loadMedia(Song song, MediaPlayer mediaPlayer) {
         if (mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
+            this.mediaPlayer = new MediaPlayer();
+            try {
+                this.mediaPlayer.setDataSource(this, song.getUri());
+                this.mediaPlayer.prepare();
+            } catch (Exception e) {
+                System.out.println(e.toString());
+            }
         }
-
         try {
             mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
@@ -648,7 +667,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         currSong = songList.get(index);
-
         Timestamp time = new Timestamp(System.currentTimeMillis());
         storePlayInformation(currSong, lastLocation, "plays", time);
 
@@ -720,7 +738,7 @@ public class MainActivity extends AppCompatActivity {
 
         album_dislike = 0;
 
-        loadMedia(songList.get(index));
+        loadMedia(songList.get(index), this.mediaPlayer);
         startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
@@ -817,9 +835,11 @@ public class MainActivity extends AppCompatActivity {
             int liked = 0;
             if(retriever.getEmbeddedPicture() != null) {
                 img = retriever.getEmbeddedPicture();
+                Log.i("LoadSongs", "Album picture loaded");
             }
             else{
                  img = default_album;
+                Log.i("LoadSongs", "No album picture for this song");
             }
 
 
@@ -873,7 +893,6 @@ public class MainActivity extends AppCompatActivity {
             albums.get(album).addSong(song);
             songs.add(song);
             res_uri.add(uri);
-
             random_songs.add(song);
         }
     }
@@ -890,10 +909,17 @@ public class MainActivity extends AppCompatActivity {
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
-        sort_songs();
+        updateTime();
+        sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
+    }
+
+    private void updateTime(){
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        currentDay = calendar.get(Calendar.DAY_OF_WEEK);
+        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
     }
 
     private void setAlbumFragment() {
@@ -929,9 +955,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void sort_songs() {
+    public void sort_songs(List<Song> songs,String prefName, int currentDay, int currentHour, Location location ) {
 
-        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(prefName, MODE_PRIVATE);
         Play play;
         Gson gson = new Gson();
         boolean AnySongsPlayed = false;
@@ -969,6 +995,8 @@ public class MainActivity extends AppCompatActivity {
         if(AnySongsPlayed == false){
             sorted_songs = new ArrayList<Song>();
             sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
+            mediaPlayer.stop();
+
             return;
         }
 
@@ -980,11 +1008,11 @@ public class MainActivity extends AppCompatActivity {
 
             int score = 0;
 
+
             if (lastLocation != null) {
                 Log.i("Raw Songs name: ",lastLocation.toString());
             }
 
-            // 304.8 m = 1000 foot
             if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
                 score++;
             }
@@ -996,9 +1024,6 @@ public class MainActivity extends AppCompatActivity {
                 int dayofWeek = c.get(Calendar.DAY_OF_WEEK);
                 int hour = c.get(Calendar.HOUR_OF_DAY);
 
-                c.setTimeInMillis(System.currentTimeMillis());
-                int currentDay = c.get(Calendar.DAY_OF_WEEK);
-                int currentHour = c.get(Calendar.HOUR_OF_DAY);
                 if (hour <= 10 && hour > 2 && currentHour <= 10 && currentHour > 2) {
                     score++;
                 } else if (hour <= 18 && hour > 10 && currentHour <= 18 && currentHour > 10) {
@@ -1037,6 +1062,10 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
         });
+
+    }
+    public List<Song> getSortedSongs(){
+        return sorted_songs;
     }
 
 }
