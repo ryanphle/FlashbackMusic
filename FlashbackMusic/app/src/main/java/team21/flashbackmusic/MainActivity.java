@@ -328,14 +328,7 @@ public class MainActivity extends AppCompatActivity {
         prevButton = (Button) findViewById(R.id.prev);
         stopButton = (Button) findViewById(R.id.play);
 
-
-
-        //frag = 1;
-
-
-
-
-
+        
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -439,11 +432,11 @@ public class MainActivity extends AppCompatActivity {
                 Song song = (Song)b.getParcelable("Song");
                 if(!enterFlash) {
                     storePlayInformation(song);
-                    Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                    //Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
                 }
                 else{
                     enterFlash = false;
-                    Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
+                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
                     initialFragSetup(frag);
 
                     //sort_songs();
@@ -660,8 +653,9 @@ public class MainActivity extends AppCompatActivity {
 
         mediaPlayer.reset();
 
-        if (mode == FLASHBACK_FRAG)
+        if (mode == FLASHBACK_FRAG){
             songList = sorted_songs;
+        }
         if (mode == ALBUM_FRAG) {
             songList = (ArrayList) currAlbum.getSongs();
             if(album_dislike == songList.size()){
@@ -823,6 +817,9 @@ public class MainActivity extends AppCompatActivity {
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
         Field[] fields=R.raw.class.getFields();
         Log.d("Size of fields", Integer.toString(fields.length));
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        Play play;
+        Gson gson = new Gson();
 
         for(int count=0; count < fields.length; count++){
 
@@ -843,6 +840,8 @@ public class MainActivity extends AppCompatActivity {
                  img = default_album;
             }
 
+
+
             //edited
             if (title == null) { title = "No title found" + null_title_offset; }
             if (album == null) { album = "No album found"+ null_title_offset; }
@@ -859,6 +858,21 @@ public class MainActivity extends AppCompatActivity {
 
             Album a = albums.get(album);
             Song song = new Song(title, artist, uri, img, a.getName());
+
+
+            String json = sharedPreferences.getString(title,"");
+            play = gson.fromJson(json,Play.class);
+            if(play != null){
+            song.setTimeStamp(play.getTime());
+            List<Address> mylist = new ArrayList<>();
+            try{
+                Geocoder mylocation = new Geocoder(this,Locale.getDefault());
+                mylist = mylocation.getFromLocation(play.getLocation().getLatitude(),play.getLocation().getLongitude(),1);
+
+            }catch (IOException e){}
+            song.setLocation(mylist.get(0));
+            }
+
 
             liked = like_setting.getInt(song.getName(),-2);
             if(liked == -2){
@@ -938,6 +952,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         Play play;
         Gson gson = new Gson();
+        boolean AnySongsPlayed = false;
 
         sorted_songs = new ArrayList<Song>();
 
@@ -948,6 +963,10 @@ public class MainActivity extends AppCompatActivity {
 
             String json = sharedPreferences.getString(songs.get(i).getName(), "");
             play = gson.fromJson(json, Play.class);
+            if(!(songs.get(i).getTimeStamp().equals(new Timestamp(0))))
+                AnySongsPlayed = true;
+
+
             sorted_songs.add(songs.get(i));
             if (play != null) {
                 sorted_songs.get(sorted_song_index).setTimeStamp(play.getTime());
@@ -963,6 +982,12 @@ public class MainActivity extends AppCompatActivity {
                 sorted_songs.get(sorted_song_index).setLocation(address);
             }
             sorted_song_index++;
+        }
+
+        if(AnySongsPlayed == false){
+            sorted_songs = new ArrayList<Song>();
+            sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
+            return;
         }
 
         for (int i = 0; i < sorted_songs.size(); i++) {
