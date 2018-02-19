@@ -49,7 +49,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void storePlayInfo(){
+    public void storePlayInfoTest(){
 
         Song song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
         final Location location = new Location("mockLocation");
@@ -67,7 +67,7 @@ public class MainActivityTest {
         assertEquals(location.getLongitude(),play.getLocation().getLongitude(), 0);
 
         assertEquals(time.getTime() ,play.getTime().getTime());
-        assertEquals("Night", play.getTimeOfDay());
+        assertEquals("Afternoon", play.getTimeOfDay());
 
 
         song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
@@ -84,7 +84,7 @@ public class MainActivityTest {
         assertEquals(location.getLongitude(),play.getLocation().getLongitude(), 0);
 
         assertEquals(time.getTime(),play.getTime().getTime());
-        assertEquals("Morning", play.getTimeOfDay());
+        assertEquals("Night", play.getTimeOfDay());
 
 
         song = new Song("hello", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
@@ -101,7 +101,7 @@ public class MainActivityTest {
         assertEquals(location.getLongitude(),play.getLocation().getLongitude(), 0);
 
         assertEquals(time.getTime(),play.getTime().getTime());
-        assertEquals("Afternoon", play.getTimeOfDay());
+        assertEquals("Morning", play.getTimeOfDay());
     }
 
     @Test

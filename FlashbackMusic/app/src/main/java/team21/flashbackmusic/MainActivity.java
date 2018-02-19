@@ -442,38 +442,16 @@ public class MainActivity extends AppCompatActivity {
                 Song song = (Song)b.getParcelable("Song");
                 Timestamp time = new Timestamp(System.currentTimeMillis());
                 if(!enterFlash) {
+
                     storePlayInformation(song, lastLocation, "plays", time);
                     Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
                 }
                 else{
                     enterFlash = false;
-                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
                     initialFragSetup(frag);
-
-                    //sort_songs();
                 }
             }
         };
-
-        //while(getLocationService == null){}
-
-
-
-
-
-
-
-
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
-         */
-
     }
 
 
@@ -641,7 +619,6 @@ public class MainActivity extends AppCompatActivity {
             List<Address> myList = new ArrayList<>();
 
             try{
-
                 Geocoder myLocation = new Geocoder(this, Locale.getDefault());
                 myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(),1);
 
@@ -691,7 +668,9 @@ public class MainActivity extends AppCompatActivity {
 
         currSong = songList.get(index);
 
-        //storePlayInformation(currSong,lastLocation,"plays",);
+        Timestamp time = new Timestamp(System.currentTimeMillis());
+        storePlayInformation(currSong, lastLocation, "plays", time);
+
 
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
@@ -927,13 +906,14 @@ public class MainActivity extends AppCompatActivity {
         fragmentSong.setArguments(bundle);
     }
 
-    private void setFlashbackFragment() {
+    protected void setFlashbackFragment() {
 
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
         updateTime();
         sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
+
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
@@ -1030,12 +1010,11 @@ public class MainActivity extends AppCompatActivity {
 
             int score = 0;
 
+            if (lastLocation != null) {
+                Log.i("Raw Songs name: ",lastLocation.toString());
+            }
 
-            //Log.i("Raw Songs name: ",lastLocation.toString());
-
-            //Log.i("Raw Songs name: ", play.getLocation().toString());
-            // 304.8 m = 1000 foot
-            if(play != null && location!=null && play.getLocation().distanceTo(location)  < 304.8 ){
+            if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ) {
                 score++;
             }
 
@@ -1084,6 +1063,7 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
         });
+
     }
     public List<Song> getSortedSongs(){
         return sorted_songs;
