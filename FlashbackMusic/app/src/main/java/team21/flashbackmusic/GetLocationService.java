@@ -13,7 +13,11 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 public class GetLocationService extends Service {
@@ -21,6 +25,8 @@ public class GetLocationService extends Service {
     private FusedLocationProviderClient mFusedLocationClient;
     private Location currLocation;
     private final IBinder iBinder = new locationService();
+    private LocationRequest mLocationRequest;
+    private LocationCallback myLocationCallback;
 
     class locationService extends Binder{
 
@@ -76,6 +82,13 @@ public class GetLocationService extends Service {
 
        // }
 
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
 
