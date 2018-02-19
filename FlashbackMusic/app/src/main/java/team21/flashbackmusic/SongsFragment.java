@@ -3,6 +3,7 @@ package team21.flashbackmusic;
 //import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
 import android.media.MediaPlayer;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -22,9 +23,11 @@ import android.widget.Toast;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by ryanle on 2/8/18.
@@ -68,31 +71,35 @@ public class SongsFragment extends Fragment {
 
    public void updateSongUI(Song s) {
 
-        adapter.notifyDataSetChanged();
+       adapter.notifyDataSetChanged();
+       ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
+       TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
+       TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
+       TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
+       TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+       Calendar calendar;
 
-        ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
-        TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
-        artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
-        artistAlbumInfo.setSelected(false);
+       Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
+       albumImage.setImageBitmap(bmp);
 
-        artistAlbumInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                scroll(v);
-            }
-        });
+       songName.setText(s.getName());
+       String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
+       artistAlbumInfo.setText(artistAndAlbumStr);
 
-        Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
-        albumImage.setImageBitmap(bmp);
+       calendar = Calendar.getInstance();
+       calendar.setTimeInMillis(s.getTimeStamp().getTime());
+       calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-        songName.setText(s.getName());
-        String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
-        artistAlbumInfo.setText(artistAndAlbumStr);
-    }
+       Address address = s.getLocation();
+       String addressStr = "";
+       addressStr += address.getAddressLine(0) + ", ";
+       addressStr += address.getAddressLine(1) + ", ";
+       addressStr += address.getAddressLine(2);
 
-    public void scroll(View view) {
-        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
-        artistAlbumInfo.setSelected(true);
-    }
+       songLocation.setText(addressStr);
+       songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+
+   }
+
 
 }

@@ -98,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Map<String, Play> flashback_song;
-    private Location currentLocation;
     private FusedLocationProviderClient myFusedLocationClient;
 
     protected static int index = 0;
@@ -117,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Song> random_songs;
     private Fragment random_fragmentFlashback;
     private ArrayList<Song> sorted_songs;
-    private Fragment fragmentFlashback;
+    protected Fragment fragmentFlashback;
 
     protected static final int SONG_FRAG = 0;
     protected static final int ALBUM_FRAG = 1;
@@ -331,14 +330,7 @@ public class MainActivity extends AppCompatActivity {
         prevButton = (Button) findViewById(R.id.prev);
         stopButton = (Button) findViewById(R.id.play);
 
-
-
-        //frag = 1;
-
-
-
-
-
+        
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -364,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     mediaPlayer.reset();
-                    if (flash_index == res_uri.size() - 1)
+                    if (flash_index == sorted_songs.size() - 1)
                         flash_index = 0;
                     else
                         flash_index++;
@@ -442,38 +434,17 @@ public class MainActivity extends AppCompatActivity {
                 Song song = (Song)b.getParcelable("Song");
                 Timestamp time = new Timestamp(System.currentTimeMillis());
                 if(!enterFlash) {
+
                     storePlayInformation(song, lastLocation, "plays", time);
                     Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
                 }
                 else{
                     enterFlash = false;
-                    Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
-                    initialFragSetup(frag);
 
-                    //sort_songs();
+                    initialFragSetup(frag);
                 }
             }
         };
-
-        //while(getLocationService == null){}
-
-
-
-
-
-
-
-
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
-         */
-
     }
 
 
@@ -663,8 +634,9 @@ public class MainActivity extends AppCompatActivity {
 
         mediaPlayer.reset();
 
-        if (mode == FLASHBACK_FRAG)
+        if (mode == FLASHBACK_FRAG){
             songList = sorted_songs;
+        }
         if (mode == ALBUM_FRAG) {
             songList = (ArrayList) currAlbum.getSongs();
             if(album_dislike == songList.size()){
@@ -676,6 +648,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         currSong = songList.get(index);
+
+        Timestamp time = new Timestamp(System.currentTimeMillis());
+        storePlayInformation(currSong, lastLocation, "plays", time);
 
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
@@ -699,7 +674,7 @@ public class MainActivity extends AppCompatActivity {
                         newSong(this.album_index,mode,next,update);
                         break;
                     case FLASHBACK_FRAG:
-                        if (this.flash_index == res_uri.size() - 1)
+                        if (this.flash_index == sorted_songs.size() - 1)
                             this.flash_index = 0;
                         else
                             this.flash_index++;
@@ -730,7 +705,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case FLASHBACK_FRAG:
                     if (this.flash_index == 0)
-                        this.flash_index = res_uri.size() - 1;
+                        this.flash_index = sorted_songs.size() - 1;
                     else
                         this.flash_index--;
                     newSong(this.flash_index,mode,next,update);
@@ -824,6 +799,9 @@ public class MainActivity extends AppCompatActivity {
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
         Field[] fields=R.raw.class.getFields();
         Log.d("Size of fields", Integer.toString(fields.length));
+        SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
+        Play play;
+        Gson gson = new Gson();
 
         for(int count=0; count < fields.length; count++){
 
@@ -844,6 +822,8 @@ public class MainActivity extends AppCompatActivity {
                  img = default_album;
             }
 
+
+
             //edited
             if (title == null) { title = "No title found" + null_title_offset; }
             if (album == null) { album = "No album found"+ null_title_offset; }
@@ -860,6 +840,21 @@ public class MainActivity extends AppCompatActivity {
 
             Album a = albums.get(album);
             Song song = new Song(title, artist, uri, img, a.getName());
+
+
+            String json = sharedPreferences.getString(title,"");
+            play = gson.fromJson(json,Play.class);
+            if(play != null){
+            song.setTimeStamp(play.getTime());
+            List<Address> mylist = new ArrayList<>();
+            try{
+                Geocoder mylocation = new Geocoder(this,Locale.getDefault());
+                mylist = mylocation.getFromLocation(play.getLocation().getLatitude(),play.getLocation().getLongitude(),1);
+
+            }catch (IOException e){}
+            song.setLocation(mylist.get(0));
+            }
+
 
             liked = like_setting.getInt(song.getName(),-2);
             if(liked == -2){
@@ -890,16 +885,12 @@ public class MainActivity extends AppCompatActivity {
         fragmentSong.setArguments(bundle);
     }
 
-    private void setFlashbackFragment() {
+    protected void setFlashbackFragment() {
 
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
-
-
-        //sort_getLocation();
         sort_songs();
-        //ArrayList<Song> sorted_songs = sort_songs(getSharedPreferences("play", 0));
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
@@ -912,12 +903,12 @@ public class MainActivity extends AppCompatActivity {
         fragmentAlbums.setArguments(bundle);
     }
 
-    public void scroll(View view) {
+    /*public void scroll(View view) {
         if (songLoaded) {
             TextView artistAlbumInfo = (TextView) view.findViewById(R.id.small_artist_album_name);
             artistAlbumInfo.setSelected(true);
         }
-    }
+    }*/
 
     public void nextSong(boolean next) {
         if (next)
@@ -943,26 +934,42 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         Play play;
         Gson gson = new Gson();
+        boolean AnySongsPlayed = false;
 
-        //ArrayList<Song> new_songs_list = new ArrayList<Song>();
-        //Map<String, ?> allEntries = sharedPreferences.getAll();
-
-        /*
-         public ArrayList<Song> sort_songs(SharedPreferences sharedPreferences) {
-         Gson gson = new Gson();
-         ArrayList<Song> sorted_songs = new ArrayList<Song>();
-         Map<String, ?> allEntries = sharedPreferences.getAll();
-         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-         String json = sharedPreferences.getString(entry.getKey(), "");
-         flashback_song.put(entry.getKey(), gson.fromJson(json, Play.class));
-         }*/
         sorted_songs = new ArrayList<Song>();
 
+        int sorted_song_index = 0;
         for(int i =0; i< songs.size();i++){
             if(songs.get(i).getFavorite() == -1)
                 continue;
 
+            String json = sharedPreferences.getString(songs.get(i).getName(), "");
+            play = gson.fromJson(json, Play.class);
+            if(!(songs.get(i).getTimeStamp().equals(new Timestamp(0))))
+                AnySongsPlayed = true;
+
+
             sorted_songs.add(songs.get(i));
+            if (play != null) {
+                sorted_songs.get(sorted_song_index).setTimeStamp(play.getTime());
+                List<Address> myList = new ArrayList<>();
+
+                try {
+                    Geocoder myLocation = new Geocoder(this, Locale.getDefault());
+                    myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(), 1);
+                }catch (IOException e) {
+
+                }
+                Address address = (Address) myList.get(0);
+                sorted_songs.get(sorted_song_index).setLocation(address);
+            }
+            sorted_song_index++;
+        }
+
+        if(AnySongsPlayed == false){
+            sorted_songs = new ArrayList<Song>();
+            sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
+            return;
         }
 
         for (int i = 0; i < sorted_songs.size(); i++) {
@@ -977,14 +984,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Raw Songs name: ",lastLocation.toString());
             }
 
-            //Log.i("Raw Songs name: ", play.getLocation().toString());
             // 304.8 m = 1000 foot
             if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
                 score++;
             }
 
-            //sorted_songs.get(i).setTimeStamp(play.getTime());
-            //Timestamp tsTemp = songs.get(i).getTimeStamp();
             if (play != null) {
                 Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(play.getTime().getTime());
@@ -1033,7 +1037,6 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
         });
-        //return sorted_songs;
     }
 
 }

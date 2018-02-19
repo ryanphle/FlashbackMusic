@@ -3,6 +3,7 @@ package team21.flashbackmusic;
 //import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +17,8 @@ import android.widget.TextView;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * Created by ryanle on 2/8/18.
@@ -75,7 +78,7 @@ public class AlbumsFragment extends Fragment {
     public void updateSongUI(Song s) {
         Log.i("Song update: ", s.getName());
 
-        if (s==null) return;
+        /*if (s==null) return;
 
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
@@ -86,6 +89,33 @@ public class AlbumsFragment extends Fragment {
 
         songName.setText(s.getName());
         String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
+        artistAlbumInfo.setText(artistAndAlbumStr);*/
+        ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
+        TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
+        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
+        TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
+        TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        Calendar calendar;
+
+        Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
+        albumImage.setImageBitmap(bmp);
+
+        songName.setText(s.getName());
+        String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
         artistAlbumInfo.setText(artistAndAlbumStr);
+
+        calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(s.getTimeStamp().getTime());
+        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+
+        Address address = s.getLocation();
+        String addressStr = "";
+        addressStr += address.getAddressLine(0) + ", ";
+        addressStr += address.getAddressLine(1) + ", ";
+        addressStr += address.getAddressLine(2);
+
+        songLocation.setText(addressStr);
+        songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+
     }
 }

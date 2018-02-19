@@ -44,6 +44,7 @@ public class Play {
         this.activity = activity;
         this.time = time;
         this.location = location;
+
         setTimeOfDay(time);
         Log.i("Play_location", location.toString());
     }
@@ -86,8 +87,8 @@ public class Play {
 
     private void setTimeOfDay(Timestamp time) {
        long miliTime = time.getTime();
-       Calendar calender = Calendar.getInstance();
-       TimeZone tz = calender.getTimeZone();
+       TimeZone tz = TimeZone.getDefault();
+       Log.i("Time zone", tz.getDisplayName());
        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(time.getTime()), tz.toZoneId());
        Log.i("hour", Integer.toString(dateTime.getHour()));
        morning = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 8, 0, 0);
