@@ -176,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             loadSongs();
+            Log.i("Oncreate", "Songs loaded");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -214,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
                         index = 0;
                     else
                         index++;
-                    loadMedia(songs.get(index));
+                    loadMedia(songs.get(index), mediaPlayer);
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -224,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                         album_index = 0;
                     else
                         album_index++;
-                    loadMedia(currAlbum.getSongs().get(index));
+                    loadMedia(currAlbum.getSongs().get(index), mediaPlayer);
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -234,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
                         flash_index = 0;
                     else
                         flash_index++;
-                    loadMedia(songs.get(flash_index));
+                    loadMedia(songs.get(flash_index), mediaPlayer);
                     mediaPlayer.start();
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
@@ -260,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
                             mediaPlayer.reset();
-                            loadMedia(songs.get(index));
+                            loadMedia(songs.get(index), mediaPlayer);
                             transaction.remove(fragmentFlashback);
                             songPlayingFrag = SONG_FRAG;
                         }
@@ -522,18 +523,22 @@ public class MainActivity extends AppCompatActivity {
         if(frag == SONG_FRAG) {
             initTransaction.hide(fragmentAlbums);
             //initTransaction.hide(random_fragmentFlashback);
+            initTransaction.addToBackStack("songs");
+
 
             bottomNavigationView.getMenu().getItem(SONG_FRAG).setChecked(true);
 
-            loadMedia(songs.get(0));
+            loadMedia(songs.get(0),this.mediaPlayer);
 
         }
         else if (frag == ALBUM_FRAG){
             initTransaction.hide(fragmentSong);
             //initTransaction.hide(random_fragmentFlashback);
             bottomNavigationView.getMenu().getItem(ALBUM_FRAG).setChecked(true);
+            initTransaction.addToBackStack("albums");
 
-            loadMedia(songs.get(0));
+
+            loadMedia(songs.get(0),this.mediaPlayer);
 
         }
         else{
@@ -555,6 +560,8 @@ public class MainActivity extends AppCompatActivity {
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
             initTransaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
+            initTransaction.addToBackStack("albums");
+
             initTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
             bottomNavigationView.getMenu().getItem(FLASHBACK_FRAG).setChecked(true);
 
@@ -570,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setBackgroundResource(R.drawable.ic_playing);
         currSongIdx = index;
         mediaPlayer.reset();
-        loadMedia(s);
+        loadMedia(s,mediaPlayer);
 
         /*
         Intent intent = new Intent(MainActivity.this, LocationService.class);
@@ -586,11 +593,16 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.start();
     }
 
-    public void loadMedia(Song song) {
+    public void loadMedia(Song song, MediaPlayer mediaPlayer) {
         if (mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
+            this.mediaPlayer = new MediaPlayer();
+            try {
+                this.mediaPlayer.setDataSource(this, song.getUri());
+                this.mediaPlayer.prepare();
+            } catch (Exception e) {
+                System.out.println(e.toString());
+            }
         }
-
         try {
             mediaPlayer.setDataSource(this, song.getUri());
             mediaPlayer.prepare();
@@ -746,7 +758,7 @@ public class MainActivity extends AppCompatActivity {
 
         album_dislike = 0;
 
-        loadMedia(songList.get(index));
+        loadMedia(songList.get(index), this.mediaPlayer);
         startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
@@ -840,9 +852,11 @@ public class MainActivity extends AppCompatActivity {
             int liked = 0;
             if(retriever.getEmbeddedPicture() != null) {
                 img = retriever.getEmbeddedPicture();
+                Log.i("LoadSongs", "Album picture loaded");
             }
             else{
                  img = default_album;
+                Log.i("LoadSongs", "No album picture for this song");
             }
 
             //edited
@@ -879,7 +893,6 @@ public class MainActivity extends AppCompatActivity {
             albums.get(album).addSong(song);
             songs.add(song);
             res_uri.add(uri);
-
             random_songs.add(song);
         }
     }

@@ -4,7 +4,9 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.support.test.annotation.UiThreadTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.v4.app.Fragment;
 
 import com.google.gson.Gson;
 
@@ -27,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 public class MainActivityTest {
 
     private List<Song> songs;
-    private MediaPlayer mediaPlayer;
+    private MockMediaPlayer mediaPlayer;
 
     @Rule
     public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
@@ -35,13 +37,7 @@ public class MainActivityTest {
     @Before
     public void setup() {
         this.songs = mainActivity.getActivity().getSongs();
-        this.mediaPlayer = new MediaPlayer();
-    }
-
-    @Test
-    public void numberOfSongsTest(){
-        Field[] fields = R.raw.class.getFields();
-        assertEquals(songs.size(),fields.length);
+        this.mediaPlayer = new MockMediaPlayer();
     }
 
     @Test
@@ -104,5 +100,59 @@ public class MainActivityTest {
         assertEquals(time.getTime(),play.getTime().getTime());
         assertEquals("Afternoon", play.getTimeOfDay());
     }
+
+    @Test
+    public void loadMediaTest(){
+         Song song = new Song("hello", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
+         mainActivity.getActivity().loadMedia(song,mediaPlayer);
+         assertEquals(song.getUri(),mediaPlayer.getDataSource());
+    }
+
+    @UiThreadTest
+    @Test
+    public void initialSongsFragSetupTest(){
+
+        mainActivity.getActivity().initialFragSetup(0);
+        List<Fragment> fragments = mainActivity.getActivity().getSupportFragmentManager().getFragments();
+        for (Fragment fragment: fragments){
+            if(fragment.isVisible()){
+                assertEquals("songs",fragment.getTag());
+            }
+        }
+    }
+
+    @UiThreadTest
+    @Test
+    public void initialAlbumsFragSetupTest(){
+
+        mainActivity.getActivity().initialFragSetup(1);
+        List<Fragment> fragments = mainActivity.getActivity().getSupportFragmentManager().getFragments();
+        for (Fragment fragment: fragments){
+            if(fragment.isVisible()){
+                assertEquals("songs",fragment.getTag());
+            }
+        }
+    }
+
+    @UiThreadTest
+    @Test
+    public void initialFlashFragSetupTest(){
+
+        mainActivity.getActivity().initialFragSetup(2);
+        List<Fragment> fragments = mainActivity.getActivity().getSupportFragmentManager().getFragments();
+        for (Fragment fragment: fragments){
+            if(fragment.isVisible()){
+                assertEquals("songs",fragment.getTag());
+            }
+        }
+    }
+
+    @Test
+    public void numberOfSongsTest(){
+        Field[] fields = R.raw.class.getFields();
+        assertEquals(songs.size(),fields.length);
+    }
+
+
 
 }

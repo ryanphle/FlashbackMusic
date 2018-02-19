@@ -89,7 +89,6 @@ public class Play {
        Calendar calender = Calendar.getInstance();
        TimeZone tz = calender.getTimeZone();
        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(time.getTime()), tz.toZoneId());
-       Log.i("hour", dateTime.getHour());
        morning = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 8, 0, 0);
        afternoon = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 16, 0, 0);
 
