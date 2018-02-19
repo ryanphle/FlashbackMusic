@@ -38,12 +38,12 @@ public class GetLocationService extends Service {
     public void getLocation(Song s){
         final Song song = s;
 
-        Log.i("RawService: ", "  on handle intent ");
+        //Log.i("RawService: ", "  on handle intent ");
 
 
         //if (song != null) {
 
-            Log.i("RawService: ", "  on handle intent ");
+            //Log.i("RawService: ", "  on handle intent ");
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -65,8 +65,8 @@ public class GetLocationService extends Service {
                             if (location != null) {
                                 currLocation = location;
                                 //Toast.makeText(getApplicationContext(), "location" + location.toString(), Toast.LENGTH_SHORT).show();
-                                Log.i("RawService: ", "  raw location: "+ location.toString());
-                                Log.i("RawService: ", "  curr location: "+ currLocation.toString());
+                                //Log.i("RawService: ", "  raw location: "+ location.toString());
+                                //Log.i("RawService: ", "  curr location: "+ currLocation.toString());
                                 sendMessageBack(getApplicationContext(),currLocation, song);
 
 
@@ -86,7 +86,7 @@ public class GetLocationService extends Service {
         b.putParcelable("Location", L);
         b.putParcelable("Song",song);
         i.putExtra("Location",b);
-        Log.i("RawService: ", "  sending message: ");
+        //Log.i("RawService: ", "  sending message: ");
         LocalBroadcastManager.getInstance(context).sendBroadcast(i);
     }
 
