@@ -29,7 +29,10 @@ import java.util.TimeZone;
 
 public class Play {
     private static Clock clock = Clock.systemDefaultZone();
-    private Location location;
+    //private Location location;
+    private double longit;
+    //private Location location;
+    private double lat;
     private String timeOfDay;
     private Timestamp time;
     private transient Context activity;
@@ -39,19 +42,28 @@ public class Play {
     public Play(){};
 
 
-    public Play( Context activity, Location location, Timestamp time ) {
+    public Play( Context activity, double lat,double longit, Timestamp time ) {
 
         this.activity = activity;
+        //setTime();
+        //this.location = location;
+        this.lat = lat;
+        this.longit = longit;
+
+        //Log.i("Play_location", location.toString());
         this.time = time;
-        this.location = location;
+        //this.location = location;
 
         setTimeOfDay(time);
-        Log.i("Play_location", location.toString());
+        //Log.i("Play_location", location.toString());
     }
 
     public static LocalDateTime now() {
         return LocalDateTime.now(getClock());
     }
+
+    //public Location getLocation() { return location; }
+
 
     public void setFusedLocationClient(MainActivity mainActivity) {
         this.activity = activity;
@@ -79,7 +91,10 @@ public class Play {
         return clock;
     }
 
-    public Location getLocation() { return location; }
+    //public Location getLocation() { return location; }
+    public double getLongitude() { return longit; }
+    public double getLatitude() { return lat; }
+
 
     public String getTimeOfDay() { return timeOfDay; }
 

@@ -21,7 +21,8 @@ import android.content.IntentFilter;
 
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.os.Parcelable;
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Map<String, Play> flashback_song;
-    private FusedLocationProviderClient myFusedLocationClient;
+    //private FusedLocationProviderClient myFusedLocationClient;
 
     protected static int index = 0;
     protected MediaPlayer mediaPlayer;
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
     //public Location lastLocation;
     //BroadcastReceiver locationReceiver;
-    Intent locationIntent;
+   // Intent locationIntent;
 
 
     protected boolean songLoaded;
@@ -157,6 +158,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBound;
     private boolean enterFlash = false;
 
+    private LocationManager locationManager;
+    private String locationProvider;
+    private LocationListener locationListener;
 
 
     @Override
@@ -200,8 +204,10 @@ public class MainActivity extends AppCompatActivity {
 
         //Log.d("Fragment mode", Integer.toString(frag));
 
+        /*
         Intent intent = new Intent(this,GetLocationService.class);
         bindService(intent, serviceConnection,Context.BIND_AUTO_CREATE);
+        */
 
 
 
@@ -422,6 +428,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        /*
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -432,29 +439,142 @@ public class MainActivity extends AppCompatActivity {
             Log.d("test1","ins");
             //return;
         }
-
-
+        */
+/*
         locationReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Bundle b = intent.getBundleExtra("Location");
                 lastLocation = (Location) b.getParcelable("Location");
                 Song song = (Song)b.getParcelable("Song");
-                Timestamp time = new Timestamp(System.currentTimeMillis());
                 if(!enterFlash) {
-
-                    storePlayInformation(song, lastLocation, "plays", time);
-                    Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
+                    storePlayInformation(song);
+                    //Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
                 }
                 else{
                     enterFlash = false;
+                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
                     initialFragSetup(frag);
+
+                    //sort_songs();
                 }
             }
         };
+        */
+
+        //while(getLocationService == null){}
+
+
+
+
+
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                lastLocation = location;
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        };
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationProvider = LocationManager.GPS_PROVIDER;
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    100);
+            Log.d("test1","ins");
+            return;
+        }
+
+        lastLocation = locationManager.getLastKnownLocation(locationProvider);
+        locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+        String netLocation = LocationManager.NETWORK_PROVIDER;
+
+
+        Log.d("LastLocation",lastLocation.toString());
+
+
+
+
+
+
+
+
+        /*
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                locationReceiver, new IntentFilter("LastLocation")
+        );
+        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
+         */
+
     }
 
+    public void onStart(){
+        super.onStart();
+        initialFragSetup(frag);
 
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 100: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                            (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                    }
+
+                    lastLocation = locationManager.getLastKnownLocation(locationProvider);
+                    locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+/*
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -484,7 +604,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
+*/
 
     public void initialFragSetup(int frag) {
         setSongFragment();
@@ -565,8 +685,11 @@ public class MainActivity extends AppCompatActivity {
                 locationReceiver, new IntentFilter("LastLocation")
         );
         */
+        Timestamp time = new Timestamp(System.currentTimeMillis());
+        storePlayInformation(s,lastLocation,"plays",time);
 
-        startLocationService(s);
+        //storePlayInformation(s);
+        //startLocationService(s);
 
         mediaPlayer.start();
     }
@@ -589,6 +712,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
     private void startLocationService(Song song) {
 
         /*Intent intent = new Intent(MainActivity.this, LocationService.class);
@@ -596,7 +720,7 @@ public class MainActivity extends AppCompatActivity {
         b.putParcelable("Song", song);
         intent.putExtra("Song",b);
         startService(intent);*/
-
+/*
         getLocationService.getLocation(song);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -604,23 +728,28 @@ public class MainActivity extends AppCompatActivity {
         );
 
 
-    }
+    }#*/
 
 
     public void storePlayInformation(Song song, Location location, String prefName, Timestamp time){
 
+        double longit;
+        double lat;
 
         SharedPreferences sharedPreferences = getSharedPreferences(prefName, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         if(location != null) {
-            Play play = new Play(this, location , time);
+            longit = location.getLongitude();
+            lat = location.getLatitude();
+            Play play = new Play(this, lat,longit , time);
             song.setTimeStamp(play.getTime());
 
             List<Address> myList = new ArrayList<>();
 
             try{
+
                 Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(),1);
+                myList = myLocation.getFromLocation(play.getLatitude(), play.getLongitude(),1);
 
             }
             catch( IOException e) {
@@ -635,8 +764,8 @@ public class MainActivity extends AppCompatActivity {
             editor.putString(song.getName(), json);
             editor.apply();
 
-            String json2 = getSharedPreferences(prefName, MODE_PRIVATE).getString(song.getName(), "");
-            Play samePlay = gson.fromJson(json2, Play.class);
+            //String json2 = getSharedPreferences(prefName, MODE_PRIVATE).getString(song.getName(), "");
+            //Play samePlay = gson.fromJson(json2, Play.class);
             //System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
         }
 
@@ -739,7 +868,9 @@ public class MainActivity extends AppCompatActivity {
         album_dislike = 0;
 
         loadMedia(songList.get(index), this.mediaPlayer);
-        startLocationService(songList.get(index));
+        time = new Timestamp(System.currentTimeMillis());
+        storePlayInformation(songList.get(index),lastLocation,"plays",time);
+        //startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
@@ -869,10 +1000,9 @@ public class MainActivity extends AppCompatActivity {
             List<Address> mylist = new ArrayList<>();
             try{
                 Geocoder mylocation = new Geocoder(this,Locale.getDefault());
-                mylist = mylocation.getFromLocation(play.getLocation().getLatitude(),play.getLocation().getLongitude(),1);
+                mylist = mylocation.getFromLocation(play.getLatitude(),play.getLongitude(),1);
 
             }catch (IOException e){}
-            song.setLocation(mylist.get(0));
             }
 
 
@@ -893,6 +1023,7 @@ public class MainActivity extends AppCompatActivity {
             albums.get(album).addSong(song);
             songs.add(song);
             res_uri.add(uri);
+
             random_songs.add(song);
         }
     }
@@ -961,6 +1092,7 @@ public class MainActivity extends AppCompatActivity {
         Play play;
         Gson gson = new Gson();
         boolean AnySongsPlayed = false;
+        Location location_song = new Location(lastLocation);
 
         sorted_songs = new ArrayList<Song>();
 
@@ -982,7 +1114,7 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                    myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(), 1);
+                    myList = myLocation.getFromLocation(play.getLatitude(), play.getLongitude(), 1);
                 }catch (IOException e) {
 
                 }
@@ -1009,11 +1141,17 @@ public class MainActivity extends AppCompatActivity {
             int score = 0;
 
 
-            if (lastLocation != null) {
-                Log.i("Raw Songs name: ",lastLocation.toString());
+            if (location != null) {
+                Log.i("Raw Songs name: ",location.toString());
             }
 
-            if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+            //Location location1 = new Location(lastLocation);
+            if(play != null) {
+                location_song.setLatitude(play.getLatitude());
+                location_song.setLongitude(play.getLongitude());
+            }
+
+            if(play != null && location != null && location_song.distanceTo(location)  < 304.8 ){
                 score++;
             }
 
