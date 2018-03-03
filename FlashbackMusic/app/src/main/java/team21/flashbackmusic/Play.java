@@ -27,7 +27,9 @@ import java.util.TimeZone;
 
 public class Play {
     private static Clock clock = Clock.systemDefaultZone();
-    private Location location;
+    //private Location location;
+    private double longit;
+    private double lat;
     private String timeOfDay;
     private Timestamp time;
     private transient Context activity;
@@ -41,7 +43,10 @@ public class Play {
         this.activity = activity;
         setTimeOfDay();
         setTime();
-        this.location = location;
+        //this.location = location;
+        this.lat = location.getLatitude();
+        this.longit = location.getLongitude();
+
         //Log.i("Play_location", location.toString());
     }
 
@@ -75,7 +80,10 @@ public class Play {
         return clock;
     }
 
-    public Location getLocation() { return location; }
+    //public Location getLocation() { return location; }
+    public double getLongitude() { return longit; }
+    public double getLatitude() { return lat; }
+
 
     public String getTimeOfDay() { return timeOfDay; }
 

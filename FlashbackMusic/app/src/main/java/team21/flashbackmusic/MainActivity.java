@@ -433,10 +433,7 @@ public class MainActivity extends AppCompatActivity {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-
                 lastLocation = location;
-
-
             }
 
             @Override
@@ -679,7 +676,7 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        if(lastLocation != null) {
+        if(true) {
             Play play = new Play(this, lastLocation);
             song.setTimeStamp(play.getTime());
 
@@ -688,7 +685,7 @@ public class MainActivity extends AppCompatActivity {
             try{
 
                 Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(),1);
+                myList = myLocation.getFromLocation(play.getLatitude(), play.getLongitude(),1);
 
             }
             catch( IOException e) {
@@ -936,7 +933,7 @@ public class MainActivity extends AppCompatActivity {
             List<Address> mylist = new ArrayList<>();
             try{
                 Geocoder mylocation = new Geocoder(this,Locale.getDefault());
-                mylist = mylocation.getFromLocation(play.getLocation().getLatitude(),play.getLocation().getLongitude(),1);
+                mylist = mylocation.getFromLocation(play.getLatitude(),play.getLongitude(),1);
 
             }catch (IOException e){}
             song.setLocation(mylist.get(0));
@@ -1043,7 +1040,7 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                    myList = myLocation.getFromLocation(play.getLocation().getLatitude(), play.getLocation().getLongitude(), 1);
+                    myList = myLocation.getFromLocation(play.getLatitude(), play.getLongitude(), 1);
                 }catch (IOException e) {
 
                 }
@@ -1068,8 +1065,14 @@ public class MainActivity extends AppCompatActivity {
             int score = 0;
 
             // 304.8 m = 1000 foot
-            if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
-                score++;
+
+            if(play != null && lastLocation != null ){
+                Location targetLocation = new Location("");//provider name is unnecessary
+                targetLocation.setLatitude(play.getLatitude());//your coords of course
+                targetLocation.setLongitude(play.getLongitude());
+                if (targetLocation.distanceTo(lastLocation)  < 304.8 ) {
+                    score++;
+                }
             }
 
             if (play != null) {
