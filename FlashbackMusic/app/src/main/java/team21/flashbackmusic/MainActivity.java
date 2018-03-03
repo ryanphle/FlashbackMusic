@@ -676,7 +676,7 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        if(true) {
+        if(lastLocation != null) {
             Play play = new Play(this, lastLocation);
             song.setTimeStamp(play.getTime());
 
@@ -936,7 +936,6 @@ public class MainActivity extends AppCompatActivity {
                 mylist = mylocation.getFromLocation(play.getLatitude(),play.getLongitude(),1);
 
             }catch (IOException e){}
-            song.setLocation(mylist.get(0));
             }
 
 
