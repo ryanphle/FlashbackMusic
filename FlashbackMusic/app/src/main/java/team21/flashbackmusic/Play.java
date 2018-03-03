@@ -13,8 +13,6 @@ import com.google.android.gms.location.LocationServices;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -29,24 +27,23 @@ import java.util.TimeZone;
 
 public class Play {
     private static Clock clock = Clock.systemDefaultZone();
-    private Location location;
+    private double longit;
+    private double lat;
     private String timeOfDay;
     private Timestamp time;
     private transient Context activity;
-    private LocalDateTime morning;
-    private LocalDateTime afternoon;
+    private final LocalTime morning = LocalTime.parse("08:00:00");
+    private final LocalTime afternoon = LocalTime.parse("16:00:00");
 
     public Play(){};
 
-
-    public Play( Context activity, Location location, Timestamp time ) {
+    public Play( Context activity, Location location ) {
 
         this.activity = activity;
-        this.time = time;
-        this.location = location;
-
-        setTimeOfDay(time);
-        Log.i("Play_location", location.toString());
+        setTimeOfDay();
+        setTime();
+        this.lat = location.getLatitude();
+        this.longit = location.getLongitude();
     }
 
     public static LocalDateTime now() {
@@ -62,42 +59,22 @@ public class Play {
         time = new Timestamp(miliTime);
     }
 
-   /* private void setLastLocation() {
-        if (ContextCompat.checkSelfPermission(activity,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(activity,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        location = new Location("dummy");//mFusedLocationClient.getLastLocation().getResult();
-    }*/
-
     private static Clock getClock() {
         return clock;
     }
 
-    public Location getLocation() { return location; }
-
+    //public Location getLocation() { return location; }
+    public double getLongitude() { return longit; }
+    public double getLatitude() { return lat; }
     public String getTimeOfDay() { return timeOfDay; }
 
     public Timestamp getTime() { return time; }
 
-    private void setTimeOfDay(Timestamp time) {
-       long miliTime = time.getTime();
-       TimeZone tz = TimeZone.getDefault();
-       Log.i("Time zone", tz.getDisplayName());
-       LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(time.getTime()), tz.toZoneId());
-       Log.i("hour", Integer.toString(dateTime.getHour()));
-
-       morning = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 8, 0, 0);
-       afternoon = LocalDateTime.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth(), 16, 0, 0);
-
-        if (dateTime.isBefore(morning)) {
+    private void setTimeOfDay() {
+        LocalTime currentTime = now().toLocalTime();
+        if (currentTime.isBefore(morning)) {
             this.timeOfDay = "Night";
-        } else if (dateTime.isBefore(afternoon)) {
+        } else if (currentTime.isBefore(afternoon)) {
             this.timeOfDay = "Morning";
         } else {
             this.timeOfDay = "Afternoon";
