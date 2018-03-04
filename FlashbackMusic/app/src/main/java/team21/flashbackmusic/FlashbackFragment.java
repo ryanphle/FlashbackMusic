@@ -19,6 +19,12 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -72,6 +78,7 @@ public class FlashbackFragment extends Fragment {
         TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
         TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
         TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        final TextView lastPlayedBy = (TextView) rootView.findViewById(R.id.last_played_by);
         Calendar calendar;
 
         Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
@@ -93,6 +100,26 @@ public class FlashbackFragment extends Fragment {
 
         songLocation.setText(addressStr);
         songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+
+        final String songID = s.getName();
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference ref = database.getReference();
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").child(songID).child("User")==null){
+                    lastPlayedBy.setText("Last played by: nobody");
+                } else {
+                    lastPlayedBy.setText("Last played by:" + dataSnapshot.child("Songs").child(songID).child("User").getValue(String.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
 
     }
 }

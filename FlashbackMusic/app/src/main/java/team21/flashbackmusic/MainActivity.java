@@ -59,6 +59,12 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
@@ -74,6 +80,7 @@ import com.google.gson.Gson;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -126,6 +133,8 @@ public class MainActivity extends AppCompatActivity {
     private int currentDay;
     private int currentHour;
     private Calendar calendar;
+    public String proxy;
+    final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
 
     //public Location lastLocation;
@@ -1009,11 +1018,11 @@ public class MainActivity extends AppCompatActivity {
             int score = 0;
 
 
-            if (lastLocation != null) {
-                Log.i("Raw Songs name: ",lastLocation.toString());
+            if (location != null) {
+                Log.i("Raw Songs name: ",location.toString());
             }
 
-            if(play != null && lastLocation != null && play.getLocation().distanceTo(lastLocation)  < 304.8 ){
+            if(play != null && location != null && play.getLocation().distanceTo(location)  < 304.8 ){
                 score++;
             }
 
@@ -1066,6 +1075,32 @@ public class MainActivity extends AppCompatActivity {
     }
     public List<Song> getSortedSongs(){
         return sorted_songs;
+    }
+
+    public void proxyGenerator(){
+        final DatabaseReference ref = database.getReference();
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Iterable<DataSnapshot> proxies = dataSnapshot.child("proxy").getChildren();
+                for (DataSnapshot proxy:proxies) {
+                    //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                    FirebaseDatabase.getInstance().getReference().child("Users").child("1").child("Proxy").setValue(proxy.getValue(String.class));
+                    ref.child("proxy").child(proxy.getValue(String.class)).removeValue();
+                    break;
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
+    }
+
+    public void setProxy(String proxy){
+        this.proxy = proxy;
     }
 
 }
