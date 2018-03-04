@@ -87,6 +87,8 @@ import java.util.TimeZone;
 
 import com.google.gson.Gson;
 
+import static java.util.Locale.JAPAN;
+
 public class MainActivity extends AppCompatActivity {
 
     private Map<String,Album> albums;
@@ -509,12 +511,24 @@ public class MainActivity extends AppCompatActivity {
                     1);
             Log.d("permission","requested");
             return;
+        }else{
+
+            lastLocation = locationManager.getLastKnownLocation(locationProvider);
+            locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+            String netLocation = LocationManager.NETWORK_PROVIDER;
+
+            try {
+                loadSongs();
+                Log.i("Oncreate", "Songs loaded");
+            } catch (Exception e) {
+            e.printStackTrace();
+            }
+            like_editor.apply();
+            albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
+
+            initialFragSetup(frag);
         }
-
-        lastLocation = locationManager.getLastKnownLocation(locationProvider);
-        locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
-
-        String netLocation = LocationManager.NETWORK_PROVIDER;
 
 
         //Log.d("LastLocation",lastLocation.toString());
@@ -548,7 +562,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case 100: {
+            case 1: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -771,8 +785,24 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
-            Address address = (Address) myList.get(0);
-            song.setLocation(address);
+            Log.d("location", "latitude"+play.getLatitude());
+
+            Log.d("address", myList.toString());
+
+
+
+            if(myList.isEmpty()){
+                Address address = new Address(JAPAN);
+                address.setAddressLine(0,"Unknown");
+                address.setAddressLine(1,"Unknown");
+                address.setAddressLine(2,"Unknown");
+                address.setCountryName("Unknown");
+
+            }
+            else {
+                Address address = (Address) myList.get(0);
+                song.setLocation(address);
+            }
 
             Gson gson = new Gson();
             String json = gson.toJson(play);
@@ -964,7 +994,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(isExternalStorageReadable()){
 
-            Music = new File(Environment.DIRECTORY_MUSIC);
+            Music = new File("/storage/emulated/0/Music");
 
 
         }
