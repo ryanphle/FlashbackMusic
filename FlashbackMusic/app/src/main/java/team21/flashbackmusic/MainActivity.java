@@ -188,13 +188,7 @@ public class MainActivity extends AppCompatActivity {
         like_setting = getSharedPreferences("like_setting",MODE_PRIVATE);
         like_editor = like_setting.edit();
 
-        try {
-            loadSongs();
-            Log.i("Oncreate", "Songs loaded");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        like_editor.apply();
+
 
         pre_setting = getSharedPreferences("pre_setting",MODE_PRIVATE);
         pre_editor = pre_setting.edit();
@@ -215,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
         //initialFragSetup(frag);
 
         /* Setting up all Listeners */
@@ -499,14 +492,22 @@ public class MainActivity extends AppCompatActivity {
         locationProvider = LocationManager.GPS_PROVIDER;
 
 
+        List<String> permissions = new ArrayList<String>();
+
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+
+
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    100);
-            Log.d("test1","ins");
+                    permissions.toArray(new String[permissions.size()]),
+                    1);
+            Log.d("permission","requested");
             return;
         }
 
@@ -516,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
         String netLocation = LocationManager.NETWORK_PROVIDER;
 
 
-        Log.d("LastLocation",lastLocation.toString());
+        //Log.d("LastLocation",lastLocation.toString());
 
 
 
@@ -539,7 +540,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void onStart(){
         super.onStart();
-        initialFragSetup(frag);
 
 
     }
@@ -561,6 +561,17 @@ public class MainActivity extends AppCompatActivity {
 
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+                    try {
+                        loadSongs();
+                        Log.i("Oncreate", "Songs loaded");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    like_editor.apply();
+                    albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
+
+                    initialFragSetup(frag);
 
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
