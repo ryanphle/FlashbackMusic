@@ -24,6 +24,7 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.provider.Settings;
@@ -55,6 +56,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -161,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
+
+    private File Music;
 
 
     @Override
@@ -946,16 +950,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {
-        Field[] fields=R.raw.class.getFields();
-        Log.d("Size of fields", Integer.toString(fields.length));
+
+        if(isExternalStorageReadable()){
+
+            Music = new File(Environment.DIRECTORY_MUSIC);
+
+
+        }
+
+        Log.i("File Path", Music.getAbsolutePath());
+
+
+        File[] songFiles = Music.listFiles();
+
+        //Field[] fields=R.raw.class.getFields();
+        //Log.d("Size of fields", Integer.toString(fields.length));
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         Play play;
         Gson gson = new Gson();
 
-        for(int count=0; count < fields.length; count++){
+        for(int count=0; count < songFiles.length; count++){
 
-            int resourceID = fields[count].getInt(fields[count]);
-            Uri uri = Uri.parse("android.resource://team21.flashbackmusic/" + resourceID);
+            //int resourceID = fields[count].getInt(fields[count]);
+            //Uri uri = Uri.parse("android.resource://team21.flashbackmusic/" + resourceID);
+
+            Uri uri = Uri.fromFile(songFiles[count]);
+
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
             retriever.setDataSource(this, uri);
 
@@ -1205,5 +1225,19 @@ public class MainActivity extends AppCompatActivity {
     public List<Song> getSortedSongs(){
         return sorted_songs;
     }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+
+
+
 
 }
