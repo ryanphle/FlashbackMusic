@@ -24,11 +24,13 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
@@ -201,15 +203,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (NullPointerException e){
 
         }
-
-        //Log.d("Fragment mode", Integer.toString(frag));
-
-        /*
-        Intent intent = new Intent(this,GetLocationService.class);
-        bindService(intent, serviceConnection,Context.BIND_AUTO_CREATE);
-        */
-
-
 
         albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
         //initialFragSetup(frag);
@@ -427,48 +420,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        /*
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    100);
-            Log.d("test1","ins");
-            //return;
-        }
-        */
-/*
-        locationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle b = intent.getBundleExtra("Location");
-                lastLocation = (Location) b.getParcelable("Location");
-                Song song = (Song)b.getParcelable("Song");
-                if(!enterFlash) {
-                    storePlayInformation(song);
-                    //Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
-                }
-                else{
-                    enterFlash = false;
-                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
-                    initialFragSetup(frag);
-
-                    //sort_songs();
-                }
-            }
-        };
-        */
-
-        //while(getLocationService == null){}
-
-
-
-
-
-
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -514,30 +465,11 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("LastLocation",lastLocation.toString());
 
-
-
-
-
-
-
-
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
-         */
-
     }
 
     public void onStart(){
         super.onStart();
         initialFragSetup(frag);
-
-
     }
 
     @Override
@@ -574,38 +506,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-/*
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            GetLocationService.locationService locationservice = (GetLocationService.locationService) iBinder;
-            getLocationService = locationservice.getService();
-            isBound = true;
-
-            if(frag == FLASHBACK_FRAG) {
-                enterFlash = true;
-
-                getLocationService.getLocation(songs.get(0));
-
-                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
-                        locationReceiver, new IntentFilter("LastLocation")
-                );
-            }
-            else{
-                initialFragSetup(frag);
-            }
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-
-            isBound = false;
-
-        }
-    };
-*/
-
     public void initialFragSetup(int frag) {
         setSongFragment();
         setAlbumFragment();
@@ -615,14 +515,9 @@ public class MainActivity extends AppCompatActivity {
         initTransaction.addToBackStack("songs");
         initTransaction.add(R.id.main_container, fragmentAlbums, "albums");
         initTransaction.addToBackStack("albums");
-        //initTransaction.add(R.id.main_container, random_fragmentFlashback, "flash_songs");
-        //initTransaction.addToBackStack("flash_songs");
         if(frag == SONG_FRAG) {
             initTransaction.hide(fragmentAlbums);
-            //initTransaction.hide(random_fragmentFlashback);
             initTransaction.addToBackStack("songs");
-
-
             bottomNavigationView.getMenu().getItem(SONG_FRAG).setChecked(true);
 
             loadMedia(songs.get(0),this.mediaPlayer);
@@ -635,25 +530,14 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.getMenu().getItem(ALBUM_FRAG).setChecked(true);
             initTransaction.addToBackStack("albums");
 
-
             loadMedia(songs.get(0),this.mediaPlayer);
-
         }
-        else{
-            //mediaPlayer.reset();
+        else {
             initTransaction.hide(fragmentSong);
             initTransaction.hide(fragmentAlbums);
 
-
-            //initTransaction.remove(random_fragmentFlashback);
-
-            //Collections.shuffle(random_songs);
-
-
             setFlashbackFragment();
-            //loadMedia(random_songs.get(flash_index));
-            //mediaPlayer.start();
-            newSong(0,FLASHBACK_FRAG,true,false);
+            newSong(0, FLASHBACK_FRAG, true, false);
 
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
@@ -664,9 +548,13 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.getMenu().getItem(FLASHBACK_FRAG).setChecked(true);
 
         }
+
         initTransaction.commit();
+    }
 
-
+    protected void showDownloadDialog() {
+        DialogFragment downloadFragment = new DownloadFragment();
+        downloadFragment.show(fragmentManager, "download");
     }
 
     public void playSelectedSong(Song s) {
@@ -677,14 +565,6 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.reset();
         loadMedia(s,mediaPlayer);
 
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        */
         Timestamp time = new Timestamp(System.currentTimeMillis());
         storePlayInformation(s,lastLocation,"plays",time);
 
@@ -1046,6 +926,8 @@ public class MainActivity extends AppCompatActivity {
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
     }
+
+
 
     private void updateTime(){
         calendar.setTimeInMillis(System.currentTimeMillis());

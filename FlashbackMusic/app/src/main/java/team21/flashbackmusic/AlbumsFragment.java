@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -48,14 +49,6 @@ public class AlbumsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 a = (Album) parent.getAdapter().getItem(position);
                 Song s = a.getSongs().get(0);
-                /*((MainActivity)getActivity()).playSelectedSong(s);
-                updateSongUI(s);
-                ((MainActivity)getActivity()).currAlbum = a;
-                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).ALBUM_FRAG;
-                ((MainActivity)getActivity()).album_index = 0;
-                ((MainActivity)getActivity()).currSongIdx = 0;
-                ((MainActivity)getActivity()).songLoaded = true;
-                ((MainActivity)getActivity()).currSong = s;*/
 
                 ((MainActivity)getActivity()).songLoaded = true;
                 ((MainActivity)getActivity()).currAlbum = a;
@@ -67,8 +60,14 @@ public class AlbumsFragment extends Fragment {
 
                 ((MainActivity)getActivity()).newSong(0,((MainActivity)getActivity()).ALBUM_FRAG,true,true);
 
+            }
+        });
 
-
+        Button downloadButton = rootView.findViewById(R.id.download_btn);
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showDownloadDialog();
             }
         });
 

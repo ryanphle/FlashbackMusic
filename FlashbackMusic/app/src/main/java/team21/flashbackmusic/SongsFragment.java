@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.media.MediaPlayer;
 import android.provider.MediaStore;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -63,6 +64,14 @@ public class SongsFragment extends Fragment {
                     ((MainActivity) getActivity()).currSong = s;
                 }
 
+            }
+        });
+
+        Button downloadButton = rootView.findViewById(R.id.download_btn);
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showDownloadDialog();
             }
         });
 
