@@ -63,8 +63,8 @@ public class MainActivityTest {
         String json = mainActivity.getActivity().getSharedPreferences("test", MODE_PRIVATE).getString(song.getName(), "");
         play = gson.fromJson(json,Play.class);
 
-        assertEquals(location.getLatitude(),play.getLocation().getLatitude(), 0);
-        assertEquals(location.getLongitude(),play.getLocation().getLongitude(), 0);
+        assertEquals(location.getLatitude(),play.getLatitude(), 0);
+        assertEquals(location.getLongitude(),play.getLongitude(), 0);
 
         assertEquals(time.getTime() ,play.getTime().getTime());
         assertEquals("Afternoon", play.getTimeOfDay());
@@ -80,8 +80,8 @@ public class MainActivityTest {
         json = mainActivity.getActivity().getSharedPreferences("test", MODE_PRIVATE).getString(song.getName(), "");
         play = gson.fromJson(json,Play.class);
 
-        assertEquals(location.getLatitude(),play.getLocation().getLatitude(), 0);
-        assertEquals(location.getLongitude(),play.getLocation().getLongitude(), 0);
+        assertEquals(location.getLatitude(),play.getLatitude(), 0);
+        assertEquals(location.getLongitude(),play.getLongitude(), 0);
 
         assertEquals(time.getTime(),play.getTime().getTime());
         assertEquals("Night", play.getTimeOfDay());
@@ -97,8 +97,8 @@ public class MainActivityTest {
         json = mainActivity.getActivity().getSharedPreferences("test", MODE_PRIVATE).getString(song.getName(), "");
         play = gson.fromJson(json,Play.class);
 
-        assertEquals(location.getLatitude(),play.getLocation().getLatitude(), 0);
-        assertEquals(location.getLongitude(),play.getLocation().getLongitude(), 0);
+        assertEquals(location.getLatitude(),play.getLatitude(), 0);
+        assertEquals(location.getLongitude(),play.getLongitude(), 0);
 
         assertEquals(time.getTime(),play.getTime().getTime());
         assertEquals("Morning", play.getTimeOfDay());
