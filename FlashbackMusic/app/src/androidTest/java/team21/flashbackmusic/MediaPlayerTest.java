@@ -79,9 +79,9 @@ public class MediaPlayerTest {
     @UiThreadTest
     @Test
     public void testPrevButton() {
-        Song currSong = mainActivity.getActivity().currSong;
         if (mainActivity.getActivity().frag != 2) {
             playButton.performClick();
+            Song currSong = mainActivity.getActivity().currSong;
             prevButton.performClick();
             assertTrue(!currSong.getName().equals(mainActivity.getActivity().currSong.getName()));
         }
