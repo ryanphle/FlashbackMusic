@@ -8,16 +8,16 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Created by jerryliu on 3/3/18.
+ * Created by samliu on 3/4/18.
  */
 
-public class TestGetPlayInformation {
+public class TestGetUserName {
     @Rule
     public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
 
     @Test
     public void test1() {
-        String value = mainActivity.getActivity().getPlayInformation(new Song("baby", "justin", null, null, null));
-        assertEquals("Jay", value);
+        String username = mainActivity.getActivity().getUserName();
+        assertEquals("jerry", username);
     }
 }
