@@ -117,7 +117,7 @@ public class SongsFragment extends Fragment {
                if (dataSnapshot.child("Songs").child(songID).child("User")==null){
                    lastPlayedBy.setText("Last played by: nobody");
                } else {
-                   lastPlayedBy.setText("Last played by:" + dataSnapshot.child("Songs").child(songID).child("User").getValue(String.class));
+                   lastPlayedBy.setText("Last played by:" + dataSnapshot.child("Songs").child("baby").child("User").getValue(String.class));
                }
            }
 
