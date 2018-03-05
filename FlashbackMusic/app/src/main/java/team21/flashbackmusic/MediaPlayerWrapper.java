@@ -52,6 +52,7 @@ public class MediaPlayerWrapper {
         newSong(nextSongIdx);
     }
 
+
     public void prev() {
         int prevSongIdx = (index - 1) < 0 ? songs.size() - 1 : index - 1;
 
