@@ -162,6 +162,8 @@ public class MainActivity extends AppCompatActivity {
     private String locationProvider;
     private LocationListener locationListener;
 
+    protected MediaPlayerWrapper mediaPlayerWrapper;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -216,7 +218,9 @@ public class MainActivity extends AppCompatActivity {
 
         /* Setting up all Listeners */
 
-        mediaPlayer = new MediaPlayer();
+        mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext());
+
+        /*mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
@@ -252,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
                 }
             }
-        });
+        });*/
 
         bottomNavigationView = findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -349,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                songLoaded = true;
+                /*songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
                     if (index == res_uri.size() - 1)
@@ -376,14 +380,17 @@ public class MainActivity extends AppCompatActivity {
                         flash_index++;
                     newSong(flash_index, frag, true,true);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
-                }
+                }*/
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
+                mediaPlayerWrapper.next();
+                updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
             }
         });
 
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                songLoaded = true;
+                /*songLoaded = true;
                 if(songPlayingFrag == SONG_FRAG) {
                     mediaPlayer.reset();
                     if (index == 0)
@@ -401,7 +408,10 @@ public class MainActivity extends AppCompatActivity {
                         album_index--;
                     newSong(album_index, songPlayingFrag, false,true);
                     stopButton.setBackgroundResource(R.drawable.ic_playing);
-                }
+                }*/
+                stopButton.setBackgroundResource(R.drawable.ic_playing);
+                mediaPlayerWrapper.prev();
+                updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
             }
         });
 
@@ -409,8 +419,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 songLoaded = true;
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
+                if (mediaPlayerWrapper.isPlaying()) {
+                    //mediaPlayer.pause();
                     view.setBackgroundResource(R.drawable.ic_stopping);
                 }
                 else {
@@ -420,10 +430,12 @@ public class MainActivity extends AppCompatActivity {
                     if (songPlayingFrag == ALBUM_FRAG) currIdx = album_index;
                     if (songPlayingFrag == FLASHBACK_FRAG) currIdx = flash_index;
 
-                    newSong(currIdx, songPlayingFrag, false,true);
+                    //newSong(currIdx, songPlayingFrag, false,true);
                     //updateSongMetaData(currIdx, frag);
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
+                //updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, false);
+                mediaPlayerWrapper.stopAndStart();
             }
         });
 
@@ -827,8 +839,6 @@ public class MainActivity extends AppCompatActivity {
                             this.flash_index++;
                         newSong(this.flash_index,mode,next,update);
                         break;
-
-
                 }
 
             }

@@ -39,6 +39,7 @@ public class SongsFragment extends Fragment {
     public View rootView;
     public ListView listView;
     public TextView artistAlbumInfo;
+    private ArrayList<Song> songs;
 
     public SongsFragment(){}
 
@@ -47,7 +48,7 @@ public class SongsFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_songs, container, false);
         listView = rootView.findViewById(R.id.song_list);
 
-        final ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
+        songs = getArguments().getParcelableArrayList("songs");
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
@@ -56,10 +57,13 @@ public class SongsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song s = (Song) parent.getAdapter().getItem(position);
                 if(s.getFavorite() != -1) {
-                    ((MainActivity) getActivity()).playSelectedSong(s);
+                    //((MainActivity) getActivity()).playSelectedSong(s);
                     updateSongUI(s);
+                    ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(songs);
+                    ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(position);
                     ((MainActivity) getActivity()).songLoaded = true;
                     ((MainActivity) getActivity()).songPlayingFrag = ((MainActivity) getActivity()).SONG_FRAG;
+                    ((MainActivity) getActivity()).stopButton.setBackgroundResource(R.drawable.ic_playing);
                     ((MainActivity) getActivity()).currSong = s;
                 }
 

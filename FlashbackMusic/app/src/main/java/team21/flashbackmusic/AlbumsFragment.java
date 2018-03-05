@@ -48,14 +48,6 @@ public class AlbumsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 a = (Album) parent.getAdapter().getItem(position);
                 Song s = a.getSongs().get(0);
-                /*((MainActivity)getActivity()).playSelectedSong(s);
-                updateSongUI(s);
-                ((MainActivity)getActivity()).currAlbum = a;
-                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).ALBUM_FRAG;
-                ((MainActivity)getActivity()).album_index = 0;
-                ((MainActivity)getActivity()).currSongIdx = 0;
-                ((MainActivity)getActivity()).songLoaded = true;
-                ((MainActivity)getActivity()).currSong = s;*/
 
                 ((MainActivity)getActivity()).songLoaded = true;
                 ((MainActivity)getActivity()).currAlbum = a;
@@ -64,11 +56,14 @@ public class AlbumsFragment extends Fragment {
                 ((MainActivity)getActivity()).currSongIdx = 0;
                 ((MainActivity)getActivity()).currSong = s;
                 ((MainActivity)getActivity()).album_dislike = 0;
+                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity) getActivity()).ALBUM_FRAG;
+                ((MainActivity) getActivity()).stopButton.setBackgroundResource(R.drawable.ic_playing);
 
-                ((MainActivity)getActivity()).newSong(0,((MainActivity)getActivity()).ALBUM_FRAG,true,true);
+                //((MainActivity)getActivity()).newSong(0,((MainActivity)getActivity()).ALBUM_FRAG,true,true);
 
-
-
+                updateSongUI(s);
+                ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(a.getSongs());
+                ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(0);
             }
         });
 
