@@ -1,8 +1,10 @@
 package team21.flashbackmusic;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,15 +19,32 @@ public class MediaPlayerWrapper {
     private Context context;
     private boolean playing;
     private int index;
+    private MainActivity activity;
 
-    public MediaPlayerWrapper(List<Song> songs, Context context) {
+    public MediaPlayerWrapper(List<Song> songs, final Context context, final MainActivity activity) {
         this.songs = songs;
         this.context = context;
         this.index = 0;
-        playing = false;
+        this.activity = activity;
+
+        this.mediaPlayer = new MediaPlayer();
 
         Song start = songs.get(0);
         loadMedia(start, mediaPlayer);
+        newSong(index);
+        playing = false;
+        mediaPlayer.pause();
+
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.reset();
+                index = (index + 1) % getSongs().size();
+                loadMedia(getSongs().get(index), mediaPlayer);
+                updateAndStore(index, activity.songPlayingFrag, true);
+                mediaPlayer.start();
+            }
+        });
     }
 
     public void stopAndStart() {
@@ -35,7 +54,7 @@ public class MediaPlayerWrapper {
         }
         else {
             playing = true;
-            newSong(index);
+            mediaPlayer.start();
         }
     }
 
@@ -58,7 +77,7 @@ public class MediaPlayerWrapper {
 
         Song s = songs.get(prevSongIdx);
         while (s.getFavorite() == -1) {
-            prevSongIdx = (index - 1) < 0 ? songs.size() - 1 : index - 1;
+            prevSongIdx = (prevSongIdx - 1) < 0 ? songs.size() - 1 : prevSongIdx - 1;
             s = songs.get(prevSongIdx);
         }
 
@@ -79,24 +98,17 @@ public class MediaPlayerWrapper {
     }
 
     public void loadMedia(Song song, MediaPlayer mediaPlayer) {
-        if (mediaPlayer == null) {
-            this.mediaPlayer = new MediaPlayer();
-            try {
-                this.mediaPlayer.setDataSource(context, song.getUri());
-                this.mediaPlayer.prepare();
-            } catch (Exception e) {
-                System.out.println(e.toString());
-            }
-        }
-
         try {
             mediaPlayer.setDataSource(context, song.getUri());
             mediaPlayer.prepare();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
-
     }
+
+    public Song getSong() { return songs.get(index); }
+
+    public void setIndex(int index) { this.index = index; }
 
     public int getIndex() {
         return index;
@@ -106,8 +118,26 @@ public class MediaPlayerWrapper {
         this.songs = songs;
     }
 
+    public List<Song> getSongs() { return this.songs; }
+
     public boolean isPlaying() {
         return playing;
+    }
+
+    public void forcePause() {
+        mediaPlayer.pause();
+        playing = false;
+    }
+
+    public void release() {
+        mediaPlayer.release();
+    }
+
+    public void updateAndStore(int index, int mode, boolean songChange) {
+        Timestamp time = new Timestamp(System.currentTimeMillis());
+        activity.storePlayInformation(songs.get(index), activity.lastLocation, "plays",
+                                        time);
+        activity.updateSongMetaData(index, mode, songChange);
     }
 
 }

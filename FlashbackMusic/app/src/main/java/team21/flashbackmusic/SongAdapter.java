@@ -72,7 +72,7 @@ public class SongAdapter extends ArrayAdapter<Song>{
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_like);
                     }
                     else if (s.getFavorite() == 1) {
-                        Song currentSong = ((MainActivity)context).currSong;
+                        Song currentSong = ((MainActivity)context).mediaPlayerWrapper.getSong();
                         s.setFavorite(-1);
 
                         ((MainActivity)context).like_editor.putInt(s.getName(),s.getFavorite());
@@ -83,7 +83,7 @@ public class SongAdapter extends ArrayAdapter<Song>{
                         //Log.d("currentSong", s.getName());
 
                         likeDislikeButton.setBackgroundResource(R.drawable.ic_dislike);
-                        if (((MainActivity)context).mediaPlayer.isPlaying() && s.equals(currentSong)) {
+                        if (((MainActivity)context).mediaPlayerWrapper.isPlaying() && s.equals(currentSong)) {
                             ((MainActivity) context).nextSong(true);
                         }
                     }

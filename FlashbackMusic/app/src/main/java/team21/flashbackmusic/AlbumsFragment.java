@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.lang.reflect.Array;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -61,9 +62,20 @@ public class AlbumsFragment extends Fragment {
 
                 //((MainActivity)getActivity()).newSong(0,((MainActivity)getActivity()).ALBUM_FRAG,true,true);
 
-                updateSongUI(s);
+
                 ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(a.getSongs());
                 ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(0);
+
+                Timestamp time = new Timestamp(System.currentTimeMillis());
+                ((MainActivity) getActivity()).storePlayInformation(
+                        ((MainActivity) getActivity()).mediaPlayerWrapper.getSong(),
+                        ((MainActivity) getActivity()).lastLocation,
+                        "plays",
+                        time
+                );
+
+                updateSongUI(s);
+
             }
         });
 
