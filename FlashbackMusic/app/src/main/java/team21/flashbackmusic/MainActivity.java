@@ -189,6 +189,8 @@ public class MainActivity extends AppCompatActivity {
     private String locationProvider;
     private LocationListener locationListener;
 
+    private AccountManager accountManager;
+
 
 
     @Override
@@ -517,6 +519,13 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationProvider = LocationManager.GPS_PROVIDER;
 
+       // accountManager = (AccountManager) this.getSystemService(Context.ACCOUNT_SERVICE);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -547,11 +556,28 @@ public class MainActivity extends AppCompatActivity {
         //updateSongMetaData(currSongIdx,SONG_FRAG,false);
          */
 
+        //AccountManager accountManager = (AccountManager) this.getSystemService(Context.ACCOUNT_SERVICE);
+
+       /* if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String []{Manifest.permission.GET_ACCOUNTS}, 0);
+            return;
+        }
+        Account []accounts = accountManager.getAccounts();
+        if (accounts.length > 0)
+            myUserName = accounts[0].name;
+        else
+            myUserName = "no";*/
+
     }
 
     public void onStart() {
         super.onStart();
         initialFragSetup(frag);
+        /*GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            myUserName = "yes";
+        else
+            myUserName = "no";*/
     }
 
     @Override
@@ -581,6 +607,20 @@ public class MainActivity extends AppCompatActivity {
                     // functionality that depends on this permission.
                 }
                 return;
+            }
+
+            case 0: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Account []accounts = accountManager.getAccounts();
+                    if (accounts.length > 0)
+                        myUserName = accounts[0].name;
+                    else
+                        myUserName = "no";
+                }
+                else {}
+                return;
+
             }
 
             // other 'case' lines to check for other
@@ -683,6 +723,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public String getUserName() {
+        return this.myUserName;
+    }
+
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
         index = songs.indexOf(s);
@@ -766,6 +810,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("TAG1", "Failed to read value.", databaseError.toException());
             }
         });
+
     }*/
 
     public void storePlayInformation(Song song, Location location, Timestamp time, String user) {
@@ -864,8 +909,6 @@ public class MainActivity extends AppCompatActivity {
                             this.flash_index++;
                         newSong(this.flash_index,mode,next,update);
                         break;
-
-
                 }
 
             }
