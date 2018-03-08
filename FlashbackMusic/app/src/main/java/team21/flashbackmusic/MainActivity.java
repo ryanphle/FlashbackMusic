@@ -47,6 +47,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -104,6 +105,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import com.google.gson.Gson;
 
@@ -185,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
     private String lastPlayTime;
     private String lastPlayLocation;
     private String myUserName;
+    private String myProxyName;
+    public String userID;
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
@@ -547,6 +551,8 @@ public class MainActivity extends AppCompatActivity {
         //updateSongMetaData(currSongIdx,SONG_FRAG,false);
          */
 
+        proxyGenerator();
+
     }
 
     public void onStart() {
@@ -700,7 +706,7 @@ public class MainActivity extends AppCompatActivity {
         );
         */
         Timestamp time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(s,lastLocation,time, "username");
+        storePlayInformation(s,lastLocation,time, userID, myProxyName);
 
         //storePlayInformation(s);
         //startLocationService(s);
@@ -744,34 +750,12 @@ public class MainActivity extends AppCompatActivity {
 
     }#*/
 
-    /*public void getPlayInformation(final Song s) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
-                    lastPlayLocation = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").getValue(String.class);
-                    lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(String.class);
-                    lastPlayUser = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
-                }
-                else {
-                    lastPlayLocation = "N/A";
-                    lastPlayTime = "N/A";
-                    lastPlayUser = "N/A";
-                }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w("TAG1", "Failed to read value.", databaseError.toException());
-            }
-        });
-    }*/
-
-    public void storePlayInformation(Song song, Location location, Timestamp time, String user) {
+    public void storePlayInformation(Song song, Location location, Timestamp time, String user, String proxy) {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
 
         String addressStr = "";
+        Address address = null;
         if (location != null) {
             Play play = new Play(this, location.getLatitude(), location.getLongitude(), time);
             song.setTimeStamp(play.getTime());
@@ -786,7 +770,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
-            Address address = myList.get(0);
+            address = myList.get(0);
             song.setLocation(address);
 
             addressStr += address.getAddressLine(0) + ", ";
@@ -797,9 +781,12 @@ public class MainActivity extends AppCompatActivity {
         String currentTime = getCurrentTime(time);
 
         myRef.child("Songs").child(song.getName()).child("last_play_user").setValue(user);
-        myRef.child("Songs").child(song.getName()).child("last_play_proxy").setValue("proxyname");
+        myRef.child("Songs").child(song.getName()).child("last_play_proxy").setValue(proxy);
         myRef.child("Songs").child(song.getName()).child("last_play_location").setValue(addressStr);
         myRef.child("Songs").child(song.getName()).child("last_play_time").setValue(currentTime);
+        myRef.child("Songs").child(song.getName()).child("time").setValue(time);
+        myRef.child("Songs").child(song.getName()).child("longitude").setValue(address.getLongitude());
+        myRef.child("Songs").child(song.getName()).child("latitude").setValue(address.getLatitude());
     }
 
     public String getCurrentTime(Timestamp time) {
@@ -834,7 +821,7 @@ public class MainActivity extends AppCompatActivity {
 
         currSong = songList.get(index);
         Timestamp time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(currSong, lastLocation, time, myUserName);
+        //storePlayInformation(currSong, lastLocation, time, userID, myProxyName);
 
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
@@ -864,8 +851,6 @@ public class MainActivity extends AppCompatActivity {
                             this.flash_index++;
                         newSong(this.flash_index,mode,next,update);
                         break;
-
-
                 }
 
             }
@@ -905,13 +890,11 @@ public class MainActivity extends AppCompatActivity {
         album_dislike = 0;
 
         loadMedia(songList.get(index), this.mediaPlayer);
-        time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(songList.get(index),lastLocation,time, "user");
-        //startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
         }
+        storePlayInformation(songList.get(index),lastLocation,time, userID, myProxyName);
     }
 
     public void updateSongMetaData(int index, int mode, boolean songChange) {
@@ -1155,8 +1138,8 @@ public class MainActivity extends AppCompatActivity {
                 }catch (IOException e) {
 
                 }
-                Address address = (Address) myList.get(0);
-                sorted_songs.get(sorted_song_index).setLocation(address);
+                //Address address = (Address) myList.get(0);
+                //sorted_songs.get(sorted_song_index).setLocation(address);
             }
             sorted_song_index++;
         }
@@ -1239,8 +1222,39 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
+
     public List<Song> getSortedSongs(){
         return sorted_songs;
+    }
+    public void proxyGenerator() {
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+
+        userID = UUID.randomUUID().toString();
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Users").child(userID).exists()){
+                    myProxyName = dataSnapshot.child("Users").child(userID).child("Proxy").getValue(String.class);
+                } else {
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
+                    for (DataSnapshot proxy : proxies) {
+                        //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        myProxyName = proxy.getValue(String.class);
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
     }
 
 }

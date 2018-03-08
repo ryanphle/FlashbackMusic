@@ -19,6 +19,12 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -70,8 +76,9 @@ public class FlashbackFragment extends Fragment {
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
         TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
-        TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
-        TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        final TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
+        final TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        final TextView lastPlayedBy = (TextView) rootView.findViewById(R.id.last_played_by);
         Calendar calendar;
 
         Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
@@ -85,14 +92,37 @@ public class FlashbackFragment extends Fragment {
         calendar.setTimeInMillis(s.getTimeStamp().getTime());
         calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-        Address address = s.getLocation();
+       /* Address address = s.getLocation();
         String addressStr = "";
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
-        addressStr += address.getAddressLine(2);
+        addressStr += address.getAddressLine(2);*/
 
-        songLocation.setText(addressStr);
-        songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+        //songLocation.setText(addressStr);
+        //songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        final String sName = s.getName();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
+                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location").getValue(String.class));
+                    songTime.setText( dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(String.class));
+                    lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Songs").child(sName).child("last_play_proxy").getValue(String.class));
+                }
+                else {
+                    songLocation.setText("N/A");
+                    songTime.setText("N/A");
+                    lastPlayedBy.setText("N/A");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
 
     }
 }
