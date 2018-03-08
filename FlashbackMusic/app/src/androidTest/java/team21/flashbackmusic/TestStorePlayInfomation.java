@@ -18,7 +18,6 @@ public class TestStorePlayInfomation {
     @Test
     public void test1() {
         Song s = new Song ("baby", null, null, null, null);
-        String value = mainActivity.getActivity().storePlayInformation(s, null, null, "Jay");
-        assertEquals(null, value);
+        mainActivity.getActivity().storePlayInformation(s, null, null, "Jay", "proxy");
     }
 }

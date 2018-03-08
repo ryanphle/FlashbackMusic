@@ -1254,7 +1254,40 @@ public class MainActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {
                 System.out.println("The read failed: " + databaseError.getCode());
             }
+
         });
+    }
+    public String getProxy(){
+        return myProxyName;
+    }
+    public void setProxy(String proxy){
+        myProxyName = proxy;
+    }
+
+    public void setData(final TextView songLocation, final TextView songTime, final TextView lastPlayedBy, final String sName){
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
+                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location").getValue(String.class));
+                    songTime.setText( dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(String.class));
+                    //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
+                    lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Songs").child(sName).child("last_play_proxy").getValue(String.class));
+                }
+                else {
+                    songLocation.setText("N/A");
+                    songTime.setText("N/A");
+                    lastPlayedBy.setText("N/A");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
+
     }
 
 }
