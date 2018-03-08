@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.media.MediaPlayer;
 import android.provider.MediaStore;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -66,6 +67,14 @@ public class SongsFragment extends Fragment {
             }
         });
 
+        Button downloadButton = rootView.findViewById(R.id.download_btn);
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showDownloadDialog();
+            }
+        });
+
         return rootView;
     }
 
@@ -98,6 +107,12 @@ public class SongsFragment extends Fragment {
 
        songLocation.setText(addressStr);
        songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+
+   }
+
+   public void updateListView(){
+
+       adapter.notifyDataSetChanged();
 
    }
 
