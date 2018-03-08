@@ -87,9 +87,9 @@ public class MediaPlayerWrapper {
 
     public void newSong(int index) {
         Song s = songs.get(index);
-        this.index = index;
 
         if (s.getFavorite() == -1) return;
+        this.index = index;
 
         mediaPlayer.reset();
         loadMedia(s, mediaPlayer);
