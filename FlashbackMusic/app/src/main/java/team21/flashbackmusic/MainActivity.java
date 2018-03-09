@@ -2,11 +2,13 @@ package team21.flashbackmusic;
 
 //import android.app.Fragment;
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -59,7 +61,18 @@ import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
+import com.google.api.services.people.v1.model.ListConnectionsResponse;
+
 import com.google.gson.Gson;
 
 import java.util.Arrays;
@@ -85,7 +98,21 @@ import java.util.TimeZone;
 
 import com.google.gson.Gson;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleBrowserClientRequestUrl;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.people.v1.PeopleService;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+
+
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
@@ -162,11 +189,23 @@ public class MainActivity extends AppCompatActivity {
     private String locationProvider;
     private LocationListener locationListener;
 
+    private GoogleApiClient google_api_client;
+    private GoogleApiAvailability google_api_availability;
+    private SignInButton signIn_btn;
+    private static final int SIGN_IN_CODE = 0;
+    private ConnectionResult connection_result;
+    private boolean is_intent_inprogress;
+    private boolean is_signInBtn_clicked;
+    private int request_code;
+    ProgressDialog progress_dialog;
+
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         albums = new HashMap<>();
         songs = new ArrayList<>();
@@ -183,6 +222,11 @@ public class MainActivity extends AppCompatActivity {
 
         like_setting = getSharedPreferences("like_setting",MODE_PRIVATE);
         like_editor = like_setting.edit();
+
+
+
+
+
 
         try {
             loadSongs();
@@ -428,46 +472,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        /*
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    100);
-            Log.d("test1","ins");
-            //return;
-        }
-        */
-/*
-        locationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle b = intent.getBundleExtra("Location");
-                lastLocation = (Location) b.getParcelable("Location");
-                Song song = (Song)b.getParcelable("Song");
-                if(!enterFlash) {
-                    storePlayInformation(song);
-                    //Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
-                }
-                else{
-                    enterFlash = false;
-                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
-                    initialFragSetup(frag);
-
-                    //sort_songs();
-                }
-            }
-        };
-        */
-
-        //while(getLocationService == null){}
-
-
-
-
-
 
         locationListener = new LocationListener() {
             @Override
@@ -512,11 +516,21 @@ public class MainActivity extends AppCompatActivity {
         String netLocation = LocationManager.NETWORK_PROVIDER;
 
 
-        Log.d("LastLocation",lastLocation.toString());
+        //Log.d("LastLocation",lastLocation.toString());
 
 
 
-
+        buidNewGoogleApiClient();
+        signIn_btn = (SignInButton) findViewById(R.id.sign_in_button);
+        signIn_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(),"start sign process", Toast.LENGTH_SHORT).show();
+                gPlusSignIn();
+            }
+        });
+        progress_dialog = new ProgressDialog(this);
+        progress_dialog.setMessage("Signing in....");
 
 
 
@@ -533,10 +547,139 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    @Override
+    public void onConnected(Bundle arg0) {
+            is_signInBtn_clicked = false;
+            // Get user's information and set it into the layout<br />
+            getProfileInfo();
+            Toast.makeText(getApplicationContext(), "Google+ connected", Toast.LENGTH_SHORT).show();
+            // Update the UI after signin<br />
+            changeUI(true);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        if (!result.hasResolution()) {
+                google_api_availability.getErrorDialog(this, result.getErrorCode(),request_code).show();
+            return;
+        }
+        if (!is_intent_inprogress) {
+                connection_result = result;
+                if (is_signInBtn_clicked) {
+                    resolveSignInError();
+            }
+        }
+    }
+
+    private void gPlusRevokeAccess() {
+        if (google_api_client.isConnected()) {
+                Plus.AccountApi.clearDefaultAccount(google_api_client);
+                Plus.AccountApi.revokeAccessAndDisconnect(google_api_client)
+                    .setResultCallback(new ResultCallback<Status>() {
+                @Override
+                public void onResult(Status arg0) {
+                        Log.d("MainActivity", "User access revoked!");
+                        buidNewGoogleApiClient();
+                        google_api_client.connect();
+                        changeUI(false);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int arg0) {
+            google_api_client.connect();
+            changeUI(false);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int responseCode,
+            Intent intent) {
+        // Check which request we're responding to<br />
+        if (requestCode == SIGN_IN_CODE) {
+                request_code = requestCode;
+            if (responseCode != RESULT_OK) {
+                    is_signInBtn_clicked = false;
+                    progress_dialog.dismiss();
+            }
+            is_intent_inprogress = false;
+            if (!google_api_client.isConnecting()) {
+                    google_api_client.connect();
+            }
+        }
+    }
+
+    private void gPlusSignIn() {
+        if (!google_api_client.isConnecting()) {
+                Log.d("user connected","connected");
+                is_signInBtn_clicked = true;
+                progress_dialog.show();
+                resolveSignInError();
+        }
+    }
+
+
+    private void resolveSignInError() {
+        if (connection_result.hasResolution()) {
+            try {
+                    is_intent_inprogress = true;
+                    connection_result.startResolutionForResult(this, SIGN_IN_CODE);
+                    Log.d("resolve error", "sign in error resolved");
+            } catch (IntentSender.SendIntentException e) {
+                    is_intent_inprogress = false;
+                    google_api_client.connect();
+            }
+        }
+    }
+
+
+    private void changeUI(boolean signedIn) {
+        if (signedIn) {
+                findViewById(R.id.sign_in_button).setVisibility(View.GONE);
+        } else {
+            findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
+        }
+    }
+
+
+    private void getProfileInfo() {
+        try {
+            if (Plus.PeopleApi.getCurrentPerson(google_api_client) != null) {
+                Person currentPerson = Plus.PeopleApi.getCurrentPerson(google_api_client);
+                setPersonalInfo(currentPerson);
+            } else {
+                Toast.makeText(getApplicationContext(), "No Personal infomention", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setPersonalInfo(Person currentPerson){
+        String personName = currentPerson.getDisplayName();
+        String personPhotoUrl = currentPerson.getImage().getUrl();
+        //String email = Plus.AccountApi.getAccountName(google_api_client);
+        Log.i("login user", personName + "    " );
+
+        progress_dialog.dismiss();
+        Toast.makeText(this, "Person information is shown!", Toast.LENGTH_LONG).show();
+    }
+
+    private void buidNewGoogleApiClient(){
+      google_api_client =  new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Plus.API,Plus.PlusOptions.builder().build())
+                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                .build();
+    }
+
     public void onStart(){
         super.onStart();
         initialFragSetup(frag);
-
+        google_api_client.connect();
 
     }
 
@@ -935,6 +1078,17 @@ public class MainActivity extends AppCompatActivity {
         if (isChangingConfigurations() && mediaPlayer.isPlaying()) {
             ; // do nothing
         }
+        if (google_api_client.isConnected()) {
+                google_api_client.disconnect();
+        }
+
+    }
+
+    protected void onResume(){
+            super.onResume();
+        if (google_api_client.isConnected()) {
+                google_api_client.connect();
+        }
     }
     @Override
     public void onDestroy() {
@@ -943,6 +1097,9 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.apply();
         super.onDestroy();
         mediaPlayer.release();
+        if (google_api_client.isConnected()) {
+            google_api_client.disconnect();
+        }
     }
 
     private void loadSongs() throws IllegalArgumentException, IllegalAccessException {

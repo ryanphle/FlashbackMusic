@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "481660506661",
+    "project_id": "modular-ethos-197402"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481660506661:android:fd35548724843091",
+        "android_client_info": {
+          "package_name": "team21.flashbackmusic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "481660506661-2govn2bdfafm96v69htpsum2dqu2nbop.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "481660506661-fi81bpcqcptofsibprd2kdgom2ba7e4v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "team21.flashbackmusic",
+            "certificate_hash": "0fcdddbfbe3ef17fa67ad4fb99de77df81686c04"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2aXMwg14z8MuAkqk81FPmM3g3MX1NLkE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
