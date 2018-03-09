@@ -36,7 +36,7 @@ public class AlbumDownloadManager implements ContentDownload {
     Context context;
     DownloadManager downloadManager;
     MainActivity activity;
-    Long downloadRef;
+    long downloadRef;
 
     public AlbumDownloadManager (Context context){
 

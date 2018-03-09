@@ -277,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                         frag = SONG_FRAG;
                         if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
+                        ((SongsFragment)fragmentSong).updateListView();
                         break;
 
                     case R.id.navigation_albums:
@@ -289,6 +290,8 @@ public class MainActivity extends AppCompatActivity {
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
 
                         if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
+                        ((AlbumsFragment)fragmentAlbums).updateListView();
+
                         break;
 
                     case R.id.navigation_flashback:
@@ -395,6 +398,10 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                contentDownloadManager.checkStatus();
+
+
                 songLoaded = true;
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
@@ -478,68 +485,15 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationProvider = LocationManager.GPS_PROVIDER;
 
 
-        List<String> permissions = new ArrayList<String>();
-
-        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-
-
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    permissions.toArray(new String[permissions.size()]),
-                    1);
-            Log.d("permission","requested");
-            return;
-        }else{
-
-            lastLocation = locationManager.getLastKnownLocation(locationProvider);
-            locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
-
-            String netLocation = LocationManager.NETWORK_PROVIDER;
-
-
-            albumList = new ArrayList<Album>();
-
-            try {
-                if(isExternalStorageReadable()) {
-                    Log.i("Enviroment", Environment.DIRECTORY_MUSIC);
-                    File rootpath = new File("storage/emulated/0/Music");
-                    loadSongs(rootpath);
-                }
-                Log.i("Oncreate", "Songs loaded");
-            } catch (Exception e) {
-            e.printStackTrace();
-            }
-            like_editor.apply();
-            //albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
-
-            initialFragSetup(frag);
-        }
-
-
-
-
-
-
-        //Log.d("LastLocation",lastLocation.toString());
-
-
-         final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
+        final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
 
             @Override
             public void onReceive(Context context, Intent intent) {
 
                 //check if the broadcast message is for our enqueued download
-               // long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                // long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
 
                 //DownloadManager.Query q = new DownloadManager.Query();
                 //Cursor c = downloadManager.query(q);
@@ -587,6 +541,7 @@ public class MainActivity extends AppCompatActivity {
 
                 }*/
 
+                contentDownloadManager.checkStatus();
 
                 Toast toast = Toast.makeText(MainActivity.this, "Music Download Complete", Toast.LENGTH_LONG);
                 toast.show();
@@ -609,6 +564,69 @@ public class MainActivity extends AppCompatActivity {
 
         IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         registerReceiver(downloadReceiver, filter);
+
+
+
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationProvider = LocationManager.GPS_PROVIDER;
+
+
+        List<String> permissions = new ArrayList<String>();
+
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        //permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                /*|| ActivityCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED*/
+                || ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    permissions.toArray(new String[permissions.size()]),
+                    1);
+            Log.d("permission","requested");
+            return;
+        }else{
+
+            lastLocation = locationManager.getLastKnownLocation(locationProvider);
+            locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+            String netLocation = LocationManager.NETWORK_PROVIDER;
+
+
+            albumList = new ArrayList<Album>();
+
+            try {
+                if(isExternalStorageReadable()) {
+                    Log.i("Enviroment", Environment.DIRECTORY_MUSIC);
+                    File rootpath = new File("storage/emulated/0/Music");
+                    loadSongs(rootpath);
+                }
+                Log.i("Oncreate", "Songs loaded");
+            } catch (Exception e) {
+            e.printStackTrace();
+            }
+            like_editor.apply();
+            //albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
+
+            initialFragSetup(frag);
+        }
+
+
+
+
+
+
+        //Log.d("LastLocation",lastLocation.toString());
+
+
+
 
 
 
@@ -698,6 +716,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
             }
+            /*
             case 2 :{
 
                 contentDownloadManager.download(download_uri);
@@ -708,8 +727,8 @@ public class MainActivity extends AppCompatActivity {
                 request.setVisibleInDownloadsUi(true);
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC,"/storage/emulated/0/Music");
 
-                downloadRef = downloadManager.enqueue(request);*/
-            }
+                downloadRef = downloadManager.enqueue(request);
+            }*/
 
             // other 'case' lines to check for other
             // permissions this app might request
@@ -767,9 +786,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         List<String> permissions = new ArrayList<String>();
-        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        //permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         //EditText URL = (EditText) findViewById(R.id.Music_URL);
-        if (ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+       /*if (ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
                     permissions.toArray(new String[permissions.size()]),
@@ -777,11 +796,11 @@ public class MainActivity extends AppCompatActivity {
             Log.d("permission","requested");
             return;
         }else {
-
+*/
             contentDownloadManager.download(url);
 
 
-        }
+       //}
 
 
     }
