@@ -66,7 +66,9 @@ public class DownloadFragment extends android.support.v4.app.DialogFragment {
 
 
 
-                        ((MainActivity) getActivity()).startDownload(url.getText().toString(), "Album");
+                        ((MainActivity) getActivity()).startDownload(url.getText().toString(), type);
+
+                        Log.i("download type",type);
 
                         // DOWNLOAD
                     }

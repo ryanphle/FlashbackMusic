@@ -38,10 +38,11 @@ public class AlbumsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceStat) {
 
         rootView = inflater.inflate(R.layout.fragment_albums, container, false);
+        gridView = rootView.findViewById(R.id.album_grid);
+
 
         ArrayList<Album> albums = getArguments().getParcelableArrayList("albums");
         adapter = new AlbumAdapter(getActivity(), R.layout.album_gridview, albums);
-        gridView = rootView.findViewById(R.id.album_grid);
         gridView.setAdapter(adapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -75,6 +76,7 @@ public class AlbumsFragment extends Fragment {
     }
 
     public void updateSongUI(Song s) {
+        adapter.notifyDataSetChanged();
         Log.i("Song update: ", s.getName());
 
         /*if (s==null) return;

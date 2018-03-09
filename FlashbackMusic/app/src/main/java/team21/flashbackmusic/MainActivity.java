@@ -507,6 +507,7 @@ public class MainActivity extends AppCompatActivity {
             String netLocation = LocationManager.NETWORK_PROVIDER;
 
 
+            albumList = new ArrayList<Album>();
 
             try {
                 if(isExternalStorageReadable()) {
@@ -519,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             }
             like_editor.apply();
-            albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
+            //albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
 
             initialFragSetup(frag);
         }
@@ -596,6 +597,8 @@ public class MainActivity extends AppCompatActivity {
                 AlbumsFragment albumFragment = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
 
 
+                //updateAlbum();
+
                 fragmentSong.updateListView();
                 albumFragment.updateListView();
 
@@ -668,6 +671,8 @@ public class MainActivity extends AppCompatActivity {
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
 
+                    albumList = new ArrayList<Album>();
+
                     try {
                         if(isExternalStorageReadable()) {
                             File rootpath = new File("storage/emulated/0/Music");
@@ -678,7 +683,8 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     like_editor.apply();
-                    albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
+
+                    //albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
 
                     initialFragSetup(frag);
 
@@ -749,11 +755,14 @@ public class MainActivity extends AppCompatActivity {
         if(download_type.equals("Song") ) {
 
             contentDownloadManager = new SongDownloadManager(this);
+            Log.i("downloading type", "Song");
 
         }
         else{
 
             contentDownloadManager = new AlbumDownloadManager(this);
+            Log.i("downloading type", "Album");
+
 
         }
 
@@ -796,7 +805,7 @@ public class MainActivity extends AppCompatActivity {
 
             bottomNavigationView.getMenu().getItem(SONG_FRAG).setChecked(true);
 
-            loadMedia(songs.get(0), this.mediaPlayer);
+            //loadMedia(songs.get(0), this.mediaPlayer);
 
         } else if (frag == ALBUM_FRAG) {
             initTransaction.hide(fragmentSong);
@@ -806,7 +815,7 @@ public class MainActivity extends AppCompatActivity {
             initTransaction.addToBackStack("albums");
 
 
-            loadMedia(songs.get(0), this.mediaPlayer);
+            //loadMedia(songs.get(0), this.mediaPlayer);
 
         } else {
             //mediaPlayer.reset();
@@ -1197,7 +1206,13 @@ public class MainActivity extends AppCompatActivity {
 
     protected void addSong(SharedPreferences sharedPreferences, Gson gson, Uri uri) {
         Play play;MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(this, uri);
+        try {
+            retriever.setDataSource(this, uri);
+        }catch(RuntimeException e){
+
+            return;
+
+        }
 
         String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
@@ -1226,6 +1241,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (albums.get(album)==null) {
             albums.put(album, new Album(album, artist,img));
+            albumList.add(albums.get(album));
+
         }
 
         Album a = albums.get(album);
@@ -1259,7 +1276,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+
+
         albums.get(album).addSong(song);
+        //albumList.add(albums.get(album)); // Used to pass into Parceble ArrayList
         songs.add(song);
         res_uri.add(uri);
 
@@ -1456,6 +1476,14 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
+    /*
+    public void updateAlbum(){
+
+        albumList = new ArrayList<>(albums.values());
+
+    }
+    */
 
 
 

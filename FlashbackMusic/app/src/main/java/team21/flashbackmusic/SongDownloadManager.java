@@ -61,6 +61,9 @@ class SongDownloadManager implements ContentDownload {
         SharedPreferences sharedPreferences = activity.getSharedPreferences("plays", MODE_PRIVATE);
         Gson gson = new Gson();
         activity.addSong(sharedPreferences,gson,fileuri);
+
+        Log.i("add download song",""+fileuri);
+
     }
 
 
