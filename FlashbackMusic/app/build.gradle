@@ -17,7 +17,6 @@ android {
         }
     }
 }
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
@@ -31,6 +30,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.1'
     implementation 'com.google.code.gson:gson:2.2.4'
     compile 'com.android.support.test.uiautomator:uiautomator-v18:2.0.0'
+    compile 'com.google.apis:google-api-services-people:v1-rev240-1.23.0'
+    compile 'com.google.android.gms:play-services-auth:11.8.0'
+
 }
 dependencies {
     compile 'com.google.code.gson:gson:2.8.0'

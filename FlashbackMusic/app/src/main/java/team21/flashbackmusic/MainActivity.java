@@ -2,91 +2,78 @@ package team21.flashbackmusic;
 
 //import android.app.Fragment;
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import android.content.BroadcastReceiver;
-import android.content.Intent;
-import android.content.IntentFilter;
-
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.MediaPlayer;
-import android.os.IBinder;
-import android.os.Parcelable;
-import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
-
-import android.support.v4.app.Fragment;
-//import android.app.FragmentManager;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-//import android.app.FragmentTransaction;
-import android.support.v4.app.FragmentTransaction;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.content.LocalBroadcastManager;
-
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-
-import java.io.IOException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleBrowserClientRequestUrl;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.model.ListConnectionsResponse;
+import com.google.api.services.people.v1.model.Person;
 import com.google.gson.Gson;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.gson.Gson;
-
-import java.time.Clock;
-import java.time.ZoneId;
-import java.util.Collection;
-import java.util.List;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.google.gson.Gson;
+//import android.app.FragmentManager;
+//import android.app.FragmentTransaction;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "TAG";
+    private static final int RC_SIGN_IN = 0;
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
     protected ArrayList<Song> songs;
@@ -128,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
     private int currentHour;
     private Calendar calendar;
 
+    private SignInButton signIn;
+
 
     //public Location lastLocation;
     //BroadcastReceiver locationReceiver;
@@ -161,6 +150,10 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
+
+    private GoogleSignInClient mGoogleSignInClient;
+    private String authCode = "";
+    private GoogleSignInAccount account;
 
 
     @Override
@@ -427,48 +420,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        /*
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    100);
-            Log.d("test1","ins");
-            //return;
-        }
-        */
-/*
-        locationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle b = intent.getBundleExtra("Location");
-                lastLocation = (Location) b.getParcelable("Location");
-                Song song = (Song)b.getParcelable("Song");
-                if(!enterFlash) {
-                    storePlayInformation(song);
-                    //Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
-                }
-                else{
-                    enterFlash = false;
-                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
-                    initialFragSetup(frag);
-
-                    //sort_songs();
-                }
-            }
-        };
-        */
-
-        //while(getLocationService == null){}
-
-
-
-
-
-
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -514,31 +465,124 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("LastLocation",lastLocation.toString());
 
+        /* GOOGLE SIGN IN */
 
+        final Activity activity = this;
+        signIn = findViewById(R.id.sign_in_button);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("CLICK");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.client_id))
+                        .requestServerAuthCode(getString(R.string.client_id), false)
+                        .requestEmail()
+                        .build();
 
+                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+                signIn();
+            }
+        });
+    }
 
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
 
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            account = completedTask.getResult(ApiException.class);
+            System.out.println("Checking account: " + account.toString());
+            try {
+                if (account == null) System.out.println("ACCOUNT NULL");
+                authCode = account.getServerAuthCode();
 
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
+                // TODO(developer): send code to server and exchange for access/refresh/ID tokens
+                System.out.println("AUTHCODE " + authCode);
+                try {
+                    setUp();
+                }
+                catch (IOException e) {
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
-         */
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Sign-in failed", e);
+                //updateUI(null);
+            }
 
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            //updateUI(null);
+        }
     }
 
     public void onStart(){
         super.onStart();
         initialFragSetup(frag);
+    }
 
+    public void setUp() throws IOException {
+        HttpTransport httpTransport = new NetHttpTransport();
+        JacksonFactory jsonFactory = new JacksonFactory();
+
+        // Go to the Google API Console, open your application's
+        // credentials page, and copy the client ID and client secret.
+        // Then paste them into the following code.
+        String clientId = getString(R.string.client_id);
+        String clientSecret = getString(R.string.client_secret);
+
+        String serverClientId = clientId;
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestServerAuthCode(serverClientId)
+                .requestEmail()
+                .build();
+
+        String redirectUrl = getString(R.string.redirect_url);
+
+        // Step 2: Exchange -->
+        GoogleTokenResponse tokenResponse =
+                new GoogleAuthorizationCodeTokenRequest(
+                        httpTransport, jsonFactory, clientId, clientSecret, authCode, redirectUrl)
+                        .execute();
+        // End of Step 2 <--
+
+        GoogleCredential credential = new GoogleCredential.Builder()
+                .setTransport(httpTransport)
+                .setJsonFactory(jsonFactory)
+                .setClientSecrets(clientId, clientSecret)
+                .build()
+                .setFromTokenResponse(tokenResponse);
+
+        PeopleService peopleService =
+                new PeopleService.Builder(httpTransport, jsonFactory, credential).build();
+
+
+        ListConnectionsResponse response = peopleService.people().connections().list("people/me")
+                .setPersonFields("names,emailAddresses")
+                .execute();
+        List<Person> connections = response.getConnections();
+        System.out.println("Size of connections: " + connections.size());
 
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -573,38 +617,6 @@ public class MainActivity extends AppCompatActivity {
             // permissions this app might request
         }
     }
-
-/*
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            GetLocationService.locationService locationservice = (GetLocationService.locationService) iBinder;
-            getLocationService = locationservice.getService();
-            isBound = true;
-
-            if(frag == FLASHBACK_FRAG) {
-                enterFlash = true;
-
-                getLocationService.getLocation(songs.get(0));
-
-                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
-                        locationReceiver, new IntentFilter("LastLocation")
-                );
-            }
-            else{
-                initialFragSetup(frag);
-            }
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-
-            isBound = false;
-
-        }
-    };
-*/
 
     public void initialFragSetup(int frag) {
         setSongFragment();
@@ -712,24 +724,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    private void startLocationService(Song song) {
-
-        /*Intent intent = new Intent(MainActivity.this, LocationService.class);
-        Bundle b = new Bundle();
-        b.putParcelable("Song", song);
-        intent.putExtra("Song",b);
-        startService(intent);*/
-/*
-        getLocationService.getLocation(song);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-
-
-    }#*/
-
 
     public void storePlayInformation(Song song, Location location, String prefName, Timestamp time){
 
@@ -771,10 +765,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
-
-    //public void newSong(int index, int mode) {}
     public void newSong(int index, int mode, boolean next, boolean update) {
         ArrayList<Song> songList = songs;
         songPlayingFrag = mode;
@@ -1060,13 +1050,6 @@ public class MainActivity extends AppCompatActivity {
         fragmentAlbums.setArguments(bundle);
     }
 
-    /*public void scroll(View view) {
-        if (songLoaded) {
-            TextView artistAlbumInfo = (TextView) view.findViewById(R.id.small_artist_album_name);
-            artistAlbumInfo.setSelected(true);
-        }
-    }*/
-
     public void nextSong(boolean next) {
         if (next)
             nextButton.performClick();
@@ -1076,7 +1059,6 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-
     public void sort_getLocation(){
 
         enterFlash = true;
@@ -1084,7 +1066,6 @@ public class MainActivity extends AppCompatActivity {
         getLocationService.getLocation(songs.get(0));
 
     }
-
 
     public void sort_songs(List<Song> songs,String prefName, int currentDay, int currentHour, Location location ) {
 
