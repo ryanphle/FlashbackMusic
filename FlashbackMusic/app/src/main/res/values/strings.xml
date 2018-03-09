@@ -6,4 +6,7 @@
     <string name="song_page_title">Songs</string>
     <string name="flashback_page_title">Flashback</string>
     <string name="album_page_title">Albums</string>
+    <string name="client_id">898035120337-jjnfd25j6cf237r5pm3vaao3dgrg1uq0.apps.googleusercontent.com</string>
+    <string name="client_secret">ky_qpRl2lwqOSWfPD0Mzz7rU</string>
+    <string name="redirect_url">https://cse110project-ff1b8.firebaseapp.com/__/auth/handler</string>
 </resources>

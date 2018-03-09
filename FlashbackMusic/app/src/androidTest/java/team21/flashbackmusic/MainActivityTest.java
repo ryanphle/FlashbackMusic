@@ -57,7 +57,7 @@ public class MainActivityTest {
         location.setLongitude(20);
         // 9 hours after the 1970 start
         Timestamp time = new Timestamp(100000);
-        mainActivity.getActivity().storePlayInformation(song,location,time, "");
+        mainActivity.getActivity().storePlayInformation(song,location,time);
         Play play;
         Gson gson = new Gson();
         String json = mainActivity.getActivity().getSharedPreferences("test", MODE_PRIVATE).getString(song.getName(), "");
@@ -75,7 +75,7 @@ public class MainActivityTest {
         location.setLongitude(-117.233971);
         // 9 hours after the 1970 start
         time = new Timestamp(59235000);
-        mainActivity.getActivity().storePlayInformation(song,location,time , "");
+        mainActivity.getActivity().storePlayInformation(song,location,time);
         gson = new Gson();
         json = mainActivity.getActivity().getSharedPreferences("test", MODE_PRIVATE).getString(song.getName(), "");
         play = gson.fromJson(json,Play.class);
@@ -92,7 +92,7 @@ public class MainActivityTest {
         location.setLongitude(-121.761562);
         // 9 hours after the 1970 start
         time = new Timestamp(49235000);
-        mainActivity.getActivity().storePlayInformation(song,location,time, "");
+        mainActivity.getActivity().storePlayInformation(song,location,time);
         gson = new Gson();
         json = mainActivity.getActivity().getSharedPreferences("test", MODE_PRIVATE).getString(song.getName(), "");
         play = gson.fromJson(json,Play.class);
@@ -143,7 +143,7 @@ public class MainActivityTest {
         location.setLongitude(20);
 
         Timestamp time = new Timestamp(100000);
-        mainActivity.getActivity().storePlayInformation(song1,location,time, "");
+        mainActivity.getActivity().storePlayInformation(song1,location,time);
 
 
         Song song2 = new Song("song2", "artist2", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album2");
@@ -153,7 +153,7 @@ public class MainActivityTest {
         location.setLongitude(20);
 
         time = new Timestamp(100000);
-        mainActivity.getActivity().storePlayInformation(song2,location,time, "");
+        mainActivity.getActivity().storePlayInformation(song2,location,time);
 
 
         Song song3 = new Song("song3", "artist3", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album3");
@@ -163,7 +163,7 @@ public class MainActivityTest {
         location.setLongitude(20);
 
         time = new Timestamp(59235000);
-        mainActivity.getActivity().storePlayInformation(song3,location,time, "");
+        mainActivity.getActivity().storePlayInformation(song3,location,time);
 
 
         Song song4 = new Song("song4", "artist4", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album4");
@@ -173,7 +173,7 @@ public class MainActivityTest {
         location.setLongitude(20);
 
         time = new Timestamp(59235000);
-        mainActivity.getActivity().storePlayInformation(song3,location,time, "");
+        mainActivity.getActivity().storePlayInformation(song3,location,time);
 
 
         location.setLatitude(50);

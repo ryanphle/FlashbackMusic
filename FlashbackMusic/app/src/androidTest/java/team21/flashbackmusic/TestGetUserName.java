@@ -17,7 +17,7 @@ public class TestGetUserName {
 
     @Test
     public void test1() {
-        String username = mainActivity.getActivity().getUserName();
+        String username = mainActivity.getActivity().getMyUserName();
         assertEquals("jerry", username);
     }
 }

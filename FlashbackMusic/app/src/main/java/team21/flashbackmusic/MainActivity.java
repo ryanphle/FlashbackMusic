@@ -4,6 +4,7 @@ package team21.flashbackmusic;
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -70,6 +71,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
@@ -107,7 +109,22 @@ import java.util.TimeZone;
 
 import com.google.gson.Gson;
 
+import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleBrowserClientRequestUrl;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.model.ListConnectionsResponse;
+import com.google.api.services.people.v1.model.Person;
+
 public class MainActivity extends AppCompatActivity {
+
+    private static final int RC_SIGN_IN = 0;
+    private static final String TAG = "TAG";
 
     private Map<String, Album> albums;
     private ArrayList<Album> albumList;
@@ -181,16 +198,16 @@ public class MainActivity extends AppCompatActivity {
     private boolean enterFlash = false;
 
 
-    public String lastPlayUser;
-    private String lastPlayTime;
-    private String lastPlayLocation;
+
     private String myUserName;
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
 
-    private AccountManager accountManager;
-
+    private GoogleSignInAccount account;
+    private SignInButton signIn;
+    private GoogleSignInClient mGoogleSignInClient;
+    private String authCode = "";
 
 
     @Override
@@ -238,8 +255,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this,GetLocationService.class);
         bindService(intent, serviceConnection,Context.BIND_AUTO_CREATE);
         */
-
-
 
         albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
         //initialFragSetup(frag);
@@ -374,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
         prevButton = (Button) findViewById(R.id.prev);
         stopButton = (Button) findViewById(R.id.play);
 
-        
+
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -519,13 +534,6 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationProvider = LocationManager.GPS_PROVIDER;
 
-       // accountManager = (AccountManager) this.getSystemService(Context.ACCOUNT_SERVICE);
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -555,29 +563,129 @@ public class MainActivity extends AppCompatActivity {
         );
         //updateSongMetaData(currSongIdx,SONG_FRAG,false);
          */
+        /* GOOGLE SIGN IN */
 
-        //AccountManager accountManager = (AccountManager) this.getSystemService(Context.ACCOUNT_SERVICE);
+        final Activity activity = this;
+        signIn = findViewById(R.id.sign_in_button);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("CLICK");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.client_id))
+                        .requestServerAuthCode(getString(R.string.client_id), false)
+                        .requestEmail()
+                        .build();
 
-       /* if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String []{Manifest.permission.GET_ACCOUNTS}, 0);
-            return;
+                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+                signIn();
+            }
+        });
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            myUserName = account.getGivenName();
+
+    }
+
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    public String getMyUserName() {
+        return this.myUserName;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
         }
-        Account []accounts = accountManager.getAccounts();
-        if (accounts.length > 0)
-            myUserName = accounts[0].name;
-        else
-            myUserName = "no";*/
+    }
 
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            account = completedTask.getResult(ApiException.class);
+            System.out.println("Checking account: " + account.toString());
+            try {
+                if (account == null) System.out.println("ACCOUNT NULL");
+                authCode = account.getServerAuthCode();
+
+                // TODO(developer): send code to server and exchange for access/refresh/ID tokens
+                System.out.println("AUTHCODE " + authCode);
+                try {
+                    setUp();
+                }
+                catch (IOException e) {
+
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Sign-in failed", e);
+                //updateUI(null);
+            }
+
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            //updateUI(null);
+        }
     }
 
     public void onStart() {
         super.onStart();
         initialFragSetup(frag);
-        /*GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null)
-            myUserName = "yes";
-        else
-            myUserName = "no";*/
+    }
+
+    public void setUp() throws IOException {
+        HttpTransport httpTransport = new NetHttpTransport();
+        JacksonFactory jsonFactory = new JacksonFactory();
+
+        // Go to the Google API Console, open your application's
+        // credentials page, and copy the client ID and client secret.
+        // Then paste them into the following code.
+        String clientId = getString(R.string.client_id);
+        String clientSecret = getString(R.string.client_secret);
+
+        String serverClientId = clientId;
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestServerAuthCode(serverClientId)
+                .requestEmail()
+                .build();
+
+        String redirectUrl = getString(R.string.redirect_url);
+
+        // Step 2: Exchange -->
+        GoogleTokenResponse tokenResponse =
+                new GoogleAuthorizationCodeTokenRequest(
+                        httpTransport, jsonFactory, clientId, clientSecret, authCode, redirectUrl)
+                        .execute();
+        // End of Step 2 <--
+
+        GoogleCredential credential = new GoogleCredential.Builder()
+                .setTransport(httpTransport)
+                .setJsonFactory(jsonFactory)
+                .setClientSecrets(clientId, clientSecret)
+                .build()
+                .setFromTokenResponse(tokenResponse);
+
+        PeopleService peopleService =
+                new PeopleService.Builder(httpTransport, jsonFactory, credential).build();
+
+
+        ListConnectionsResponse response = peopleService.people().connections().list("people/me")
+                .setPersonFields("names,emailAddresses")
+                .execute();
+        List<Person> connections = response.getConnections();
+        System.out.println("Size of connections: " + connections.size());
+
     }
 
     @Override
@@ -607,20 +715,6 @@ public class MainActivity extends AppCompatActivity {
                     // functionality that depends on this permission.
                 }
                 return;
-            }
-
-            case 0: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Account []accounts = accountManager.getAccounts();
-                    if (accounts.length > 0)
-                        myUserName = accounts[0].name;
-                    else
-                        myUserName = "no";
-                }
-                else {}
-                return;
-
             }
 
             // other 'case' lines to check for other
@@ -723,10 +817,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public String getUserName() {
-        return this.myUserName;
-    }
-
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
         index = songs.indexOf(s);
@@ -744,7 +834,7 @@ public class MainActivity extends AppCompatActivity {
         );
         */
         Timestamp time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(s,lastLocation,time, "username");
+        storePlayInformation(s,lastLocation,time);
 
         //storePlayInformation(s);
         //startLocationService(s);
@@ -813,38 +903,15 @@ public class MainActivity extends AppCompatActivity {
 
     }*/
 
-    public void storePlayInformation(Song song, Location location, Timestamp time, String user) {
+    public void storePlayInformation(Song song, Location location, Timestamp time) {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
 
-        String addressStr = "";
         if (location != null) {
             Play play = new Play(this, location.getLatitude(), location.getLongitude(), time);
             song.setTimeStamp(play.getTime());
-
-            List<Address> myList = new ArrayList<>();
-
-            try {
-                Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                myList = myLocation.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-
-            } catch (IOException e) {
-
-            }
-
-            Address address = myList.get(0);
-            song.setLocation(address);
-
-            addressStr += address.getAddressLine(0) + ", ";
-            addressStr += address.getAddressLine(1) + ", ";
-            addressStr += address.getAddressLine(2);
         }
-
-        String currentTime = getCurrentTime(time);
-
-        myRef.child("Songs").child(song.getName()).child("last_play_user").setValue(user);
-        myRef.child("Songs").child(song.getName()).child("last_play_proxy").setValue("proxyname");
-        myRef.child("Songs").child(song.getName()).child("last_play_location").setValue(addressStr);
-        myRef.child("Songs").child(song.getName()).child("last_play_time").setValue(currentTime);
+        FBSongInfo thisSong = new FBSongInfo(myUserName,time.getTime(),location,"proxyname");
+        myRef.child("Songs").child(song.getName()).setValue(thisSong);
     }
 
     public String getCurrentTime(Timestamp time) {
@@ -879,7 +946,7 @@ public class MainActivity extends AppCompatActivity {
 
         currSong = songList.get(index);
         Timestamp time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(currSong, lastLocation, time, myUserName);
+        storePlayInformation(currSong, lastLocation, time);
 
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
@@ -949,7 +1016,7 @@ public class MainActivity extends AppCompatActivity {
 
         loadMedia(songList.get(index), this.mediaPlayer);
         time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(songList.get(index),lastLocation,time, "user");
+        storePlayInformation(songList.get(index),lastLocation,time);
         //startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
@@ -982,7 +1049,6 @@ public class MainActivity extends AppCompatActivity {
                     SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
 
                     //Log.i("currSongfrag", fragmentSong.toString());
-
 
                     fragmentSong.updateSongUI(song);
                     break;
