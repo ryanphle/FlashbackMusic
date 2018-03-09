@@ -46,6 +46,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -65,12 +66,16 @@ import java.util.Calendar;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.plus.People;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
+import com.google.android.gms.plus.model.people.PersonBuffer;
 import com.google.api.services.people.v1.model.ListConnectionsResponse;
 
 import com.google.gson.Gson;
@@ -112,7 +117,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ResultCallback<People.LoadPeopleResult> {
 
     private Map<String,Album> albums;
     private ArrayList<Album> albumList;
@@ -222,10 +227,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         like_setting = getSharedPreferences("like_setting",MODE_PRIVATE);
         like_editor = like_setting.edit();
-
-
-
-
 
 
         try {
@@ -545,6 +546,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         //updateSongMetaData(currSongIdx,SONG_FRAG,false);
          */
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS)
+                != PackageManager.PERMISSION_GRANTED)
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.GET_ACCOUNTS},
+                1);
+
     }
 
 
@@ -553,6 +560,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             is_signInBtn_clicked = false;
             // Get user's information and set it into the layout<br />
             getProfileInfo();
+            Plus.PeopleApi.loadVisible(google_api_client, null).setResultCallback(this);
             Toast.makeText(getApplicationContext(), "Google+ connected", Toast.LENGTH_SHORT).show();
             // Update the UI after signin<br />
             changeUI(true);
@@ -611,6 +619,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
+    @Override
+    public void onResult(People.LoadPeopleResult peopleData) {
+        Log.i("friends", "loading friends");
+
+        if (peopleData.getStatus().getStatusCode() == CommonStatusCodes.SUCCESS) {
+            PersonBuffer personBuffer = peopleData.getPersonBuffer();
+            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<String> img_list= new ArrayList<String>();
+           try {
+                int count = personBuffer.getCount();
+                for (int i = 0; i < count; i++) {
+                    list.add(personBuffer.get(i).getDisplayName());
+                    img_list.add(personBuffer.get(i).getImage().getUrl());
+                }
+
+                Log.i("friends", list.toString());
+                Log.i("friends",  TextUtils.join(", ", list));
+           } finally {
+                    personBuffer.release();
+            }
+        } else {
+                Log.e("circle error", "Error requesting visible circles: " + peopleData.getStatus());
+        }
+    }
+
     private void gPlusSignIn() {
         if (!google_api_client.isConnecting()) {
                 Log.d("user connected","connected");
@@ -660,8 +693,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private void setPersonalInfo(Person currentPerson){
         String personName = currentPerson.getDisplayName();
         String personPhotoUrl = currentPerson.getImage().getUrl();
-        //String email = Plus.AccountApi.getAccountName(google_api_client);
-        Log.i("login user", personName + "    " );
+        String email = Plus.AccountApi.getAccountName(google_api_client);
+        Log.i("login user", personName + "    "+ email);
+
+
 
         progress_dialog.dismiss();
         Toast.makeText(this, "Person information is shown!", Toast.LENGTH_LONG).show();
@@ -717,37 +752,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
-/*
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            GetLocationService.locationService locationservice = (GetLocationService.locationService) iBinder;
-            getLocationService = locationservice.getService();
-            isBound = true;
 
-            if(frag == FLASHBACK_FRAG) {
-                enterFlash = true;
-
-                getLocationService.getLocation(songs.get(0));
-
-                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
-                        locationReceiver, new IntentFilter("LastLocation")
-                );
-            }
-            else{
-                initialFragSetup(frag);
-            }
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-
-            isBound = false;
-
-        }
-    };
-*/
 
     public void initialFragSetup(int frag) {
         setSongFragment();
