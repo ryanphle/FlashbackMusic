@@ -242,7 +242,6 @@ public class MainActivity extends AppCompatActivity {
                         ((AlbumsFragment)fragmentAlbums).updateListView();
 
                         break;
-
                     case R.id.navigation_flashback:
                         if(frag != FLASHBACK_FRAG) {
                             frag = FLASHBACK_FRAG;
