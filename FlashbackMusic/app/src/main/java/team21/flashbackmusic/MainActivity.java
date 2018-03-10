@@ -3,10 +3,15 @@ package team21.flashbackmusic;
 //import android.app.Fragment;
 import android.Manifest;
 import android.app.DownloadManager;
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -32,12 +37,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -48,18 +58,50 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.Calendar;
+
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
 
+import java.time.Clock;
+import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import static java.util.Locale.CHINA;
 import static java.util.Locale.JAPAN;
@@ -67,9 +109,24 @@ import static java.nio.file.StandardCopyOption.*;
 import static java.util.Locale.US;
 
 
+import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleBrowserClientRequestUrl;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.model.ListConnectionsResponse;
+import com.google.api.services.people.v1.model.Person;
+
 public class MainActivity extends AppCompatActivity {
 
-    private Map<String,Album> albums;
+    private static final int RC_SIGN_IN = 0;
+    private static final String TAG = "TAG";
+
+    private Map<String, Album> albums;
     private ArrayList<Album> albumList;
     protected ArrayList<Song> songs;
 
@@ -130,10 +187,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBound;
     private boolean enterFlash = false;
 
-    private LocationManager locationManager;
-    private String locationProvider;
-    private LocationListener locationListener;
-
     protected MediaPlayerWrapper mediaPlayerWrapper;
 
     private File Music;
@@ -147,6 +200,24 @@ public class MainActivity extends AppCompatActivity {
     private Path target;
 
     private ContentDownload contentDownloadManager;
+
+    private String myUserName;
+    private String myUserID;
+    private String myProxyName;
+    public String userID;
+    private LocationManager locationManager;
+    private String locationProvider;
+    private LocationListener locationListener;
+
+    private GoogleSignInAccount account;
+    private SignInButton signIn;
+    private GoogleSignInClient mGoogleSignInClient;
+    private String authCode = "";
+
+    private Location lastPlayLocation;
+    private String lastPlayUser;
+    private long lastPlayTime;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -166,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
         currentDay = calendar.get(Calendar.DAY_OF_WEEK);
         currentHour = calendar.get(Calendar.HOUR_OF_DAY);
 
-        like_setting = getSharedPreferences("like_setting",MODE_PRIVATE);
+        like_setting = getSharedPreferences("like_setting", MODE_PRIVATE);
         like_editor = like_setting.edit();
 
         pre_setting = getSharedPreferences("pre_setting",MODE_PRIVATE);
@@ -181,6 +252,44 @@ public class MainActivity extends AppCompatActivity {
         albumList = new ArrayList<>(albums.values()); // Used to pass into Parceble ArrayList
 
         /* Setting up all Listeners */
+
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+
+                if (songPlayingFrag == SONG_FRAG) {
+                    mediaPlayer.reset();
+                    if (index == res_uri.size() - 1)
+                        index = 0;
+                    else
+                        index++;
+                    loadMedia(songs.get(index), mediaPlayer);
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+                }
+                else if (songPlayingFrag == ALBUM_FRAG) {
+                    mediaPlayer.reset();
+                    if (album_index == currAlbum.getSongs().size() - 1)
+                        album_index = 0;
+                    else
+                        album_index++;
+                    loadMedia(currAlbum.getSongs().get(index), mediaPlayer);
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+                }
+                else {
+                    mediaPlayer.reset();
+                    if (flash_index == res_uri.size() - 1)
+                        flash_index = 0;
+                    else
+                        flash_index++;
+                    loadMedia(songs.get(flash_index), mediaPlayer);
+                    mediaPlayer.start();
+                    stopButton.setBackgroundResource(R.drawable.ic_playing);
+                }
+            }
+        });
 
         bottomNavigationView = findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -276,9 +385,9 @@ public class MainActivity extends AppCompatActivity {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
                 mediaPlayerWrapper.next();
                 Timestamp time = new Timestamp(System.currentTimeMillis());
-                storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation, "plays",
-                                        time);
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
+                storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
+                        time);
             }
         });
 
@@ -288,9 +397,9 @@ public class MainActivity extends AppCompatActivity {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
                 mediaPlayerWrapper.prev();
                 Timestamp time = new Timestamp(System.currentTimeMillis());
-                storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation, "plays",
-                        time);
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
+                storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
+                        time);
             }
         });
 
@@ -307,9 +416,9 @@ public class MainActivity extends AppCompatActivity {
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
                 Timestamp time = new Timestamp(System.currentTimeMillis());
-                storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation, "plays",
-                        time);
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, false);
+                storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
+                        time);
                 mediaPlayerWrapper.stopAndStart();
             }
         });
@@ -373,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -419,6 +529,28 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
 
         mediaPlayerWrapper.forcePause();
+        proxyGenerator();
+
+        final Activity activity = this;
+        signIn = findViewById(R.id.sign_in_button);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("CLICK");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.client_id))
+                        .requestServerAuthCode(getString(R.string.client_id), false)
+                        .requestEmail()
+                        .build();
+
+                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+                signIn();
+            }
+        });
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+
 
     }
 
@@ -448,7 +580,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case 1: {
+            case 100: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -462,37 +594,19 @@ public class MainActivity extends AppCompatActivity {
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
 
-                    albumList = new ArrayList<Album>();
-
-                    try {
-                        if(isExternalStorageReadable()) {
-                            File rootpath = new File("storage/emulated/0/Music");
-                            loadSongs(rootpath);
-                        }
-                        Log.i("Oncreate", "Songs loaded");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    like_editor.apply();
-
-                    initialFragSetup(frag);
-
-                    if (frag == FLASHBACK_FRAG)
-                        mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
-                    else
-                        mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
-
-                    mediaPlayerWrapper.forcePause();
-
-
-
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
 
                 } else {
 
-
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
                 }
                 return;
             }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
         }
     }
 
@@ -558,6 +672,123 @@ public class MainActivity extends AppCompatActivity {
         initTransaction.commit();
     }
 
+
+
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    public String getMyUserName() {
+        String user = "";
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            user = account.getDisplayName();
+        return user;
+    }
+
+    public String getMyID(){
+        String user = "";
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            user = account.getId();
+        return user;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
+
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            account = completedTask.getResult(ApiException.class);
+            System.out.println("Checking account: " + account.toString());
+            try {
+                if (account == null) System.out.println("ACCOUNT NULL");
+                authCode = account.getServerAuthCode();
+
+                // TODO(developer): send code to server and exchange for access/refresh/ID tokens
+                System.out.println("AUTHCODE " + authCode);
+                try {
+                    setUp();
+                }
+                catch (IOException e) {
+
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Sign-in failed", e);
+                //updateUI(null);
+            }
+
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            //updateUI(null);
+        }
+    }
+
+    public void onStart() {
+        super.onStart();
+        initialFragSetup(frag);
+    }
+
+    public void setUp() throws IOException {
+        HttpTransport httpTransport = new NetHttpTransport();
+        JacksonFactory jsonFactory = new JacksonFactory();
+
+        // Go to the Google API Console, open your application's
+        // credentials page, and copy the client ID and client secret.
+        // Then paste them into the following code.
+        String clientId = getString(R.string.client_id);
+        String clientSecret = getString(R.string.client_secret);
+
+        String serverClientId = clientId;
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestServerAuthCode(serverClientId)
+                .requestEmail()
+                .build();
+
+        String redirectUrl = getString(R.string.redirect_url);
+
+        // Step 2: Exchange -->
+        GoogleTokenResponse tokenResponse =
+                new GoogleAuthorizationCodeTokenRequest(
+                        httpTransport, jsonFactory, clientId, clientSecret, authCode, redirectUrl)
+                        .execute();
+        // End of Step 2 <--
+
+        GoogleCredential credential = new GoogleCredential.Builder()
+                .setTransport(httpTransport)
+                .setJsonFactory(jsonFactory)
+                .setClientSecrets(clientId, clientSecret)
+                .build()
+                .setFromTokenResponse(tokenResponse);
+
+        PeopleService peopleService =
+                new PeopleService.Builder(httpTransport, jsonFactory, credential).build();
+
+
+        ListConnectionsResponse response = peopleService.people().connections().list("people/me")
+                .setPersonFields("names,emailAddresses")
+                .execute();
+        List<Person> connections = response.getConnections();
+        System.out.println("Size of connections: " + connections.size());
+
+    }
+
+
+
     protected void showDownloadDialog() {
         DialogFragment downloadFragment = new DownloadFragment();
         downloadFragment.show(fragmentManager, "download");
@@ -581,55 +812,158 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void storePlayInformation(Song song, Location location, String prefName, Timestamp time){
+    public void storePlayInformation(Song song, Location location, Timestamp time) {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
 
-        double longit;
-        double lat;
-
-        SharedPreferences sharedPreferences = getSharedPreferences(prefName, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        if(location != null) {
-            longit = location.getLongitude();
-            lat = location.getLatitude();
-            Play play = new Play(this, lat,longit , time);
+        if (location != null) {
+            Play play = new Play(this, location.getLatitude(), location.getLongitude(), time);
             song.setTimeStamp(play.getTime());
-
-            List<Address> myList = new ArrayList<>();
-
-            try{
-
-                Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                myList = myLocation.getFromLocation(play.getLatitude(), play.getLongitude(),1);
-
-            }
-            catch( IOException e) {
-
-            }
-
-            Log.d("location", "latitude"+play.getLatitude());
-
-            Log.d("address", myList.toString());
-
-
-
-            if(myList.isEmpty()){
-                Address address = new Address(JAPAN);
-                address.setAddressLine(0,"Unknown");
-                address.setAddressLine(1,"Unknown");
-                address.setAddressLine(2,"Unknown");
-                address.setCountryName("Unknown");
-
-            }
-            else {
-                Address address = (Address) myList.get(0);
-                song.setLocation(address);
-            }
-
-            Gson gson = new Gson();
-            String json = gson.toJson(play);
-            editor.putString(song.getName(), json);
-            editor.apply();
         }
+        FBSongInfo thisSong = new FBSongInfo(time.getTime(),location,myUserID);
+        Address address = null;
+        String addressStr = "";
+        List<Address> myList = new ArrayList<>();
+
+        try {
+            Geocoder myLocation = new Geocoder(this, Locale.getDefault());
+            myList = myLocation.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+
+        } catch (IOException e) {
+
+        }
+
+        address = myList.get(0);
+        song.setLocation(address);
+
+        addressStr += address.getAddressLine(0) + ", ";
+        addressStr += address.getAddressLine(1) + ", ";
+        addressStr += address.getAddressLine(2);
+        myRef.child("Songs").child(song.getName()).setValue(thisSong);
+        myRef.child("Songs").child(song.getName()).child("last_play_location_string").setValue(addressStr);
+    }
+
+
+    public void getPlayInfomation(final Song s) {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
+                    lastPlayLocation = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").getValue(Location.class);
+                    lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
+                    lastPlayUser = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                    //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
+    }
+
+    //public void newSong(int index, int mode) {}
+    public void newSong(int index, int mode, boolean next, boolean update) {
+        ArrayList<Song> songList = songs;
+        songPlayingFrag = mode;
+        currSongIdx = index;
+
+        mediaPlayer.reset();
+
+        if (mode == FLASHBACK_FRAG){
+            songList = sorted_songs;
+        }
+        if (mode == ALBUM_FRAG) {
+            songList = (ArrayList) currAlbum.getSongs();
+            if(album_dislike == songList.size()){
+                currSong = null;
+                //updateSongMetaData(index, mode, true);
+                stopButton.setBackgroundResource(R.drawable.ic_stopping);
+                return;
+            }
+        }
+
+        currSong = songList.get(index);
+        Timestamp time = new Timestamp(System.currentTimeMillis());
+        //storePlayInformation(currSong, lastLocation, time);
+
+        Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
+
+        if (currSong.getFavorite() == -1) {
+            //nextSong(next);
+            if(next){
+                switch (mode){
+                    case SONG_FRAG:
+                        if (this.index == res_uri.size() - 1)
+                            this.index = 0;
+                        else
+                            this.index++;
+                        newSong(this.index,mode,next,update);
+                        break;
+                    case ALBUM_FRAG:
+                        if (album_index == currAlbum.getSongs().size() - 1)
+                            album_index = 0;
+                        else
+                            album_index++;
+                        album_dislike++;
+                        newSong(this.album_index,mode,next,update);
+                        break;
+                    case FLASHBACK_FRAG:
+                        if (this.flash_index == sorted_songs.size() - 1)
+                            this.flash_index = 0;
+                        else
+                            this.flash_index++;
+                        newSong(this.flash_index,mode,next,update);
+                        break;
+                }
+
+            }
+            else{
+                switch (mode){
+                case SONG_FRAG:
+                    if (this.index == 0)
+                        this.index = res_uri.size() - 1;
+                    else
+                        this.index--;
+
+                    newSong(this.index,mode,next,update);
+                    break;
+                case ALBUM_FRAG:
+                    if (this.album_index == 0)
+                        this.album_index = currAlbum.getSongs().size() - 1;
+                    else
+                        this.album_index--;
+                    album_dislike++;
+                    newSong(this.album_index,mode,next,update);
+                    break;
+                case FLASHBACK_FRAG:
+                    if (this.flash_index == 0)
+                        this.flash_index = sorted_songs.size() - 1;
+                    else
+                        this.flash_index--;
+                    newSong(this.flash_index,mode,next,update);
+                    break;
+
+
+            }
+            }
+
+            return;
+        }
+
+        album_dislike = 0;
+
+        loadMedia(songList.get(index), this.mediaPlayer);
+        time = new Timestamp(System.currentTimeMillis());
+
+        //startLocationService(songList.get(index));
+        mediaPlayer.start();
+        if(update) {
+            updateSongMetaData(index, mode, true);
+        }
+        storePlayInformation(songList.get(index),lastLocation,time);
     }
 
     public void updateSongMetaData(int index, int mode, boolean songChange) {
@@ -972,8 +1306,90 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
+
     public List<Song> getSortedSongs(){
         return sorted_songs;
+    }
+    public void proxyGenerator() {
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+
+        //userID = UUID.randomUUID().toString();
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Users").child(myUserID).exists()){
+                    myProxyName = dataSnapshot.child("Users").child(myUserID).child("Proxy").getValue(String.class);
+                } else {
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
+                    for (DataSnapshot proxy : proxies) {
+                        //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        myProxyName = proxy.getValue(String.class);
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Proxy").setValue(proxy.getValue(String.class));
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Username").setValue(myUserName);
+                        ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+
+        });
+    }
+    public String getProxy(){
+        return myProxyName;
+    }
+    public void setProxy(String proxy){
+        myProxyName = proxy;
+    }
+
+    public void setData(final TextView songLocation, final TextView songTime, final TextView lastPlayedBy, final String sName){
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
+                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location_string").getValue(String.class));
+                    songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(long.class))));
+                    //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
+                    String user = dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class);
+                    if (user.equals(myUserID)) {
+                        lastPlayedBy.setText("Last played by:  you");
+                    }
+                    //else if (friends.contains(user)){
+                    //lastPlayedBy.setText(dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
+                    //}
+                    else {
+                        lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Proxy").getValue(String.class));
+                    }
+                }
+                else {
+                    songLocation.setText("N/A");
+                    songTime.setText("N/A");
+                    lastPlayedBy.setText("N/A");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
+
+    }
+    public String getCurrentTime(Timestamp time) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(time.getTime());
+        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+
+        String currentTime = calendar.get(Calendar.MONTH) + 1 + "/" + calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
+        return currentTime;
     }
 
     /* Checks if external storage is available to at least read */
