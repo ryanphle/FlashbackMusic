@@ -148,8 +148,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ContentDownload contentDownloadManager;
 
-
-
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
