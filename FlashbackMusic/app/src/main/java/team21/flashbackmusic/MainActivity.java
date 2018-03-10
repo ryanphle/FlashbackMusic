@@ -202,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private String myUserName;
+    private String myUserID;
     private String myProxyName;
     public String userID;
     private LocationManager locationManager;
@@ -592,6 +593,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         myUserName = getMyUserName();
+        myUserID = getMyID();
     }
 
     private void signIn() {
@@ -603,7 +605,15 @@ public class MainActivity extends AppCompatActivity {
         String user = "";
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null)
-            user = account.getGivenName();
+            user = account.getDisplayName();
+        return user;
+    }
+
+    public String getMyID(){
+        String user = "";
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            user = account.getId();
         return user;
     }
 
@@ -921,8 +931,27 @@ public class MainActivity extends AppCompatActivity {
             Play play = new Play(this, location.getLatitude(), location.getLongitude(), time);
             song.setTimeStamp(play.getTime());
         }
-        FBSongInfo thisSong = new FBSongInfo(myUserName,time.getTime(),location,"proxyname");
+        FBSongInfo thisSong = new FBSongInfo(myUserName,time.getTime(),location, myProxyName);
+        Address address = null;
+        String addressStr = "";
+        List<Address> myList = new ArrayList<>();
+
+        try {
+            Geocoder myLocation = new Geocoder(this, Locale.getDefault());
+            myList = myLocation.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+
+        } catch (IOException e) {
+
+        }
+
+        address = myList.get(0);
+        song.setLocation(address);
+
+        addressStr += address.getAddressLine(0) + ", ";
+        addressStr += address.getAddressLine(1) + ", ";
+        addressStr += address.getAddressLine(2);
         myRef.child("Songs").child(song.getName()).setValue(thisSong);
+        myRef.child("Songs").child(song.getName()).child("last_play_location_string").setValue(addressStr);
     }
 
     public void getPlayInfomation(final Song s) {
@@ -1382,19 +1411,20 @@ public class MainActivity extends AppCompatActivity {
     public void proxyGenerator() {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
-        userID = UUID.randomUUID().toString();
+        //userID = UUID.randomUUID().toString();
 
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Users").child(userID).exists()){
-                    myProxyName = dataSnapshot.child("Users").child(userID).child("Proxy").getValue(String.class);
+                if (dataSnapshot.child("Users").child(myUserName).exists()){
+                    myProxyName = dataSnapshot.child("Users").child(myUserName).child("Proxy").getValue(String.class);
                 } else {
                     Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
                     for (DataSnapshot proxy : proxies) {
                         //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
                         myProxyName = proxy.getValue(String.class);
-                        FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Proxy").setValue(proxy.getValue(String.class));
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Username").setValue(myUserName);
                         ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
                         break;
                     }
@@ -1421,8 +1451,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
-                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location").getValue(String.class));
-                    songTime.setText( dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(String.class));
+                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location_string").getValue(String.class));
+                    songTime.setText( getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(long.class))));
                     //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
                     lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Songs").child(sName).child("last_play_proxy").getValue(String.class));
                 }
@@ -1439,6 +1469,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+    public String getCurrentTime(Timestamp time) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(time.getTime());
+        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+
+        String currentTime = calendar.get(Calendar.MONTH) + 1 + "/" + calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
+        return currentTime;
     }
 
 }

@@ -10,7 +10,7 @@ public class FBSongInfo {
     public String last_play_user;
     public long last_play_time;
     public Location last_play_location;
-    public  String getLast_play_proxy;
+    public  String last_play_proxy;
 
     FBSongInfo() {}
 
@@ -18,7 +18,7 @@ public class FBSongInfo {
         this.last_play_user = user;
         this.last_play_time = time;
         this.last_play_location = location;
-        this.getLast_play_proxy = proxy;
+        this.last_play_proxy = proxy;
     }
 
 }
