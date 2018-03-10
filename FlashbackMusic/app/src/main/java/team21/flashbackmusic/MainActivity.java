@@ -22,6 +22,7 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.OpenableColumns;
 import android.support.v4.app.ActivityCompat;
@@ -253,44 +254,6 @@ public class MainActivity extends AppCompatActivity {
 
         /* Setting up all Listeners */
 
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-
-                if (songPlayingFrag == SONG_FRAG) {
-                    mediaPlayer.reset();
-                    if (index == res_uri.size() - 1)
-                        index = 0;
-                    else
-                        index++;
-                    loadMedia(songs.get(index), mediaPlayer);
-                    mediaPlayer.start();
-                    stopButton.setBackgroundResource(R.drawable.ic_playing);
-                }
-                else if (songPlayingFrag == ALBUM_FRAG) {
-                    mediaPlayer.reset();
-                    if (album_index == currAlbum.getSongs().size() - 1)
-                        album_index = 0;
-                    else
-                        album_index++;
-                    loadMedia(currAlbum.getSongs().get(index), mediaPlayer);
-                    mediaPlayer.start();
-                    stopButton.setBackgroundResource(R.drawable.ic_playing);
-                }
-                else {
-                    mediaPlayer.reset();
-                    if (flash_index == res_uri.size() - 1)
-                        flash_index = 0;
-                    else
-                        flash_index++;
-                    loadMedia(songs.get(flash_index), mediaPlayer);
-                    mediaPlayer.start();
-                    stopButton.setBackgroundResource(R.drawable.ic_playing);
-                }
-            }
-        });
-
         bottomNavigationView = findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -449,25 +412,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onReceive(Context context, Intent intent) {
-
-
                 contentDownloadManager.checkStatus();
                 contentDownloadManager.updateList();
 
                 Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
 
-
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
                 AlbumsFragment albumFragment = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
 
-
-
                 fragmentSong.updateListView();
                 albumFragment.updateListView();
-
-
-
             }
         };
 
@@ -482,6 +437,23 @@ public class MainActivity extends AppCompatActivity {
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
+        final Activity activity = this;
+        signIn = findViewById(R.id.sign_in_button);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("CLICK");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.client_id))
+                        .requestScopes(new Scope("https://www.googleapis.com/auth/contacts"))
+                        .requestServerAuthCode(getString(R.string.client_id), false)
+                        .requestEmail()
+                        .build();
+
+                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+                signIn();
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -496,7 +468,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         else {
-
             lastLocation = locationManager.getLastKnownLocation(locationProvider);
             locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
 
@@ -531,27 +502,8 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayerWrapper.forcePause();
         proxyGenerator();
 
-        final Activity activity = this;
-        signIn = findViewById(R.id.sign_in_button);
-        signIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                System.out.println("CLICK");
-                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(getString(R.string.client_id))
-                        .requestServerAuthCode(getString(R.string.client_id), false)
-                        .requestEmail()
-                        .build();
-
-                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
-                signIn();
-            }
-        });
-
         myUserName = getMyUserName();
         myUserID = getMyID();
-
-
     }
 
     public String getFileName(Uri uri) {
@@ -611,27 +563,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startDownload(String url, String download_type){
-
         download_uri = url;
-
         if(download_type.equals("Song") ) {
 
             contentDownloadManager = new SongDownloadManager(this);
             Log.i("downloading type", "Song");
-
         }
         else{
 
             contentDownloadManager = new AlbumDownloadManager(this);
             Log.i("downloading type", "Album");
 
-
         }
 
         List<String> permissions = new ArrayList<String>();
-
         contentDownloadManager.download(url);
-
     }
 
     public void initialFragSetup(int frag) {
@@ -648,7 +594,6 @@ public class MainActivity extends AppCompatActivity {
             initTransaction.hide(fragmentAlbums);
             initTransaction.addToBackStack("songs");
             bottomNavigationView.getMenu().getItem(SONG_FRAG).setChecked(true);
-            loadMedia(songs.get(0),this.mediaPlayer);
         }
         else if (frag == ALBUM_FRAG){
             initTransaction.hide(fragmentSong);
@@ -671,8 +616,6 @@ public class MainActivity extends AppCompatActivity {
         }
         initTransaction.commit();
     }
-
-
 
     private void signIn() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
@@ -718,28 +661,37 @@ public class MainActivity extends AppCompatActivity {
 
                 // TODO(developer): send code to server and exchange for access/refresh/ID tokens
                 System.out.println("AUTHCODE " + authCode);
-                try {
-                    setUp();
-                }
-                catch (IOException e) {
-
-                }
-            } catch (Exception e) {
+                new LoginRunner().execute();
+                signIn.setVisibility(View.GONE);
+            }
+            catch (Exception e) {
                 Log.w(TAG, "Sign-in failed", e);
-                //updateUI(null);
             }
 
-        } catch (ApiException e) {
+        }
+        catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
-            //updateUI(null);
+        }
+    }
+
+    private class LoginRunner extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                setUp();
+            }
+            catch (IOException e) {
+
+            }
+            return null;
         }
     }
 
     public void onStart() {
         super.onStart();
-        initialFragSetup(frag);
     }
 
     public void setUp() throws IOException {
@@ -753,11 +705,6 @@ public class MainActivity extends AppCompatActivity {
         String clientSecret = getString(R.string.client_secret);
 
         String serverClientId = clientId;
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
-                .requestServerAuthCode(serverClientId)
-                .requestEmail()
-                .build();
 
         String redirectUrl = getString(R.string.redirect_url);
 
@@ -778,38 +725,17 @@ public class MainActivity extends AppCompatActivity {
         PeopleService peopleService =
                 new PeopleService.Builder(httpTransport, jsonFactory, credential).build();
 
-
         ListConnectionsResponse response = peopleService.people().connections().list("people/me")
                 .setPersonFields("names,emailAddresses")
                 .execute();
         List<Person> connections = response.getConnections();
         System.out.println("Size of connections: " + connections.size());
-
+        System.out.println("Name of first person: " + connections.get(0).getNames().get(0).getDisplayName());
     }
-
-
 
     protected void showDownloadDialog() {
         DialogFragment downloadFragment = new DownloadFragment();
         downloadFragment.show(fragmentManager, "download");
-    }
-
-    public void loadMedia(Song song, MediaPlayer mediaPlayer) {
-        if (mediaPlayer == null) {
-            this.mediaPlayer = new MediaPlayer();
-            try {
-                this.mediaPlayer.setDataSource(this, song.getUri());
-                this.mediaPlayer.prepare();
-            } catch (Exception e) {
-                System.out.println(e.toString());
-            }
-        }
-        try {
-            mediaPlayer.setDataSource(this, song.getUri());
-            mediaPlayer.prepare();
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
     }
 
     public void storePlayInformation(Song song, Location location, Timestamp time) {
@@ -862,108 +788,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("TAG1", "Failed to read value.", databaseError.toException());
             }
         });
-    }
-
-    //public void newSong(int index, int mode) {}
-    public void newSong(int index, int mode, boolean next, boolean update) {
-        ArrayList<Song> songList = songs;
-        songPlayingFrag = mode;
-        currSongIdx = index;
-
-        mediaPlayer.reset();
-
-        if (mode == FLASHBACK_FRAG){
-            songList = sorted_songs;
-        }
-        if (mode == ALBUM_FRAG) {
-            songList = (ArrayList) currAlbum.getSongs();
-            if(album_dislike == songList.size()){
-                currSong = null;
-                //updateSongMetaData(index, mode, true);
-                stopButton.setBackgroundResource(R.drawable.ic_stopping);
-                return;
-            }
-        }
-
-        currSong = songList.get(index);
-        Timestamp time = new Timestamp(System.currentTimeMillis());
-        //storePlayInformation(currSong, lastLocation, time);
-
-        Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
-
-        if (currSong.getFavorite() == -1) {
-            //nextSong(next);
-            if(next){
-                switch (mode){
-                    case SONG_FRAG:
-                        if (this.index == res_uri.size() - 1)
-                            this.index = 0;
-                        else
-                            this.index++;
-                        newSong(this.index,mode,next,update);
-                        break;
-                    case ALBUM_FRAG:
-                        if (album_index == currAlbum.getSongs().size() - 1)
-                            album_index = 0;
-                        else
-                            album_index++;
-                        album_dislike++;
-                        newSong(this.album_index,mode,next,update);
-                        break;
-                    case FLASHBACK_FRAG:
-                        if (this.flash_index == sorted_songs.size() - 1)
-                            this.flash_index = 0;
-                        else
-                            this.flash_index++;
-                        newSong(this.flash_index,mode,next,update);
-                        break;
-                }
-
-            }
-            else{
-                switch (mode){
-                case SONG_FRAG:
-                    if (this.index == 0)
-                        this.index = res_uri.size() - 1;
-                    else
-                        this.index--;
-
-                    newSong(this.index,mode,next,update);
-                    break;
-                case ALBUM_FRAG:
-                    if (this.album_index == 0)
-                        this.album_index = currAlbum.getSongs().size() - 1;
-                    else
-                        this.album_index--;
-                    album_dislike++;
-                    newSong(this.album_index,mode,next,update);
-                    break;
-                case FLASHBACK_FRAG:
-                    if (this.flash_index == 0)
-                        this.flash_index = sorted_songs.size() - 1;
-                    else
-                        this.flash_index--;
-                    newSong(this.flash_index,mode,next,update);
-                    break;
-
-
-            }
-            }
-
-            return;
-        }
-
-        album_dislike = 0;
-
-        loadMedia(songList.get(index), this.mediaPlayer);
-        time = new Timestamp(System.currentTimeMillis());
-
-        //startLocationService(songList.get(index));
-        mediaPlayer.start();
-        if(update) {
-            updateSongMetaData(index, mode, true);
-        }
-        storePlayInformation(songList.get(index),lastLocation,time);
     }
 
     public void updateSongMetaData(int index, int mode, boolean songChange) {
@@ -1232,8 +1056,6 @@ public class MainActivity extends AppCompatActivity {
         if(AnySongsPlayed == false){
             sorted_songs = new ArrayList<Song>();
             sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
-            //mediaPlayer.stop();
-
             return;
         }
 
