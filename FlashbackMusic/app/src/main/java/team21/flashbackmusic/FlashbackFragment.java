@@ -54,8 +54,6 @@ public class FlashbackFragment extends Fragment {
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
-        //updateSongUI(((MainActivity)getActivity()).currSong);
-
         updateSongUI(songs.get(0));
 
 

@@ -74,11 +74,8 @@ public class SongsFragment extends Fragment {
                             "plays",
                             time
                     );
-
                     updateSongUI(s);
-
                 }
-
             }
         });
 
