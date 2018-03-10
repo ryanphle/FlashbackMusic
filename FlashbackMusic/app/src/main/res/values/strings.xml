@@ -6,4 +6,8 @@
     <string name="song_page_title">Songs</string>
     <string name="flashback_page_title">Flashback</string>
     <string name="album_page_title">Albums</string>
+    <string name="download_prompt">Input the URL of the song/album you want to download: </string>
+    <string name="download">Download</string>
+    <string name="cancel">Cancel</string>
+    <string name="download_box_msg">Ex. google.com (Change later)</string>
 </resources>
