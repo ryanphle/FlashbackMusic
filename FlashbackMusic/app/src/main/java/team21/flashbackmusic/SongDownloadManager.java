@@ -46,9 +46,6 @@ class SongDownloadManager implements ContentDownload {
 
     public String checkStatus(){
 
-        //String result = "";
-
-
         return Check_Status();
     }
 
@@ -75,37 +72,25 @@ class SongDownloadManager implements ContentDownload {
 
     public void download (String url){
 
-        //downloadManager = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
 
         Uri uri = Uri.parse(url);
         Log.i("download get the uri",uri.toString());
 
-        //download_uri = uri;
         DownloadManager.Request request = new DownloadManager.Request(uri);
 
         request.setVisibleInDownloadsUi(true);
 
-            //MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-            //request.setMimeType(mimeTypeMap.getMimeTypeFromExtension(url));
-
-
-        request.setDestinationInExternalPublicDir("storage/emulated/0/Music", URLUtil.guessFileName(url, null,null));
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, URLUtil.guessFileName(url, null,null));
 
         Log.i("download set destination","storage/emulated/0/Music");
-
-
-        //Uri fileuri = Uri.parse(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString()+"/");
-
-            //request.setDestinationUri(fileuri);
 
         downloadRef = downloadManager.enqueue(request);
         Log.i("download enque",request.toString());
 
+        Toast toast = Toast.makeText(activity, "Download start", Toast.LENGTH_LONG);
+        toast.show();
+
         Check_Status();
-
-
-        //Log.i("uri",""+DownloadManager.COLUMN_LOCAL_URI);
-            //Log.i("uri",""+DownloadManager.COLUMN_LOCAL_FILENAME);
 
 
     }
@@ -137,9 +122,7 @@ class SongDownloadManager implements ContentDownload {
         //column for reason code if the download failed or paused
         int columnReason = cursor.getColumnIndex(DownloadManager.COLUMN_REASON);
         int reason = cursor.getInt(columnReason);
-        //get the download filename
-        //int filenameIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME);
-        //String filename = cursor.getString(filenameIndex);
+
 
         String statusText = "";
         String reasonText = "";
@@ -202,17 +185,12 @@ class SongDownloadManager implements ContentDownload {
                 break;
             case DownloadManager.STATUS_SUCCESSFUL:
                 statusText = "STATUS_SUCCESSFUL";
-                //reasonText = "Filename:\n" + filename;
                 break;
         }
 
+        Log.i("Download Status: ", statusText + "\n" + reasonText);
 
-            Toast toast = Toast.makeText(activity,
-                    "Download Status:" + "\n" + statusText + "\n" +
-                            reasonText,
-                    Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.TOP, 25, 400);
-            toast.show();
+
 
         return statusText+" " +reasonText;
 

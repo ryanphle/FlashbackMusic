@@ -3,11 +3,14 @@ package team21.flashbackmusic;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.icu.lang.UCharacter;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Gravity;
 import android.webkit.URLUtil;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -49,10 +52,7 @@ public class AlbumDownloadManager implements ContentDownload {
 
     public String checkStatus(){
 
-        String result = "";
-
-
-        return result;
+        return Check_Status();
     }
 
     public String checkType(){
@@ -72,8 +72,6 @@ public class AlbumDownloadManager implements ContentDownload {
         Log.i("DownloadZIp","unzipping");
 
         Log.i("Unzip",fileName);
-
-        //unZip("storage/emulated/0/Music/",fileName);
 
         try {
             unzip(new File("storage/emulated/0/Music/" + fileName), new File("storage/emulated/0/Music"));
@@ -103,6 +101,7 @@ public class AlbumDownloadManager implements ContentDownload {
         }
 
         Log.i("DownloadZIp","unzip success");
+
 
 
 
@@ -145,111 +144,136 @@ public class AlbumDownloadManager implements ContentDownload {
         }
     }
 
-    /*
-     private boolean unZip (String path, String fileName){
-
-         InputStream inputStream;
-         ZipInputStream zipInputStream;
-         try{
-
-             String songName;
-
-             inputStream = new FileInputStream(path+fileName);
-             zipInputStream = new ZipInputStream(new BufferedInputStream(inputStream));
-
-             ZipEntry zipEntry;
-
-             byte[] buffer = new byte[1024];
-             int count;
-
-             while((zipEntry = zipInputStream.getNextEntry())!=null){
-
-                 songName = zipEntry.getName();
-                 //songFiles.add(songName);
-
-                 Log.i("zip song name",songName);
-
-                 if(zipEntry.isDirectory()){
-
-
-                     //songFiles.remove(songFiles.size()-1);
-
-                     File fmd = new File(path+fileName);
-                     fmd.mkdir();
-                     continue;
-
-                 }
-
-                 Log.i("zip file name",path+fileName);
-
-
-                 FileOutputStream fileOutputStream = new FileOutputStream(path+fileName);
-
-                 int i = 0;
-
-                 while((count = zipInputStream.read(buffer)) != -1){
-
-                     Log.i("zip file count",""+count);
-                     i = i + count;
-                     Log.i("zip file total count",""+i);
-
-                     fileOutputStream.write(buffer,0,count);
-
-                 }
-
-                 fileOutputStream.close();
-                 zipInputStream.closeEntry();
-             }
-
-             zipInputStream.close();
-
-         }
-         catch (IOException e){
-
-             e.printStackTrace();
-             return false;
-
-
-         }
-
-
-         return true;
-
-
-
-     }
-
-
-*/
-
     public void download (String url){
 
-        //downloadManager = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
 
         Uri uri = Uri.parse(url);
+        Log.i("download get the uri",uri.toString());
 
-        //download_uri = uri;
         DownloadManager.Request request = new DownloadManager.Request(uri);
 
         request.setVisibleInDownloadsUi(true);
 
-        //MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-        //request.setMimeType(mimeTypeMap.getMimeTypeFromExtension(url));
-
-
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, URLUtil.guessFileName(url, null,null));
+        Log.i("download set destination","storage/emulated/0/Music");
 
-        //Uri fileuri = Uri.parse(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString()+"/");
-
-        //request.setDestinationUri(fileuri);
 
         downloadRef = downloadManager.enqueue(request);
+        Log.i("download enque",request.toString());
 
-        //Log.i("uri",""+DownloadManager.COLUMN_LOCAL_URI);
-        //Log.i("uri",""+DownloadManager.COLUMN_LOCAL_FILENAME);
+        Toast toast = Toast.makeText(activity, "Download start", Toast.LENGTH_LONG);
+        toast.show();
+
+        Check_Status();
+
+
 
 
     }
+
+    private String Check_Status() {
+
+        String result = "";
+
+        DownloadManager.Query DownloadQuery = new DownloadManager.Query();
+        //set the query filter to our previously Enqueued download
+        DownloadQuery.setFilterById(downloadRef);
+
+        //Query the download manager about downloads that have been requested.
+        Cursor cursor = downloadManager.query(DownloadQuery);
+        if(cursor.moveToFirst()){
+            result = DownloadStatus(cursor, downloadRef);
+        }
+
+        return result;
+
+    }
+
+
+    private String DownloadStatus(Cursor cursor, long DownloadId){
+
+        //column for download  status
+        int columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+        int status = cursor.getInt(columnIndex);
+        //column for reason code if the download failed or paused
+        int columnReason = cursor.getColumnIndex(DownloadManager.COLUMN_REASON);
+        int reason = cursor.getInt(columnReason);
+
+
+        String statusText = "";
+        String reasonText = "";
+
+        switch(status){
+            case DownloadManager.STATUS_FAILED:
+                statusText = "STATUS_FAILED";
+                switch(reason){
+                    case DownloadManager.ERROR_CANNOT_RESUME:
+                        reasonText = "ERROR_CANNOT_RESUME";
+                        break;
+                    case DownloadManager.ERROR_DEVICE_NOT_FOUND:
+                        reasonText = "ERROR_DEVICE_NOT_FOUND";
+                        break;
+                    case DownloadManager.ERROR_FILE_ALREADY_EXISTS:
+                        reasonText = "ERROR_FILE_ALREADY_EXISTS";
+                        break;
+                    case DownloadManager.ERROR_FILE_ERROR:
+                        reasonText = "ERROR_FILE_ERROR";
+                        break;
+                    case DownloadManager.ERROR_HTTP_DATA_ERROR:
+                        reasonText = "ERROR_HTTP_DATA_ERROR";
+                        break;
+                    case DownloadManager.ERROR_INSUFFICIENT_SPACE:
+                        reasonText = "ERROR_INSUFFICIENT_SPACE";
+                        break;
+                    case DownloadManager.ERROR_TOO_MANY_REDIRECTS:
+                        reasonText = "ERROR_TOO_MANY_REDIRECTS";
+                        break;
+                    case DownloadManager.ERROR_UNHANDLED_HTTP_CODE:
+                        reasonText = "ERROR_UNHANDLED_HTTP_CODE";
+                        break;
+                    case DownloadManager.ERROR_UNKNOWN:
+                        reasonText = "ERROR_UNKNOWN";
+                        break;
+                }
+                break;
+            case DownloadManager.STATUS_PAUSED:
+                statusText = "STATUS_PAUSED";
+                switch(reason){
+                    case DownloadManager.PAUSED_QUEUED_FOR_WIFI:
+                        reasonText = "PAUSED_QUEUED_FOR_WIFI";
+                        break;
+                    case DownloadManager.PAUSED_UNKNOWN:
+                        reasonText = "PAUSED_UNKNOWN";
+                        break;
+                    case DownloadManager.PAUSED_WAITING_FOR_NETWORK:
+                        reasonText = "PAUSED_WAITING_FOR_NETWORK";
+                        break;
+                    case DownloadManager.PAUSED_WAITING_TO_RETRY:
+                        reasonText = "PAUSED_WAITING_TO_RETRY";
+                        break;
+                }
+                break;
+            case DownloadManager.STATUS_PENDING:
+                statusText = "STATUS_PENDING";
+                break;
+            case DownloadManager.STATUS_RUNNING:
+                statusText = "STATUS_RUNNING";
+                break;
+            case DownloadManager.STATUS_SUCCESSFUL:
+                statusText = "STATUS_SUCCESSFUL";
+                break;
+        }
+
+
+        Log.i("Download Status: ", statusText + "\n" + reasonText);
+
+
+
+        return statusText+" " +reasonText;
+
+
+    }
+
 
 
 

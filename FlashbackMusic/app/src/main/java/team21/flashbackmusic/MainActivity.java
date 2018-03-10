@@ -61,10 +61,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static java.util.Locale.CHINA;
 import static java.util.Locale.JAPAN;
 import static java.nio.file.StandardCopyOption.*;
-
-
+import static java.util.Locale.US;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -109,11 +109,6 @@ public class MainActivity extends AppCompatActivity {
     private int currentDay;
     private int currentHour;
     private Calendar calendar;
-
-
-    //public Location lastLocation;
-    //BroadcastReceiver locationReceiver;
-   // Intent locationIntent;
 
 
     protected boolean songLoaded;
@@ -190,18 +185,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        //Log.d("Fragment mode", Integer.toString(frag));
-
-        /*
-        Intent intent = new Intent(this,GetLocationService.class);
-        bindService(intent, serviceConnection,Context.BIND_AUTO_CREATE);
-        */
-
-
-
-        //initialFragSetup(frag);
-
-        /* Setting up all Listeners */
 
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -299,15 +282,6 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer.reset();
                             frag = FLASHBACK_FRAG;
 
-                            //loadMedia(random_songs.get(flash_index));
-                            //mediaPlayer.start();
-
-                            //newSong(flash_index, FLASHBACK_FRAG,true,false);
-
-                            //transaction.remove(random_fragmentFlashback);
-
-                            //Collections.shuffle(random_songs);
-
                             setFlashbackFragment();
 
                             newSong(flash_index, FLASHBACK_FRAG,true,false);
@@ -399,8 +373,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                contentDownloadManager.checkStatus();
-
 
                 songLoaded = true;
                 if (mediaPlayer.isPlaying()) {
@@ -420,47 +392,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-
-        /*
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    100);
-            Log.d("test1","ins");
-            //return;
-        }
-        */
-/*
-        locationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle b = intent.getBundleExtra("Location");
-                lastLocation = (Location) b.getParcelable("Location");
-                Song song = (Song)b.getParcelable("Song");
-                if(!enterFlash) {
-                    storePlayInformation(song);
-                    //Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
-                }
-                else{
-                    enterFlash = false;
-                    //Log.i("Sortgetlocation ", "  location : " + lastLocation.toString());
-                    initialFragSetup(frag);
-
-                    //sort_songs();
-                }
-            }
-        };
-        */
-
-        //while(getLocationService == null){}
-
-
-
-
 
 
         locationListener = new LocationListener() {
@@ -492,67 +423,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                //check if the broadcast message is for our enqueued download
-                // long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-
-                //DownloadManager.Query q = new DownloadManager.Query();
-                //Cursor c = downloadManager.query(q);
-
-
-                //c.moveToFirst();
-
-                //Log.i("title",c.getString(c.getColumnIndex(DownloadManager.COLUMN_TITLE)));
-
-                //String fileUri = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-
-
-                //Uri uri = Uri.parse(fileUri);
-
-                //Uri fileuri = downloadManager.getUriForDownloadedFile(downloadRef);
-
-                //String filePath = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME));
-                //resolver.openFileDescriptor (uri,"r");
-
-                //String downloadTitle = filePath.substring( filePath.lastIndexOf('/')+1, filePath.length() );
-
-
-                //String filePath = getFileName(fileuri);
-
-                //Log.i("file name",""+""+filePath);
-                //Log.i("file uri",""+""+fileuri);
-
-
-                //File file = new File(fileuri.toString());
-
-
-                //source = Paths.get(fileuri.toString());
-                //source = Paths.get(file.getAbsolutePath());
-                //target = Paths.get("/storage/emulated/0/Music/"+filePath);
-
-                //Log.i("file name",""+""+source);
-
-
-                /*
-                try {
-                    Files.move(source, target,
-                            REPLACE_EXISTING);
-                }
-                catch(IOException e){
-
-                }*/
 
                 contentDownloadManager.checkStatus();
+                contentDownloadManager.updateList();
 
-                Toast toast = Toast.makeText(MainActivity.this, "Music Download Complete", Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
 
-                contentDownloadManager.updateList();
 
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
                 AlbumsFragment albumFragment = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
 
 
-                //updateAlbum();
 
                 fragmentSong.updateListView();
                 albumFragment.updateListView();
@@ -620,33 +502,18 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-
-        //Log.d("LastLocation",lastLocation.toString());
-
-
-
-
-
-
-
-
-        //downloadManager = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
-
-
-
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        //updateSongMetaData(currSongIdx,SONG_FRAG,false);
-         */
-
     }
+
+
+
+
+
+
+
+
+
+
+
 
 
     public String getFileName(Uri uri) {
@@ -706,66 +573,18 @@ public class MainActivity extends AppCompatActivity {
 
                     initialFragSetup(frag);
 
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
+
 
                 } else {
 
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+
                 }
                 return;
             }
-            /*
-            case 2 :{
 
-                contentDownloadManager.download(download_uri);
-
-                /*
-                DownloadManager.Request request = new DownloadManager.Request(download_uri);
-
-                request.setVisibleInDownloadsUi(true);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC,"/storage/emulated/0/Music");
-
-                downloadRef = downloadManager.enqueue(request);
-            }*/
-
-            // other 'case' lines to check for other
-            // permissions this app might request
         }
     }
 
-/*
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            GetLocationService.locationService locationservice = (GetLocationService.locationService) iBinder;
-            getLocationService = locationservice.getService();
-            isBound = true;
-
-            if(frag == FLASHBACK_FRAG) {
-                enterFlash = true;
-
-                getLocationService.getLocation(songs.get(0));
-
-                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
-                        locationReceiver, new IntentFilter("LastLocation")
-                );
-            }
-            else{
-                initialFragSetup(frag);
-            }
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-
-            isBound = false;
-
-        }
-    };
-*/
 
     public void startDownload(String url, String download_type){
 
@@ -786,21 +605,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         List<String> permissions = new ArrayList<String>();
-        //permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        //EditText URL = (EditText) findViewById(R.id.Music_URL);
-       /*if (ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions(this,
-                    permissions.toArray(new String[permissions.size()]),
-                    2);
-            Log.d("permission","requested");
-            return;
-        }else {
-*/
             contentDownloadManager.download(url);
 
-
-       //}
 
 
     }
@@ -814,42 +621,34 @@ public class MainActivity extends AppCompatActivity {
         initTransaction.addToBackStack("songs");
         initTransaction.add(R.id.main_container, fragmentAlbums, "albums");
         initTransaction.addToBackStack("albums");
-        //initTransaction.add(R.id.main_container, random_fragmentFlashback, "flash_songs");
-        //initTransaction.addToBackStack("flash_songs");
+
         if (frag == SONG_FRAG) {
             initTransaction.hide(fragmentAlbums);
-            //initTransaction.hide(random_fragmentFlashback);
             initTransaction.addToBackStack("songs");
 
 
             bottomNavigationView.getMenu().getItem(SONG_FRAG).setChecked(true);
 
-            //loadMedia(songs.get(0), this.mediaPlayer);
+
 
         } else if (frag == ALBUM_FRAG) {
             initTransaction.hide(fragmentSong);
             Log.i("InitFrag", "" + fragmentSong.isVisible());
-            //initTransaction.hide(random_fragmentFlashback);
+
             bottomNavigationView.getMenu().getItem(ALBUM_FRAG).setChecked(true);
             initTransaction.addToBackStack("albums");
 
 
-            //loadMedia(songs.get(0), this.mediaPlayer);
+
 
         } else {
-            //mediaPlayer.reset();
+
             initTransaction.hide(fragmentSong);
             initTransaction.hide(fragmentAlbums);
 
 
-            //initTransaction.remove(random_fragmentFlashback);
-
-            //Collections.shuffle(random_songs);
-
 
             setFlashbackFragment();
-            //loadMedia(random_songs.get(flash_index));
-            //mediaPlayer.start();
             newSong(0, FLASHBACK_FRAG, true, false);
 
             prevButton.setVisibility(View.INVISIBLE);
@@ -869,6 +668,7 @@ public class MainActivity extends AppCompatActivity {
         downloadFragment.show(fragmentManager, "download");
     }
 
+
     public void playSelectedSong(Song s) {
         Uri uri = s.getUri();
         index = songs.indexOf(s);
@@ -877,22 +677,12 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.reset();
         loadMedia(s,mediaPlayer);
 
-        /*
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-        */
         Timestamp time = new Timestamp(System.currentTimeMillis());
         storePlayInformation(s,lastLocation,"plays",time);
 
-        //storePlayInformation(s);
-        //startLocationService(s);
-
         mediaPlayer.start();
     }
+
 
     public void loadMedia(Song song, MediaPlayer mediaPlayer) {
         if (mediaPlayer == null) {
@@ -912,23 +702,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    private void startLocationService(Song song) {
-
-        /*Intent intent = new Intent(MainActivity.this, LocationService.class);
-        Bundle b = new Bundle();
-        b.putParcelable("Song", song);
-        intent.putExtra("Song",b);
-        startService(intent);*/
-/*
-        getLocationService.getLocation(song);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                locationReceiver, new IntentFilter("LastLocation")
-        );
-
-
-    }#*/
 
 
     public void storePlayInformation(Song song, Location location, String prefName, Timestamp time){
@@ -980,9 +753,6 @@ public class MainActivity extends AppCompatActivity {
             editor.putString(song.getName(), json);
             editor.apply();
 
-            //String json2 = getSharedPreferences(prefName, MODE_PRIVATE).getString(song.getName(), "");
-            //Play samePlay = gson.fromJson(json2, Play.class);
-            //System.out.print("time: " + samePlay.getTime().getTime() + " time of day: " + samePlay.getTimeOfDay());
         }
 
     }
@@ -990,7 +760,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    //public void newSong(int index, int mode) {}
     public void newSong(int index, int mode, boolean next, boolean update) {
         ArrayList<Song> songList = songs;
         songPlayingFrag = mode;
@@ -1018,7 +787,6 @@ public class MainActivity extends AppCompatActivity {
         Log.d("like", currSong.getName() + " " +Integer.toString(currSong.getFavorite()));
 
         if (currSong.getFavorite() == -1) {
-            //nextSong(next);
             if(next){
                 switch (mode){
                     case SONG_FRAG:
@@ -1086,7 +854,6 @@ public class MainActivity extends AppCompatActivity {
         loadMedia(songList.get(index), this.mediaPlayer);
         time = new Timestamp(System.currentTimeMillis());
         storePlayInformation(songList.get(index),lastLocation,"plays",time);
-        //startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
@@ -1107,32 +874,21 @@ public class MainActivity extends AppCompatActivity {
             song = currSong;
         }
 
-        //Log.i("currSong", currSong.getName());
 
 
 
         if(song != null) {
             switch (frag) {
                 case SONG_FRAG:
-                    //SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().getFragments().get(0);
                     SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
-
-                    //Log.i("currSongfrag", fragmentSong.toString());
-
-
                     fragmentSong.updateSongUI(song);
                     break;
                 case ALBUM_FRAG:
-                    //AlbumsFragment fragmentAlbum = (AlbumsFragment)
-                    //      getSupportFragmentManager().getFragments().get(1);
                     AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
                     fragmentAlbum.updateSongUI(song);
                     break;
                 case FLASHBACK_FRAG:
-                    //FlashbackFragment fragmentFlash = (FlashbackFragment)
-                    //      getSupportFragmentManager().getFragments().get(2);
                     FlashbackFragment fragmentFlash = (FlashbackFragment) getSupportFragmentManager().findFragmentByTag("flash_songs");
-
                     fragmentFlash.updateSongUI(song);
                     break;
             }
@@ -1147,9 +903,8 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.putInt("frag_mode",frag);
         pre_editor.apply();
         like_editor.apply();
-        //Log.d("Fragment mode", Integer.toString(frag));
         if (isChangingConfigurations() && mediaPlayer.isPlaying()) {
-            ; // do nothing
+
         }
     }
     @Override
@@ -1165,50 +920,25 @@ public class MainActivity extends AppCompatActivity {
 
         if(isExternalStorageReadable()){
 
-            //Music = new File("/storage/emulated/0/Music");
-
             Music = path;
-
-            //Download = new File("/storage/emulated/0/Download");
 
         }
 
         Log.i("File Path", Music.getAbsolutePath());
-       // Log.i("File Path", Download.getAbsolutePath());
 
 
         File[] songFiles = Music.listFiles();
-        //File[] downloadFiles = Download.listFiles();
-
-        /*
-        ArrayList<File> totalFiles = new ArrayList<File>();
-        for(int count=0; count < songFiles.length; count++) {
-
-            totalFiles.add(songFiles[count]);
-
-        }
-        for(int count=0; count < downloadFiles.length; count++) {
-
-            totalFiles.add(downloadFiles[count]);
-
-        }*/
-        //Field[] fields=R.raw.class.getFields();
-        //Log.d("Size of fields", Integer.toString(fields.length));
 
         SharedPreferences sharedPreferences = getSharedPreferences("plays", MODE_PRIVATE);
         Play play;
         Gson gson = new Gson();
-
-        //File[] totalsongs = songFiles.toArray(new File[totalFiles.size()]);
-
         loadListofFiles(songFiles, sharedPreferences, gson);
+
     }
 
     protected void loadListofFiles(File[] songFiles, SharedPreferences sharedPreferences, Gson gson) throws IllegalAccessException {
         for(int count=0; count < songFiles.length; count++){
 
-            //int resourceID = fields[count].getInt(fields[count]);
-            //Uri uri = Uri.parse("android.resource://team21.flashbackmusic/" + resourceID);
 
             if(!songFiles[count].isDirectory()) {
                 Uri uri = Uri.fromFile(songFiles[count]);
@@ -1249,12 +979,22 @@ public class MainActivity extends AppCompatActivity {
 
 
         //edited
+        /*
         if (title == null) { title = "No title found" + null_title_offset; }
         if (album == null) { album = "No album found"+ null_title_offset; }
         if (artist == null) {
             artist = "No artist found"+ null_title_offset;
             null_title_offset++;
+        }*/
+
+
+        if (title == null) { title = this.getFileName(uri); }
+        if (album == null) { album = "Unknown Album";}
+        if (artist == null) {
+            artist = "Unknown Artist";
         }
+
+
 
         Log.i("Raw Songs name: ", title+ "  album:"+ album+ "   artist  "+artist+" uri "+uri);
 
@@ -1295,10 +1035,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
-
         albums.get(album).addSong(song);
-        //albumList.add(albums.get(album)); // Used to pass into Parceble ArrayList
         songs.add(song);
         res_uri.add(uri);
 
@@ -1340,13 +1077,6 @@ public class MainActivity extends AppCompatActivity {
         fragmentAlbums.setArguments(bundle);
     }
 
-    /*public void scroll(View view) {
-        if (songLoaded) {
-            TextView artistAlbumInfo = (TextView) view.findViewById(R.id.small_artist_album_name);
-            artistAlbumInfo.setSelected(true);
-        }
-    }*/
-
     public void nextSong(boolean next) {
         if (next)
             nextButton.performClick();
@@ -1355,15 +1085,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public List<Song> getSongs(){return songs;}
-
-
-    public void sort_getLocation(){
-
-        enterFlash = true;
-
-        getLocationService.getLocation(songs.get(0));
-
-    }
 
 
     public void sort_songs(List<Song> songs,String prefName, int currentDay, int currentHour, Location location ) {
@@ -1398,7 +1119,23 @@ public class MainActivity extends AppCompatActivity {
                 }catch (IOException e) {
 
                 }
-                Address address = (Address) myList.get(0);
+
+                Address address;
+
+                try {
+                    address = (Address) myList.get(0);
+                }catch(IndexOutOfBoundsException e){
+
+                    address = new Address(US);
+                    address.setAddressLine(0,"Unknown");
+                    address.setAddressLine(1,"Unknown");
+                    address.setAddressLine(2,"Unknown");
+                    address.setCountryName("Unknown");
+
+                }
+
+
+
                 sorted_songs.get(sorted_song_index).setLocation(address);
             }
             sorted_song_index++;
@@ -1425,7 +1162,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Raw Songs name: ",location.toString());
             }
 
-            //Location location1 = new Location(lastLocation);
             if(play != null) {
                 location_song.setLatitude(play.getLatitude());
                 location_song.setLongitude(play.getLongitude());
@@ -1495,16 +1231,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
-    /*
-    public void updateAlbum(){
-
-        albumList = new ArrayList<>(albums.values());
-
-    }
-    */
-
-
 
 
 
