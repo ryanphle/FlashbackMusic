@@ -16,6 +16,7 @@ import android.location.LocationManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -445,6 +446,22 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationProvider = LocationManager.GPS_PROVIDER;
 
+        final Activity activity = this;
+        signIn = findViewById(R.id.sign_in_button);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("CLICK");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.client_id))
+                        .requestServerAuthCode(getString(R.string.client_id), false)
+                        .requestEmail()
+                        .build();
+
+                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+                signIn();
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -467,22 +484,21 @@ public class MainActivity extends AppCompatActivity {
 
         /* GOOGLE SIGN IN */
 
-        final Activity activity = this;
-        signIn = findViewById(R.id.sign_in_button);
-        signIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                System.out.println("CLICK");
-                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(getString(R.string.client_id))
-                        .requestServerAuthCode(getString(R.string.client_id), false)
-                        .requestEmail()
-                        .build();
+    }
 
-                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
-                signIn();
+    private class LoginRunner extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                setUp();
+                signIn.setVisibility(View.GONE);
             }
-        });
+            catch (IOException e) {
+
+            }
+            return null;
+        }
     }
 
     private void signIn() {
@@ -513,12 +529,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // TODO(developer): send code to server and exchange for access/refresh/ID tokens
                 System.out.println("AUTHCODE " + authCode);
-                try {
-                    setUp();
-                }
-                catch (IOException e) {
 
-                }
+                new LoginRunner().execute();
             } catch (Exception e) {
                 Log.w(TAG, "Sign-in failed", e);
                 //updateUI(null);
