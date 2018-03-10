@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -38,10 +39,11 @@ public class AlbumsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceStat) {
 
         rootView = inflater.inflate(R.layout.fragment_albums, container, false);
+        gridView = rootView.findViewById(R.id.album_grid);
+
 
         ArrayList<Album> albums = getArguments().getParcelableArrayList("albums");
         adapter = new AlbumAdapter(getActivity(), R.layout.album_gridview, albums);
-        gridView = rootView.findViewById(R.id.album_grid);
         gridView.setAdapter(adapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -60,9 +62,6 @@ public class AlbumsFragment extends Fragment {
                 ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity) getActivity()).ALBUM_FRAG;
                 ((MainActivity) getActivity()).stopButton.setBackgroundResource(R.drawable.ic_playing);
 
-                //((MainActivity)getActivity()).newSong(0,((MainActivity)getActivity()).ALBUM_FRAG,true,true);
-
-
                 ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(a.getSongs());
                 ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(0);
 
@@ -79,24 +78,21 @@ public class AlbumsFragment extends Fragment {
             }
         });
 
+        Button downloadButton = rootView.findViewById(R.id.download_btn);
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showDownloadDialog();
+            }
+        });
+
         return rootView;
     }
 
     public void updateSongUI(Song s) {
+        adapter.notifyDataSetChanged();
         Log.i("Song update: ", s.getName());
 
-        /*if (s==null) return;
-
-        ImageView albumImage = (ImageView) rootView.findViewById(R.id.small_album_art);
-        TextView songName = (TextView) rootView.findViewById(R.id.small_song_name);
-        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.small_artist_album_name);
-
-        Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
-        albumImage.setImageBitmap(bmp);
-
-        songName.setText(s.getName());
-        String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
-        artistAlbumInfo.setText(artistAndAlbumStr);*/
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
         TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
@@ -125,4 +121,10 @@ public class AlbumsFragment extends Fragment {
         songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
 
     }
+
+
+    public void updateListView() {
+        adapter.notifyDataSetChanged();
+    }
+
 }
