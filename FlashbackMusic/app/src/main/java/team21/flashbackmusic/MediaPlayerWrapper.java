@@ -135,9 +135,9 @@ public class MediaPlayerWrapper {
 
     public void updateAndStore(int index, int mode, boolean songChange) {
         Timestamp time = new Timestamp(System.currentTimeMillis());
-        activity.storePlayInformation(songs.get(index), activity.lastLocation, "plays",
-                                        time);
         activity.updateSongMetaData(index, mode, songChange);
+        activity.storePlayInformation(songs.get(index), activity.lastLocation,
+                time);
     }
 
 }
