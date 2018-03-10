@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private String authCode = "";
     private GoogleSignInAccount account;
+    private List<Person> connections;
 
 
     @Override
@@ -451,9 +452,10 @@ public class MainActivity extends AppCompatActivity {
         signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("CLICK");
                 GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestIdToken(getString(R.string.client_id))
+                        .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                        .requestScopes(new Scope("https://www.googleapis.com/auth/contacts"))
                         .requestServerAuthCode(getString(R.string.client_id), false)
                         .requestEmail()
                         .build();
@@ -494,8 +496,8 @@ public class MainActivity extends AppCompatActivity {
                 setUp();
                 signIn.setVisibility(View.GONE);
             }
-            catch (IOException e) {
-
+            catch (Exception e) {
+                Log.d("Setup error", e.getMessage());
             }
             return null;
         }
@@ -540,7 +542,6 @@ public class MainActivity extends AppCompatActivity {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
-            //updateUI(null);
         }
     }
 
@@ -560,11 +561,6 @@ public class MainActivity extends AppCompatActivity {
         String clientSecret = getString(R.string.client_secret);
 
         String serverClientId = clientId;
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
-                .requestServerAuthCode(serverClientId)
-                .requestEmail()
-                .build();
 
         String redirectUrl = getString(R.string.redirect_url);
 
@@ -585,15 +581,13 @@ public class MainActivity extends AppCompatActivity {
         PeopleService peopleService =
                 new PeopleService.Builder(httpTransport, jsonFactory, credential).build();
 
-
         ListConnectionsResponse response = peopleService.people().connections().list("people/me")
                 .setPersonFields("names,emailAddresses")
                 .execute();
-        List<Person> connections = response.getConnections();
+        connections = response.getConnections();
         System.out.println("Size of connections: " + connections.size());
-
+        System.out.println("Name of first person: " + connections.get(0).getNames().get(0).getDisplayName());
     }
-
 
 
     @Override
