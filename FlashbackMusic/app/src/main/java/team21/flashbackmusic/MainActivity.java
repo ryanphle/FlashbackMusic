@@ -209,6 +209,10 @@ public class MainActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private String authCode = "";
 
+    private Location lastPlayLocation;
+    private String lastPlayUser;
+    private long lastPlayTime;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -581,10 +585,8 @@ public class MainActivity extends AppCompatActivity {
                 signIn();
             }
         });
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null)
-            myUserName = account.getGivenName();
 
+        myUserName = getMyUserName();
     }
 
     private void signIn() {
@@ -593,7 +595,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String getMyUserName() {
-        return this.myUserName;
+        String user = "";
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            user = account.getGivenName();
+        return user;
     }
 
     @Override
@@ -914,13 +920,25 @@ public class MainActivity extends AppCompatActivity {
         myRef.child("Songs").child(song.getName()).setValue(thisSong);
     }
 
-    public String getCurrentTime(Timestamp time) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(time.getTime());
-        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+    public void getPlayInfomation(final Song s) {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
+                    lastPlayLocation = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").getValue(Location.class);
+                    lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
+                    lastPlayUser = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                    //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
 
-        String currentTime = calendar.get(Calendar.MONTH) + 1 + "/" + calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
-        return currentTime;
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
     }
 
     //public void newSong(int index, int mode) {}

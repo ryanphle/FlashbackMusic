@@ -8,7 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Created by samliu on 3/4/18.
+ * Created by jerryliu on 3/4/18.
  */
 
 public class TestGetUserName {
@@ -18,6 +18,6 @@ public class TestGetUserName {
     @Test
     public void test1() {
         String username = mainActivity.getActivity().getMyUserName();
-        assertEquals("jerry", username);
+        assertEquals("Chenglin", username);
     }
 }
