@@ -48,6 +48,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -106,6 +107,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import com.google.gson.Gson;
 
@@ -200,6 +202,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private String myUserName;
+    private String myProxyName;
+    public String userID;
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
@@ -567,7 +571,8 @@ public class MainActivity extends AppCompatActivity {
         );
         //updateSongMetaData(currSongIdx,SONG_FRAG,false);
          */
-        /* GOOGLE SIGN IN */
+
+        proxyGenerator();
 
         final Activity activity = this;
         signIn = findViewById(R.id.sign_in_button);
@@ -1034,12 +1039,13 @@ public class MainActivity extends AppCompatActivity {
 
         loadMedia(songList.get(index), this.mediaPlayer);
         time = new Timestamp(System.currentTimeMillis());
-        storePlayInformation(songList.get(index),lastLocation,time);
+
         //startLocationService(songList.get(index));
         mediaPlayer.start();
         if(update) {
             updateSongMetaData(index, mode, true);
         }
+        storePlayInformation(songList.get(index),lastLocation,time);
     }
 
     public void updateSongMetaData(int index, int mode, boolean songChange) {
@@ -1067,6 +1073,7 @@ public class MainActivity extends AppCompatActivity {
                     SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
 
                     //Log.i("currSongfrag", fragmentSong.toString());
+
 
                     fragmentSong.updateSongUI(song);
                     break;
@@ -1366,8 +1373,72 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
+
     public List<Song> getSortedSongs(){
         return sorted_songs;
+    }
+    public void proxyGenerator() {
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+
+        userID = UUID.randomUUID().toString();
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Users").child(userID).exists()){
+                    myProxyName = dataSnapshot.child("Users").child(userID).child("Proxy").getValue(String.class);
+                } else {
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
+                    for (DataSnapshot proxy : proxies) {
+                        //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        myProxyName = proxy.getValue(String.class);
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+
+        });
+    }
+    public String getProxy(){
+        return myProxyName;
+    }
+    public void setProxy(String proxy){
+        myProxyName = proxy;
+    }
+
+    public void setData(final TextView songLocation, final TextView songTime, final TextView lastPlayedBy, final String sName){
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
+                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location").getValue(String.class));
+                    songTime.setText( dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(String.class));
+                    //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
+                    lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Songs").child(sName).child("last_play_proxy").getValue(String.class));
+                }
+                else {
+                    songLocation.setText("N/A");
+                    songTime.setText("N/A");
+                    lastPlayedBy.setText("N/A");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
+
     }
 
 }

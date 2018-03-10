@@ -15,6 +15,12 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -93,8 +99,9 @@ public class AlbumsFragment extends Fragment {
         ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
         TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
         TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
-        TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
-        TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        final TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
+        final TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+        final TextView lastPlayedBy = (TextView) rootView.findViewById(R.id.last_played_by);
         Calendar calendar;
 
         Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
@@ -108,7 +115,7 @@ public class AlbumsFragment extends Fragment {
         calendar.setTimeInMillis(s.getTimeStamp().getTime());
         calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-        Address address = s.getLocation();
+        /*Address address = s.getLocation();
         String addressStr = "";
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
@@ -116,6 +123,8 @@ public class AlbumsFragment extends Fragment {
 
         songLocation.setText(addressStr);
         songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
+*/
+        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
 
     }
 }
