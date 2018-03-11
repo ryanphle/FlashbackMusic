@@ -167,6 +167,8 @@ public class MainActivity extends AppCompatActivity {
     private Calendar calendar;
 
     protected boolean songLoaded;
+    protected boolean songListEmpty;
+
 
     //default img
     byte[] default_album = new byte[100];
@@ -408,15 +410,26 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        final Context mainContext = this.getApplicationContext();
+
         final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
 
             @Override
             public void onReceive(Context context, Intent intent) {
                 contentDownloadManager.checkStatus();
-                contentDownloadManager.updateList();
+
+                if(songListEmpty){
+                    contentDownloadManager.updateList();
+                    songListEmpty = false;
+                    mediaPlayerWrapper = new MediaPlayerWrapper(songs, mainContext,MainActivity.this);
+                }
+                else
+                    contentDownloadManager.updateList();
+
 
                 Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
+
 
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
                 AlbumsFragment albumFragment = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
@@ -494,12 +507,19 @@ public class MainActivity extends AppCompatActivity {
             initialFragSetup(frag);
         }
 
+        if(songs.size() == 0)
+            songListEmpty = true;
+        else
+            songListEmpty = false;
+
+        if(!songListEmpty){
         if (frag == FLASHBACK_FRAG)
             mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
         else
             mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
 
         mediaPlayerWrapper.forcePause();
+        }
         proxyGenerator();
 
         myUserName = getMyUserName();
