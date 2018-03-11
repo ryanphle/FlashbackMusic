@@ -38,15 +38,6 @@ public class DatabaseTest {
     }
 
     @Test
-    public void multipleProxyTest(){
-        String proxy = mainActivity.getActivity().getProxy();
-        mainActivity.getActivity().setProxy(null);
-        mainActivity.getActivity().proxyGenerator();
-        while (mainActivity.getActivity().getProxy()==null){}
-        assertNotEquals(proxy,mainActivity.getActivity().getProxy());
-    }
-
-    @Test
     public void updateUITest(){
         final TextView songLocation = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_location);
         final TextView songTime = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_time);
@@ -54,7 +45,7 @@ public class DatabaseTest {
         mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"Hello");
         while (songLocation.getText().toString().equals("Location") || lastPlayedBy.getText().toString().equals("Last played by:") ){}
         assertEquals("402w Broadway, San Diego, CA 92101, USA", songLocation.getText());
-        assertEquals("Last played by: Mickey Mouse", lastPlayedBy.getText().toString());
+        assertEquals("Last played by: you", lastPlayedBy.getText().toString());
         assertEquals("3/9 19:50", songTime.getText().toString());
     }
 
@@ -73,10 +64,8 @@ public class DatabaseTest {
         mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"title");
         while (songLocation.getText().toString().equals("Location") || lastPlayedBy.getText().toString().equals("Last played by:") ){}
         assertEquals("402w Broadway, San Diego, CA 92101, USA", songLocation.getText());
-        assertEquals("Last played by: " + mainActivity.getActivity().getProxy(), lastPlayedBy.getText().toString());
+        assertEquals("Last played by: you" , lastPlayedBy.getText().toString());
         //assertEquals(mainActivity.getActivity().getCurrentTime(time), songTime.getText().toString());
-
-
 
     }
 

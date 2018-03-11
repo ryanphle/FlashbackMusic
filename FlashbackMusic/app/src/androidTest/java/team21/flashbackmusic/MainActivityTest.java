@@ -104,13 +104,6 @@ public class MainActivityTest {
         assertEquals("Morning", play.getTimeOfDay());
     }
 
-    @Test
-    public void loadMediaTest(){
-         Song song = new Song("hello", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
-         mainActivity.getActivity().loadMedia(song,mediaPlayer);
-         assertEquals(song.getUri(),mediaPlayer.getDataSource());
-    }
-
     @UiThreadTest
     @Test
     public void initialSongsFragSetupTest(){
