@@ -1214,6 +1214,7 @@ public class MainActivity extends AppCompatActivity {
         myProxyName = proxy;
     }
 
+
     public void setData(final TextView songLocation, final TextView songTime, final TextView lastPlayedBy, final String sName){
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
