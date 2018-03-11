@@ -15,6 +15,34 @@
       },
       "oauth_client": [
         {
+          "client_id": "898035120337-16vuan8pd7tmufmqsbjq0m40o33g480v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "team21.flashbackmusic",
+            "certificate_hash": "b218d2c4daa8f45b84a76fe99bb284b9756aa697"
+          }
+        },
+        {
+          "client_id": "898035120337-jjnfd25j6cf237r5pm3vaao3dgrg1uq0.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "898035120337-h1hekqsrostes3586t0k1kts9qsob3d4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "team21.flashbackmusic",
+            "certificate_hash": "9bb487bf622f20792ca76d480eed43752053cd26"
+          }
+        },
+        {
+          "client_id": "898035120337-tr7rnodubfqtd4o2o3vu19q61a4eqbqh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "team21.flashbackmusic",
+            "certificate_hash": "6c6727b81ab5f45f8d894e2bdc412736b87e6270"
+          }
+        },
+        {
           "client_id": "898035120337-bmnnguvs88n2bhk79hiqqsjfm1sogk9s.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -40,7 +68,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "898035120337-rvvbm4051meg6tdmqhq3305toaa3ingf.apps.googleusercontent.com",
+              "client_id": "898035120337-jjnfd25j6cf237r5pm3vaao3dgrg1uq0.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -764,8 +764,9 @@ public class MainActivity extends AppCompatActivity {
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
         addressStr += address.getAddressLine(2);
-        myRef.child("Songs").child(song.getName()).setValue(thisSong);
-        myRef.child("Songs").child(song.getName()).child("last_play_location_string").setValue(addressStr);
+
+        myRef.child("Songs").child(song.getName().replace(".",",")).setValue(thisSong);
+        myRef.child("Songs").child(song.getName().replace(".",",")).child("last_play_location_string").setValue(addressStr);
     }
 
 
@@ -1176,11 +1177,12 @@ public class MainActivity extends AppCompatActivity {
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
-                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location_string").getValue(String.class));
-                    songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(long.class))));
+                String encodedName = sName.replace(".",",");
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(encodedName).exists()) {
+                    songLocation.setText(dataSnapshot.child("Songs").child(encodedName).child("last_play_location_string").getValue(String.class));
+                    songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(encodedName).child("last_play_time").getValue(long.class))));
                     //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
-                    String user = dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class);
+                    String user = dataSnapshot.child("Songs").child(encodedName).child("last_play_user").getValue(String.class);
                     if (user.equals(myUserID)) {
                         lastPlayedBy.setText("Last played by:  you");
                     }
