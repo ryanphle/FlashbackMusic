@@ -73,6 +73,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.api.services.people.v1.model.EmailAddress;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -204,8 +205,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String myUserName;
     private String myUserID;
+    private String myUserEmail;
     private String myProxyName;
-    public String userID;
+    private List<Person> connections;
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
@@ -504,6 +506,7 @@ public class MainActivity extends AppCompatActivity {
 
         myUserName = getMyUserName();
         myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
     public String getFileName(Uri uri) {
@@ -630,12 +633,32 @@ public class MainActivity extends AppCompatActivity {
         return user;
     }
 
-    public String getMyID(){
+    public String getMyEmail() {
         String user = "";
+        int hash;
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null)
-            user = account.getId();
+            user = account.getEmail();
         return user;
+    }
+
+    public String getMyID(){
+        String user = "";
+        int hash;
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            user = account.getEmail();
+            user = HashFunction(user);
+        return user;
+    }
+
+    public String HashFunction(String email){
+        String res;
+        int hash;
+        res = email.split("@")[0];
+        hash = res.hashCode();
+        res = Integer.toString(hash);
+        return res;
     }
 
     @Override
@@ -728,7 +751,7 @@ public class MainActivity extends AppCompatActivity {
         ListConnectionsResponse response = peopleService.people().connections().list("people/me")
                 .setPersonFields("names,emailAddresses")
                 .execute();
-        List<Person> connections = response.getConnections();
+        connections = response.getConnections();
         System.out.println("Size of connections: " + connections.size());
         System.out.println("Name of first person: " + connections.get(0).getNames().get(0).getDisplayName());
     }
@@ -1181,12 +1204,22 @@ public class MainActivity extends AppCompatActivity {
                     songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(long.class))));
                     //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
                     String user = dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class);
-                    if (user.equals(myUserID)) {
-                        lastPlayedBy.setText("Last played by:  you");
+                    boolean isFriend = false;
+                    if (connections!=null){
+                        for (Person connection : connections) {
+                          for (EmailAddress address : connection.getEmailAddresses()){
+                              if (HashFunction(address.getValue()).equals(user)){
+                                  isFriend = true;
+                              }
+                         }
+                     }
                     }
-                    //else if (friends.contains(user)){
-                    //lastPlayedBy.setText(dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
-                    //}
+                    if (isFriend){
+                        lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
+                    }
+                    else if (myUserID.equals(user) && myUserID!=null) {
+                        lastPlayedBy.setText("Last played by: you");
+                    }
                     else {
                         lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Proxy").getValue(String.class));
                     }
