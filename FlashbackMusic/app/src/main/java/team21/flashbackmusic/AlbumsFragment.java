@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,7 +56,7 @@ public class AlbumsFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                a = (Album) parent.getAdapter().getItem(position);
+                /*a = (Album) parent.getAdapter().getItem(position);
                 Song s = a.getSongs().get(0);
 
                 ((MainActivity)getActivity()).songLoaded = true;
@@ -77,7 +78,35 @@ public class AlbumsFragment extends Fragment {
                         ((MainActivity) getActivity()).mediaPlayerWrapper.getSong(),
                         ((MainActivity) getActivity()).lastLocation,
                         time
-                );
+                );*/
+
+                a = (Album) parent.getAdapter().getItem(position);
+                ArrayList<Song> s = new ArrayList<Song>(a.getSongs());
+
+                ((MainActivity)getActivity()).songLoaded = true;
+                ((MainActivity)getActivity()).currAlbum = a;
+                ((MainActivity)getActivity()).album_index = 0;
+                ((MainActivity)getActivity()).currSongIdx = 0;
+                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity) getActivity()).ALBUM_FRAG;
+
+
+                SongsFragment songList = ((MainActivity)getActivity()).setAlbumSongFragment(s,a);
+
+
+
+                FragmentTransaction songsTransaction = ((MainActivity)getActivity()).getSupportFragmentManager().beginTransaction();
+
+                //((MainActivity)getActivity()).getSupportFragmentManager().popBackStack();
+
+                songsTransaction.add(R.id.main_container,songList,"albumsongs");
+                songsTransaction.addToBackStack("albumsongs");
+                songsTransaction.commit();
+
+                Song curr_song = a.getSongs().get(0);
+
+                songList.updateSongUI(curr_song);
+
+
 
 
             }

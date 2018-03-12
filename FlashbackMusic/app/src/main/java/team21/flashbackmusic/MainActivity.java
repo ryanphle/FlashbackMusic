@@ -221,6 +221,8 @@ public class MainActivity extends AppCompatActivity {
     private String lastPlayUser;
     private long lastPlayTime;
 
+    //private BroadcastReceiver downloadReceiver;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -263,6 +265,8 @@ public class MainActivity extends AppCompatActivity {
                 String tag = "";
                 final android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
+                Bundle bundle = new Bundle();
+
                 Log.i("CURR FRAG: ", Integer.toString(frag));
                 switch(frag) {
                     case SONG_FRAG:
@@ -270,6 +274,23 @@ public class MainActivity extends AppCompatActivity {
                         Log.i("CURR FRAG: ", Integer.toString(frag));
                         break;
                     case ALBUM_FRAG:
+
+                        Fragment songList;
+
+                        songList = getSupportFragmentManager().findFragmentByTag("albumsongs");
+
+
+                        if(songList != null){
+
+                            transaction.remove(songList);
+
+                        }
+                        else{
+
+                            Log.i("fragment","songlist is null");
+
+                        }
+
                         transaction.hide(fragmentAlbums);
                         album_dislike = 0;
                         break;
@@ -505,25 +526,50 @@ public class MainActivity extends AppCompatActivity {
 
             like_editor.apply();
             initialFragSetup(frag);
+
+            if(songs.size() == 0)
+                songListEmpty = true;
+            else
+                songListEmpty = false;
+
+            if(!songListEmpty){
+                if (frag == FLASHBACK_FRAG)
+                    mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
+                else
+                    mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
+
+                mediaPlayerWrapper.forcePause();
+            }
+            proxyGenerator();
+
+            myUserName = getMyUserName();
+            myUserID = getMyID();
+
         }
 
-        if(songs.size() == 0)
-            songListEmpty = true;
-        else
-            songListEmpty = false;
 
-        if(!songListEmpty){
-        if (frag == FLASHBACK_FRAG)
-            mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
-        else
-            mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
+    }
 
-        mediaPlayerWrapper.forcePause();
-        }
-        proxyGenerator();
+    @Override
+    public void onPause(){
 
-        myUserName = getMyUserName();
-        myUserID = getMyID();
+        super.onPause();
+
+        //unregisterReceiver(downloadReceiver);
+
+
+
+    }
+
+    @Override
+    public void onResume(){
+
+        super.onResume();
+
+        //IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        //registerReceiver(downloadReceiver, filter);
+
+
     }
 
     public String getFileName(Uri uri) {
@@ -552,7 +598,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case 100: {
+            case 1: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -565,6 +611,45 @@ public class MainActivity extends AppCompatActivity {
 
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+
+
+                    String netLocation = LocationManager.NETWORK_PROVIDER;
+
+
+                    albumList = new ArrayList<Album>();
+
+                    try {
+                        if(isExternalStorageReadable()) {
+                            Log.i("Enviroment", Environment.DIRECTORY_MUSIC);
+                            File rootpath = new File("storage/emulated/0/Music");
+                            loadSongs(rootpath);
+                        }
+                        Log.i("Oncreate", "Songs loaded");
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    like_editor.apply();
+                    initialFragSetup(frag);
+
+                    if(songs.size() == 0)
+                        songListEmpty = true;
+                    else
+                        songListEmpty = false;
+
+                    if(!songListEmpty){
+                        if (frag == FLASHBACK_FRAG)
+                            mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
+                        else
+                            mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
+
+                        mediaPlayerWrapper.forcePause();
+                    }
+                    proxyGenerator();
+
+                    myUserName = getMyUserName();
+                    myUserID = getMyID();
 
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
@@ -831,8 +916,20 @@ public class MainActivity extends AppCompatActivity {
                     fragmentSong.updateSongUI(song);
                     break;
                 case ALBUM_FRAG:
-                    AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
-                    fragmentAlbum.updateSongUI(song);
+                    SongsFragment fragmentAlbumSongs = (SongsFragment) getSupportFragmentManager().findFragmentByTag("albumsongs");
+
+                    if(fragmentAlbumSongs == null) {
+                        AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
+                        fragmentAlbum.updateSongUI(song);
+
+                        Log.i("Curr Song",song.getName());
+
+                    }
+                    else{
+
+                        fragmentAlbumSongs.updateSongUI(song);
+
+                    }
                     break;
                 case FLASHBACK_FRAG:
                     FlashbackFragment fragmentFlash = (FlashbackFragment) getSupportFragmentManager().findFragmentByTag("flash_songs");
@@ -898,7 +995,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void addSong(SharedPreferences sharedPreferences, Gson gson, Uri uri) {
-        Play play;MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        Play play;
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(this, uri);
         }catch(RuntimeException e){
@@ -976,12 +1074,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    protected SongsFragment setAlbumSongFragment(ArrayList<Song> songList,Album album) {
+        SongsFragment songListFragment = new SongsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList("songs", songList);
+        bundle.putBoolean("isAlbum",true);
+        bundle.putString("title",album.getName());
+        songListFragment.setArguments(bundle);
+
+        return songListFragment;
+
+    }
+
+
 
 
     private void setSongFragment() {
         fragmentSong = new SongsFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
+        bundle.putBoolean("isAlbum",false);
         fragmentSong.setArguments(bundle);
     }
 

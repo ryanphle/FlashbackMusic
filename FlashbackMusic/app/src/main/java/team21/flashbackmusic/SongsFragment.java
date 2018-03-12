@@ -48,8 +48,10 @@ public class SongsFragment extends Fragment {
     public ListView listView;
     public TextView artistAlbumInfo;
     private ArrayList<Song> songs;
+    private boolean isAlbum;
 
-    public SongsFragment(){}
+    public SongsFragment(){
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceStat) {
@@ -57,6 +59,16 @@ public class SongsFragment extends Fragment {
         listView = rootView.findViewById(R.id.song_list);
 
         songs = getArguments().getParcelableArrayList("songs");
+        isAlbum = getArguments().getBoolean("isAlbum");
+        if(isAlbum){
+
+            String title = getArguments().getString("title");
+
+            TextView songName = (TextView) rootView.findViewById(R.id.Frag_title);
+
+            songName.setText(title);
+
+        }
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
@@ -67,7 +79,12 @@ public class SongsFragment extends Fragment {
                 if(s.getFavorite() != -1) {
                     updateSongUI(s);
                     ((MainActivity) getActivity()).songLoaded = true;
-                    ((MainActivity) getActivity()).songPlayingFrag = ((MainActivity) getActivity()).SONG_FRAG;
+                    if(!isAlbum) {
+                        ((MainActivity) getActivity()).songPlayingFrag = ((MainActivity) getActivity()).SONG_FRAG;
+                    }
+                    else{
+                        ((MainActivity) getActivity()).songPlayingFrag = ((MainActivity) getActivity()).ALBUM_FRAG;
+                    }
                     ((MainActivity) getActivity()).stopButton.setBackgroundResource(R.drawable.ic_playing);
                     ((MainActivity) getActivity()).currSong = s;
 
