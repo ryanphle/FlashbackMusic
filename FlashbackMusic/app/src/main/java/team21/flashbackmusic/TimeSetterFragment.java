@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by ryanle on 3/11/18.
@@ -85,6 +86,7 @@ public class TimeSetterFragment extends android.support.v4.app.DialogFragment {
                             ":" + seconds;
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
         Date date = null;
         try {
             date = sdf.parse(timeStr);
