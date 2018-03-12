@@ -1211,13 +1211,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ArrayList<Song> sorted_songs = new ArrayList<>();
-        SharedPreferences  mPrefs = getPreferences(MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = mPrefs.getString("DataSnapshot", "");
-        Log.i("datasnap2", json);
-         allPlays = gson.fromJson(json, DataSnapshot.class);
-
-
         Location location_song = new Location(lastLocation);
         for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
             boolean added = false;
@@ -1254,8 +1247,8 @@ public class MainActivity extends AppCompatActivity {
 
             if(allPlays.child(ID).exists()) {
 
-                location_song.setLatitude(allPlays.child(ID).child("last_play_location").child("latitude").getValue(double.class));
-                location_song.setLongitude(allPlays.child(ID).child("last_play_location").child("longitude").getValue(double.class));
+                location_song.setLatitude(allPlays.child("Plays").child(ID).child("last_play_location").child("latitude").getValue(double.class));
+                location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
             if(allPlays.child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
