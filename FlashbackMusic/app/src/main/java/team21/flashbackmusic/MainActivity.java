@@ -282,7 +282,13 @@ public class MainActivity extends AppCompatActivity {
 
                         if(songList != null){
 
+                            Log.i("fragment",""+songList.toString());
+
                             transaction.remove(songList);
+                            getSupportFragmentManager().popBackStackImmediate();
+
+                            Log.i("fragment",""+"songlist removed");
+
 
                         }
                         else{
@@ -355,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 transaction.commit();
-                transaction.addToBackStack(tag);
+                //getSupportFragmentManager().popBackStack();
                 return true;
             }
         });
@@ -909,6 +915,10 @@ public class MainActivity extends AppCompatActivity {
             song = mediaPlayerWrapper.getSong();
         }
 
+        Log.i("UPdate Song Meta:",""+frag);
+        Log.i("UPdate Song Meta:",""+song.getName());
+
+
         if(song != null) {
             switch (frag) {
                 case SONG_FRAG:
@@ -917,15 +927,19 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case ALBUM_FRAG:
                     SongsFragment fragmentAlbumSongs = (SongsFragment) getSupportFragmentManager().findFragmentByTag("albumsongs");
+                    AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
+
 
                     if(fragmentAlbumSongs == null) {
-                        AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
                         fragmentAlbum.updateSongUI(song);
-
                         Log.i("Curr Song",song.getName());
 
                     }
                     else{
+
+                        fragmentAlbum.updateSongUI(song);
+
+                        Log.i("UPdate song frag",fragmentAlbumSongs.toString());
 
                         fragmentAlbumSongs.updateSongUI(song);
 

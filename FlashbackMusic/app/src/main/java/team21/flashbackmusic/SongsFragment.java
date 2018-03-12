@@ -110,12 +110,19 @@ public class SongsFragment extends Fragment {
             }
         });
 
+        if(isAlbum && ((MainActivity)getActivity()).currSong != null){
+
+            updateSongUI(((MainActivity)getActivity()).currSong);
+
+        }
+
         return rootView;
     }
 
    public void updateSongUI(Song s) {
 
        adapter.notifyDataSetChanged();
+
        ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
        TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);

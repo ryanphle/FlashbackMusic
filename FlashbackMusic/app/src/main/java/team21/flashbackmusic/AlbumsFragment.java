@@ -102,9 +102,8 @@ public class AlbumsFragment extends Fragment {
                 songsTransaction.addToBackStack("albumsongs");
                 songsTransaction.commit();
 
-                Song curr_song = a.getSongs().get(0);
 
-                songList.updateSongUI(curr_song);
+
 
 
 
