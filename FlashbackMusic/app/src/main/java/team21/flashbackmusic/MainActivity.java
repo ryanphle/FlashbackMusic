@@ -160,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
     protected Fragment fragmentFlashback;
 
     protected static final int SONG_FRAG = 0;
+    public static final int PERMISSION_CONSTANT = 1;
     protected static final int ALBUM_FRAG = 1;
     protected static final int FLASHBACK_FRAG = 2;
     protected Location lastLocation;
@@ -478,55 +479,15 @@ public class MainActivity extends AppCompatActivity {
 
             ActivityCompat.requestPermissions(this,
                     permissions.toArray(new String[permissions.size()]),
-                    1);
+                    PERMISSION_CONSTANT);
             Log.d("permission","requested");
             return;
         }
         else {
             lastLocation = locationManager.getLastKnownLocation(locationProvider);
             locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
-
-            Log.d("LastLocation",lastLocation.toString());
-
-            String netLocation = LocationManager.NETWORK_PROVIDER;
-
-
-            albumList = new ArrayList<Album>();
-
-            try {
-                if(isExternalStorageReadable()) {
-                    Log.i("Enviroment", Environment.DIRECTORY_MUSIC);
-                    File rootpath = new File("storage/emulated/0/Music");
-                    loadSongs(rootpath);
-                }
-                Log.i("Oncreate", "Songs loaded");
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            like_editor.apply();
-            initialFragSetup(frag);
+            setUpFragAndMedia();
         }
-
-        if(songs.size() == 0)
-            songListEmpty = true;
-        else
-            songListEmpty = false;
-
-        if(!songListEmpty){
-        if (frag == FLASHBACK_FRAG)
-            mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
-        else
-            mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
-
-        mediaPlayerWrapper.forcePause();
-        }
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public String getFileName(Uri uri) {
@@ -541,6 +502,7 @@ public class MainActivity extends AppCompatActivity {
                 cursor.close();
             }
         }
+
         if (result == null) {
             result = uri.getPath();
             int cut = result.lastIndexOf('/');
@@ -555,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case 100: {
+            case PERMISSION_CONSTANT: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -568,6 +530,8 @@ public class MainActivity extends AppCompatActivity {
 
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+                    setUpFragAndMedia();
+
 
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
@@ -583,6 +547,46 @@ public class MainActivity extends AppCompatActivity {
             // other 'case' lines to check for other
             // permissions this app might request
         }
+    }
+
+    private void setUpFragAndMedia() {
+        albumList = new ArrayList<Album>();
+
+        try {
+            if (isExternalStorageReadable()) {
+                Log.i("Enviroment", Environment.DIRECTORY_MUSIC);
+                File rootpath = new File("storage/emulated/0/Music");
+                loadSongs(rootpath);
+            }
+
+            Log.i("Oncreate", "Songs loaded");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        like_editor.apply();
+        initialFragSetup(frag);
+
+        if(songs.size() == 0)
+            songListEmpty = true;
+        else
+            songListEmpty = false;
+
+        if(!songListEmpty){
+            if (frag == FLASHBACK_FRAG)
+                mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
+            else
+                mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
+
+            mediaPlayerWrapper.forcePause();
+        }
+
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
@@ -807,8 +811,8 @@ public class MainActivity extends AppCompatActivity {
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
         addressStr += address.getAddressLine(2);
-        myRef.child("Songs").child(song.getName().replace(".",",")).setValue(thisSong);
-        myRef.child("Songs").child(song.getName().replace(".",",")).child("last_play_location_string").setValue(addressStr);
+        myRef.child("Songs").child(song.getName()).setValue(thisSong);
+        myRef.child("Songs").child(song.getName()).child("last_play_location_string").setValue(addressStr);
     }
 
 
@@ -1216,28 +1220,18 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void setData(final TextView songLocation, final TextView songTime, final TextView lastPlayedBy, final String sName){
-
-
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String encodedName = sName.replace(".",",");
-                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(encodedName).exists()) {
-                    songLocation.setText(dataSnapshot.child("Songs").child(encodedName).child("last_play_location_string").getValue(String.class));
-                    songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(encodedName).child("last_play_time").getValue(long.class))));
-                    //if (dataSnapshot.child("Songs").child(encodedName).child("last_play_user").getValue(String.class)
-                    String user = dataSnapshot.child("Songs").child(encodedName).child("last_play_user").getValue(String.class);
-                    boolean isFriend = false;
-                    if (connections!=null){
-                        for (Person connection : connections) {
-                          for (EmailAddress address : connection.getEmailAddresses()){
-                              if (HashFunction(address.getValue()).equals(user)){
-                                  isFriend = true;
-                              }
-                         }
-                     }
-                    }
+                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
+                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location_string").getValue(String.class));
+                    songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(long.class))));
+                    //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
+                    String user = dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class);
+
+                    boolean isFriend = isFriend(user, connections);
+
                     if (isFriend){
                         lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
                     }
@@ -1262,6 +1256,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+    protected boolean isFriend(String user, List<Person> connections) {
+        boolean isFriend = false;
+        if (connections!=null){
+            for (Person connection : connections) {
+                  for (EmailAddress address : connection.getEmailAddresses()){
+                      if (HashFunction(address.getValue()).equals(user)){
+                          isFriend = true;
+                      }
+                  }
+
+            }
+        }
+
+        return isFriend;
+    }
+
     public String getCurrentTime(Timestamp time) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(time.getTime());
@@ -1279,6 +1290,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    public List<Person> getTestConnections() {
+        return connections;
     }
 
 
