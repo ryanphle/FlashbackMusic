@@ -57,6 +57,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
@@ -223,6 +224,8 @@ public class MainActivity extends AppCompatActivity {
     private Location lastPlayLocation;
     private String lastPlayUser;
     private long lastPlayTime;
+    private boolean isCustomTime;
+    private Timestamp time;
 
 
     @Override
@@ -352,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
                 mediaPlayerWrapper.next();
-                Timestamp time = new Timestamp(System.currentTimeMillis());
+                Timestamp time = getTime();
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
                         time);
@@ -364,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
                 mediaPlayerWrapper.prev();
-                Timestamp time = new Timestamp(System.currentTimeMillis());
+                Timestamp time = getTime();
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
                         time);
@@ -383,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
                 else {
                     view.setBackgroundResource(R.drawable.ic_playing);
                 }
-                Timestamp time = new Timestamp(System.currentTimeMillis());
+                Timestamp time = getTime();
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, false);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
                         time);
@@ -783,6 +786,11 @@ public class MainActivity extends AppCompatActivity {
     protected void showDownloadDialog() {
         DialogFragment downloadFragment = new DownloadFragment();
         downloadFragment.show(fragmentManager, "download");
+    }
+
+    protected void showTimeDialog() {
+        DialogFragment timeFragment = new TimeSetterFragment();
+        timeFragment.show(fragmentManager, "time_setter");
     }
 
     public void storePlayInformation(Song song, Location location, Timestamp time) {
@@ -1296,5 +1304,25 @@ public class MainActivity extends AppCompatActivity {
         return connections;
     }
 
+    protected Timestamp getTime() {
+        if (!isCustomTime)
+            return new Timestamp(System.currentTimeMillis());
+        else
+            return this.time;
+    }
+
+    protected boolean isCustomTime() {
+        return isCustomTime;
+    }
+
+    protected void setCustomTime(Timestamp time) {
+        isCustomTime = true;
+        this.time = time;
+    }
+
+    protected void resetTime() {
+        isCustomTime = false;
+        time = new Timestamp(System.currentTimeMillis());
+    }
 
 }

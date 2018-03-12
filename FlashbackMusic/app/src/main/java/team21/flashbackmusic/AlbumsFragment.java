@@ -71,7 +71,7 @@ public class AlbumsFragment extends Fragment {
                 ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(a.getSongs());
                 ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(0);
 
-                Timestamp time = new Timestamp(System.currentTimeMillis());
+                Timestamp time = ((MainActivity) getActivity()).getTime();
                 updateSongUI(s);
                 ((MainActivity) getActivity()).storePlayInformation(
                         ((MainActivity) getActivity()).mediaPlayerWrapper.getSong(),
@@ -88,6 +88,14 @@ public class AlbumsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 ((MainActivity) getActivity()).showDownloadDialog();
+            }
+        });
+
+        Button timeButton = rootView.findViewById(R.id.time_btn);
+        timeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showTimeDialog();
             }
         });
 
