@@ -9,7 +9,7 @@
     <string name="download_prompt">Input the URL of the song/album you want to download: </string>
     <string name="download">Download</string>
     <string name="cancel">Cancel</string>
-    <string name="download_box_msg">Ex. google.com (Change later)</string>
+    <string name="download_box_msg">Ex. last.fm/your_song.mp3</string>
     <string name="client_id">898035120337-jjnfd25j6cf237r5pm3vaao3dgrg1uq0.apps.googleusercontent.com</string>
     <string name="client_secret">ky_qpRl2lwqOSWfPD0Mzz7rU</string>
     <string name="redirect_url">https://cse110project-ff1b8.firebaseapp.com/__/auth/handler</string>

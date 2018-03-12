@@ -83,11 +83,11 @@ public class AlbumsFragment extends Fragment {
                 a = (Album) parent.getAdapter().getItem(position);
                 ArrayList<Song> s = new ArrayList<Song>(a.getSongs());
 
-                ((MainActivity)getActivity()).songLoaded = true;
+                //((MainActivity)getActivity()).songLoaded = true;
                 ((MainActivity)getActivity()).currAlbum = a;
                 ((MainActivity)getActivity()).album_index = 0;
-                ((MainActivity)getActivity()).currSongIdx = 0;
-                ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity) getActivity()).ALBUM_FRAG;
+                //((MainActivity)getActivity()).currSongIdx = 0;
+                //((MainActivity)getActivity()).songPlayingFrag = ((MainActivity) getActivity()).ALBUM_FRAG;
 
 
                 SongsFragment songList = ((MainActivity)getActivity()).setAlbumSongFragment(s,a);
