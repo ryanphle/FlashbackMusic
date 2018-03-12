@@ -1,24 +1,27 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.media.MediaPlayer;
 import android.provider.MediaStore;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +32,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.lang.reflect.Field;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -47,7 +49,7 @@ public class SongsFragment extends Fragment {
     public View rootView;
     public ListView listView;
     public TextView artistAlbumInfo;
-    private ArrayList<Song> songs;
+    Sorter sorter;
 
     public SongsFragment(){}
 
@@ -56,7 +58,7 @@ public class SongsFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_songs, container, false);
         listView = rootView.findViewById(R.id.song_list);
 
-        songs = getArguments().getParcelableArrayList("songs");
+        final ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
@@ -66,30 +68,46 @@ public class SongsFragment extends Fragment {
                 Song s = (Song) parent.getAdapter().getItem(position);
                 if(s.getFavorite() != -1) {
                     updateSongUI(s);
+                    ((MainActivity) getActivity()).playSelectedSong(s);
                     ((MainActivity) getActivity()).songLoaded = true;
                     ((MainActivity) getActivity()).songPlayingFrag = ((MainActivity) getActivity()).SONG_FRAG;
-                    ((MainActivity) getActivity()).stopButton.setBackgroundResource(R.drawable.ic_playing);
                     ((MainActivity) getActivity()).currSong = s;
-
-                    ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(songs);
-                    ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(position);
-
-                    Timestamp time = new Timestamp(System.currentTimeMillis());
-                    updateSongUI(s);
-                    ((MainActivity) getActivity()).storePlayInformation(
-                            ((MainActivity) getActivity()).mediaPlayerWrapper.getSong(),
-                            ((MainActivity)getActivity()).lastLocation,
-                            time
-                    );
                 }
+
             }
         });
 
-        Button downloadButton = rootView.findViewById(R.id.download_btn);
-        downloadButton.setOnClickListener(new View.OnClickListener() {
+        final ImageButton mybutton = rootView.findViewById(R.id.sorting);
+        mybutton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                ((MainActivity) getActivity()).showDownloadDialog();
+            public void onClick(View view) {
+                PopupMenu popupMenu = new PopupMenu(getContext(), mybutton);
+                popupMenu.getMenuInflater().inflate(R.menu.sort_songs, popupMenu.getMenu());
+                popupMenu.show();
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        Toast.makeText(
+                                getContext(),
+                                "You Clicked : " + menuItem.getTitle(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        if (menuItem.getTitle().equals("Sort by artist")) {
+                            sorter = new SortByArtist();
+                        }
+                        if (menuItem.getTitle().equals("Sort by title")) {
+                            sorter = new SortByTitle();
+                        }
+                        if (menuItem.getTitle().equals("Sort by favorite")) {
+                            sorter = new SortByFavorite();
+                        }
+                        if (menuItem.getTitle().equals("Sort by recent play")) {
+                            sorter = new SortByRecentPlay();
+                        }
+                        sorter.sort(songs);
+                        return true;
+                    }
+                });
             }
         });
 
@@ -129,12 +147,6 @@ public class SongsFragment extends Fragment {
 */
        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
    }
-
-    public void updateListView(){
-
-        adapter.notifyDataSetChanged();
-
-    }
 
 
 }
