@@ -273,7 +273,32 @@ public class MainActivity extends AppCompatActivity {
                         Log.i("CURR FRAG: ", Integer.toString(frag));
                         break;
                     case ALBUM_FRAG:
-                        transaction.hide(fragmentAlbums);
+
+                        Fragment songList;
+
+                        songList = getSupportFragmentManager().findFragmentByTag("albumsongs");
+
+
+                        if(songList != null){
+
+                            Log.i("fragment",""+songList.toString());
+
+                            transaction.remove(songList);
+                            getSupportFragmentManager().popBackStackImmediate();
+
+                            Log.i("fragment",""+"songlist removed");
+
+
+                        }
+                        else{
+
+                            Log.i("fragment","songlist is null");
+
+                        }
+
+                        if(item.getItemId() != R.id.navigation_albums) {
+                            transaction.hide(fragmentAlbums);
+                        }
                         album_dislike = 0;
                         break;
                     case FLASHBACK_FRAG:
@@ -337,7 +362,6 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 transaction.commit();
-                transaction.addToBackStack(tag);
                 return true;
             }
         });
@@ -352,6 +376,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
                 mediaPlayerWrapper.next();
+                currSong = mediaPlayerWrapper.getSong();
                 Timestamp time = new Timestamp(System.currentTimeMillis());
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
@@ -364,6 +389,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 stopButton.setBackgroundResource(R.drawable.ic_playing);
                 mediaPlayerWrapper.prev();
+                currSong = mediaPlayerWrapper.getSong();
                 Timestamp time = new Timestamp(System.currentTimeMillis());
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
@@ -455,6 +481,14 @@ public class MainActivity extends AppCompatActivity {
 
         final Activity activity = this;
         signIn = findViewById(R.id.sign_in_button);
+
+
+
+        if (GoogleSignIn.getLastSignedInAccount(this) != null) {
+            // signed in. Show the "sign out" button and explanation.
+            signIn.setVisibility(View.GONE);
+        }
+
         signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -845,11 +879,17 @@ public class MainActivity extends AppCompatActivity {
         if (mode == ALBUM_FRAG)
             songList = (ArrayList<Song>) currAlbum.getSongs();
 
+        Log.i("fragment:","current Fragment"+mode);
+
         Song song = songList.get(index);
 
         if (!songChange) {
             song = mediaPlayerWrapper.getSong();
         }
+
+        Log.i("UPdate Song Meta:",""+frag);
+        Log.i("UPdate Song Meta:",""+song.getName());
+
 
         if(song != null) {
             switch (frag) {
@@ -858,8 +898,24 @@ public class MainActivity extends AppCompatActivity {
                     fragmentSong.updateSongUI(song);
                     break;
                 case ALBUM_FRAG:
+                    SongsFragment fragmentAlbumSongs = (SongsFragment) getSupportFragmentManager().findFragmentByTag("albumsongs");
                     AlbumsFragment fragmentAlbum = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
-                    fragmentAlbum.updateSongUI(song);
+
+
+                    if(fragmentAlbumSongs == null) {
+                        fragmentAlbum.updateSongUI(song);
+                        Log.i("Curr Song",song.getName());
+
+                    }
+                    else{
+
+                        fragmentAlbum.updateSongUI(song);
+
+                        Log.i("UPdate song frag",fragmentAlbumSongs.toString());
+
+                        fragmentAlbumSongs.updateSongUI(song);
+
+                    }
                     break;
                 case FLASHBACK_FRAG:
                     FlashbackFragment fragmentFlash = (FlashbackFragment) getSupportFragmentManager().findFragmentByTag("flash_songs");
@@ -925,7 +981,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void addSong(SharedPreferences sharedPreferences, Gson gson, Uri uri) {
-        Play play;MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        Play play;
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(this, uri);
         }catch(RuntimeException e){
@@ -1003,12 +1060,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    protected SongsFragment setAlbumSongFragment(ArrayList<Song> songList,Album album) {
+        SongsFragment songListFragment = new SongsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList("songs", songList);
+        bundle.putBoolean("isAlbum",true);
+        bundle.putString("title",album.getName());
+        songListFragment.setArguments(bundle);
+
+        return songListFragment;
+
+    }
+
+
 
 
     private void setSongFragment() {
         fragmentSong = new SongsFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList("songs", songs);
+        bundle.putBoolean("isAlbum",false);
         fragmentSong.setArguments(bundle);
     }
 
