@@ -127,7 +127,8 @@ public class SongsFragment extends Fragment {
        songLocation.setText(addressStr);
        songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
 */
-       ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
+
+       ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getID());
    }
 
     public void updateListView(){

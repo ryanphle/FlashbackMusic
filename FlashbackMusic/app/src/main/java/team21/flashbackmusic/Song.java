@@ -24,8 +24,10 @@ public class Song implements Parcelable {
     private int favorite;
     private Timestamp timeStamp;
     private Address location;
+    private String ID;
+    private boolean downloaded;
 
-    public Song(String name, String artist,Uri uri, byte[] img, String album){
+    public Song(String ID, String name, String artist,Uri uri, byte[] img, String album, boolean downloaded){
         this.name = name;
         this.artist = artist;
         this.img = img;
@@ -35,6 +37,8 @@ public class Song implements Parcelable {
         this.favorite = 0;
         this.timeStamp = new Timestamp(0);
         this.location = new Address(Locale.getDefault());
+        this.ID = ID;
+        this.downloaded = downloaded;
     }
 
     public String getName(){
@@ -80,6 +84,10 @@ public class Song implements Parcelable {
     }
 
     public Uri getUri() {return this.uri;}
+
+    public String getID() {return this.ID;}
+
+    public boolean isDownloaded(){return this.downloaded;}
 
 
 

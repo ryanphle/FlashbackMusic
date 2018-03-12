@@ -126,7 +126,8 @@ public class AlbumsFragment extends Fragment {
         songLocation.setText(addressStr);
         songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
 */
-        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
+        String id = ((MainActivity) getActivity()).hashFunction(s.getName()+s.getArtist());
+        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,id);
 
     }
 
