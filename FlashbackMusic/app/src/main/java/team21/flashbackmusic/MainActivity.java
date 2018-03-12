@@ -148,7 +148,9 @@ public class MainActivity extends AppCompatActivity {
     protected Button nextButton;
     protected static int frag = 0;
     protected static int songPlayingFrag = 0;
+    protected static int preSongPlayingFrag = -1;
     protected static int currSongIdx = 0;
+    protected static int preCurrSongIdx = 0;
     protected static Album currAlbum;
     protected static Song currSong;
 
@@ -265,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 String tag = "";
                 final android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                boolean songChange = false;
 
                 Log.i("CURR FRAG: ", Integer.toString(frag));
                 switch(frag) {
@@ -304,12 +307,35 @@ public class MainActivity extends AppCompatActivity {
                     case FLASHBACK_FRAG:
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
-                            mediaPlayerWrapper.setSongs(songs);
-                            mediaPlayerWrapper.setIndex(-1);
-                            mediaPlayerWrapper.next();
-                            mediaPlayerWrapper.forcePause();
+                            currSongIdx = preCurrSongIdx;
                             transaction.remove(fragmentFlashback);
-                            songPlayingFrag = SONG_FRAG;
+                            if(preSongPlayingFrag != -1) {
+                                songPlayingFrag = preSongPlayingFrag;
+                                songChange = true;
+                            }
+                            else{
+
+                                songLoaded = false;
+
+                            }
+
+                            if(songPlayingFrag == SONG_FRAG){
+
+                                mediaPlayerWrapper.setSongs(songs);
+                                mediaPlayerWrapper.setIndex(currSongIdx - 1);
+                                mediaPlayerWrapper.next();
+                                mediaPlayerWrapper.forcePause();
+
+                            }
+                            else{
+
+                                mediaPlayerWrapper.setSongs((ArrayList<Song>) currAlbum.getSongs());
+                                mediaPlayerWrapper.setIndex(currSongIdx - 1);
+                                mediaPlayerWrapper.next();
+                                mediaPlayerWrapper.forcePause();
+
+                            }
+
                         }
                         break;
                 }
@@ -324,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                         frag = SONG_FRAG;
 
-                        if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
+                        if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, songChange);
                         ((SongsFragment)fragmentSong).updateListView();
 
                         break;
@@ -338,13 +364,15 @@ public class MainActivity extends AppCompatActivity {
                         transaction.show(fragmentAlbums);
                         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
 
-                        if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, false);
+                        if (songLoaded) updateSongMetaData(currSongIdx, songPlayingFrag, songChange);
                         ((AlbumsFragment)fragmentAlbums).updateListView();
 
                         break;
                     case R.id.navigation_flashback:
                         if(frag != FLASHBACK_FRAG) {
                             frag = FLASHBACK_FRAG;
+
+                            preCurrSongIdx = mediaPlayerWrapper.getIndex();
 
                             setFlashbackFragment();
                             mediaPlayerWrapper.setSongs(sorted_songs);
@@ -357,6 +385,7 @@ public class MainActivity extends AppCompatActivity {
                             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                         }
                         frag = FLASHBACK_FRAG;
+                        preSongPlayingFrag = songPlayingFrag;
                         songPlayingFrag = FLASHBACK_FRAG;
                         break;
                 }
@@ -880,15 +909,21 @@ public class MainActivity extends AppCompatActivity {
             songList = (ArrayList<Song>) currAlbum.getSongs();
 
         Log.i("fragment:","current Fragment"+mode);
+        Log.i("fragment:","current songlist"+songList.toString());
 
         Song song = songList.get(index);
+
+        Log.i("fragment:","current index"+index);
+        Log.i("fragment:","current song"+song.getName());
+
+
 
         if (!songChange) {
             song = mediaPlayerWrapper.getSong();
         }
 
-        Log.i("UPdate Song Meta:",""+frag);
-        Log.i("UPdate Song Meta:",""+song.getName());
+        Log.i("fragment Song Meta:",""+frag);
+        Log.i("fragment Song Meta:",""+song.getName());
 
 
         if(song != null) {
