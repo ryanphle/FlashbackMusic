@@ -73,6 +73,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.api.services.people.v1.model.EmailAddress;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -167,6 +168,8 @@ public class MainActivity extends AppCompatActivity {
     private Calendar calendar;
 
     protected boolean songLoaded;
+    protected boolean songListEmpty;
+
 
     //default img
     byte[] default_album = new byte[100];
@@ -204,8 +207,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String myUserName;
     private String myUserID;
+    private String myUserEmail;
     private String myProxyName;
-    public String userID;
+    private List<Person> connections;
     private LocationManager locationManager;
     private String locationProvider;
     private LocationListener locationListener;
@@ -408,15 +412,26 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        final Context mainContext = this.getApplicationContext();
+
         final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
 
             @Override
             public void onReceive(Context context, Intent intent) {
                 contentDownloadManager.checkStatus();
-                contentDownloadManager.updateList();
+
+                if(songListEmpty){
+                    contentDownloadManager.updateList();
+                    songListEmpty = false;
+                    mediaPlayerWrapper = new MediaPlayerWrapper(songs, mainContext,MainActivity.this);
+                }
+                else
+                    contentDownloadManager.updateList();
+
 
                 Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
+
 
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
                 AlbumsFragment albumFragment = (AlbumsFragment) getSupportFragmentManager().findFragmentByTag("albums");
@@ -494,16 +509,24 @@ public class MainActivity extends AppCompatActivity {
             initialFragSetup(frag);
         }
 
+        if(songs.size() == 0)
+            songListEmpty = true;
+        else
+            songListEmpty = false;
+
+        if(!songListEmpty){
         if (frag == FLASHBACK_FRAG)
             mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, this.getApplicationContext(), this);
         else
             mediaPlayerWrapper = new MediaPlayerWrapper(songs, this.getApplicationContext(), this);
 
         mediaPlayerWrapper.forcePause();
+        }
         proxyGenerator();
 
         myUserName = getMyUserName();
         myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
     public String getFileName(Uri uri) {
@@ -630,12 +653,32 @@ public class MainActivity extends AppCompatActivity {
         return user;
     }
 
-    public String getMyID(){
+    public String getMyEmail() {
         String user = "";
+        int hash;
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null)
-            user = account.getId();
+            user = account.getEmail();
         return user;
+    }
+
+    public String getMyID(){
+        String user = "";
+        int hash;
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null)
+            user = account.getEmail();
+            user = HashFunction(user);
+        return user;
+    }
+
+    public String HashFunction(String email){
+        String res;
+        int hash;
+        res = email.split("@")[0];
+        hash = res.hashCode();
+        res = Integer.toString(hash);
+        return res;
     }
 
     @Override
@@ -728,7 +771,7 @@ public class MainActivity extends AppCompatActivity {
         ListConnectionsResponse response = peopleService.people().connections().list("people/me")
                 .setPersonFields("names,emailAddresses")
                 .execute();
-        List<Person> connections = response.getConnections();
+        connections = response.getConnections();
         System.out.println("Size of connections: " + connections.size());
         System.out.println("Name of first person: " + connections.get(0).getNames().get(0).getDisplayName());
     }
@@ -764,7 +807,6 @@ public class MainActivity extends AppCompatActivity {
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
         addressStr += address.getAddressLine(2);
-
         myRef.child("Songs").child(song.getName().replace(".",",")).setValue(thisSong);
         myRef.child("Songs").child(song.getName().replace(".",",")).child("last_play_location_string").setValue(addressStr);
     }
@@ -1172,7 +1214,10 @@ public class MainActivity extends AppCompatActivity {
         myProxyName = proxy;
     }
 
+
     public void setData(final TextView songLocation, final TextView songTime, final TextView lastPlayedBy, final String sName){
+
+
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -1181,14 +1226,24 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(encodedName).exists()) {
                     songLocation.setText(dataSnapshot.child("Songs").child(encodedName).child("last_play_location_string").getValue(String.class));
                     songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(encodedName).child("last_play_time").getValue(long.class))));
-                    //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
+                    //if (dataSnapshot.child("Songs").child(encodedName).child("last_play_user").getValue(String.class)
                     String user = dataSnapshot.child("Songs").child(encodedName).child("last_play_user").getValue(String.class);
-                    if (user.equals(myUserID)) {
-                        lastPlayedBy.setText("Last played by:  you");
+                    boolean isFriend = false;
+                    if (connections!=null){
+                        for (Person connection : connections) {
+                          for (EmailAddress address : connection.getEmailAddresses()){
+                              if (HashFunction(address.getValue()).equals(user)){
+                                  isFriend = true;
+                              }
+                         }
+                     }
                     }
-                    //else if (friends.contains(user)){
-                    //lastPlayedBy.setText(dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
-                    //}
+                    if (isFriend){
+                        lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
+                    }
+                    else if (myUserID.equals(user) && myUserID!=null) {
+                        lastPlayedBy.setText("Last played by: you");
+                    }
                     else {
                         lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Proxy").getValue(String.class));
                     }
