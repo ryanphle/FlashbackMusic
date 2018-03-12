@@ -27,6 +27,7 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.provider.Settings;
@@ -49,13 +50,20 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
+import android.text.Layout;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -216,6 +224,8 @@ public class MainActivity extends AppCompatActivity {
     private Location lastPlayLocation;
     private String lastPlayUser;
     private long lastPlayTime;
+    private long latitude;
+    private long longitude;
 
 
     @Override
@@ -480,43 +490,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        /*
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    100);
-            Log.d("test1","ins");
-            //return;
-        }
-
-
-        locationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle b = intent.getBundleExtra("Location");
-                lastLocation = (Location) b.getParcelable("Location");
-                Song song = (Song)b.getParcelable("Song");
-                Timestamp time = new Timestamp(System.currentTimeMillis());
-                if(!enterFlash) {
-
-                    storePlayInformation(song, lastLocation, "plays", time);
-                    Log.i("RawMainActivity ", "  location in main : " + lastLocation.toString());
-                }
-                else{
-                    enterFlash = false;
-                    initialFragSetup(frag);
-                }
-            }
-        };
-        */
-
-        //while(getLocationService == null){}
-
-
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -542,6 +515,23 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationProvider = LocationManager.GPS_PROVIDER;
 
+
+        final Activity activity = this;
+        signIn = findViewById(R.id.sign_in_button);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("CLICK");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.client_id))
+                        .requestServerAuthCode(getString(R.string.client_id), false)
+                        .requestEmail()
+                        .build();
+
+                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+                signIn();
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -574,24 +564,19 @@ public class MainActivity extends AppCompatActivity {
 
         proxyGenerator();
 
-        final Activity activity = this;
-        signIn = findViewById(R.id.sign_in_button);
-        signIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                System.out.println("CLICK");
-                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(getString(R.string.client_id))
-                        .requestServerAuthCode(getString(R.string.client_id), false)
-                        .requestEmail()
-                        .build();
-
-                mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
-                signIn();
-            }
-        });
-
         myUserName = getMyUserName();
+    }
+
+    private class LoginRunner extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                setUp();
+            }
+            catch (IOException e) {
+            }
+            return null;
+        }
     }
 
     private void signIn() {
@@ -630,12 +615,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // TODO(developer): send code to server and exchange for access/refresh/ID tokens
                 System.out.println("AUTHCODE " + authCode);
-                try {
-                    setUp();
-                }
-                catch (IOException e) {
-
-                }
+                new LoginRunner().execute();
             } catch (Exception e) {
                 Log.w(TAG, "Sign-in failed", e);
                 //updateUI(null);
@@ -921,21 +901,25 @@ public class MainActivity extends AppCompatActivity {
             Play play = new Play(this, location.getLatitude(), location.getLongitude(), time);
             song.setTimeStamp(play.getTime());
         }
-        FBSongInfo thisSong = new FBSongInfo(myUserName,time.getTime(),location,"proxyname");
+        FBSongInfo thisSong = new FBSongInfo(myUserName,time.getTime(),location,myProxyName);
         myRef.child("Songs").child(song.getName()).setValue(thisSong);
     }
 
-    public void getPlayInfomation(final Song s) {
+    /*public void getPlayInfomation(final Song s) {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
+
         myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            String user;
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
-                    lastPlayLocation = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").getValue(Location.class);
+                    latitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("latitude").getValue(long.class);
+                    longitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("longitude").getValue(long.class);
                     lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
-                    lastPlayUser = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                    user = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                    update(user);
                     //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
-
+                    //finished.callback(dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class));
                 }
             }
 
@@ -944,6 +928,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("TAG1", "Failed to read value.", databaseError.toException());
             }
         });
+    }*/
+
+
+    public Location getLastLocation() {
+        Location location = new Location("dummy");
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+        return location;
     }
 
     //public void newSong(int index, int mode) {}
@@ -1143,8 +1135,6 @@ public class MainActivity extends AppCompatActivity {
                  img = default_album;
                 Log.i("LoadSongs", "No album picture for this song");
             }
-
-
 
             //edited
             if (title == null) { title = "No title found" + null_title_offset; }
@@ -1382,19 +1372,19 @@ public class MainActivity extends AppCompatActivity {
     public void proxyGenerator() {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
-        userID = UUID.randomUUID().toString();
+       // userID = UUID.randomUUID().toString();
 
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Users").child(userID).exists()){
-                    myProxyName = dataSnapshot.child("Users").child(userID).child("Proxy").getValue(String.class);
+                if (dataSnapshot.child("Users").child(myUserName).exists()){
+                    myProxyName = dataSnapshot.child("Users").child(myUserName).child("Proxy").getValue(String.class);
                 } else {
                     Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
                     for (DataSnapshot proxy : proxies) {
                         //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
                         myProxyName = proxy.getValue(String.class);
-                        FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
+                        FirebaseDatabase.getInstance().getReference().child("Users").child(myUserName).child("Proxy").setValue(proxy.getValue(String.class));
                         ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
                         break;
                     }

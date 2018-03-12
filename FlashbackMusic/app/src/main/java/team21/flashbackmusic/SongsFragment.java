@@ -1,6 +1,7 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
@@ -12,12 +13,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +49,7 @@ public class SongsFragment extends Fragment {
     public View rootView;
     public ListView listView;
     public TextView artistAlbumInfo;
+    Sorter sorter;
 
     public SongsFragment(){}
 
@@ -69,6 +74,40 @@ public class SongsFragment extends Fragment {
                     ((MainActivity) getActivity()).currSong = s;
                 }
 
+            }
+        });
+
+        final ImageButton mybutton = rootView.findViewById(R.id.sorting);
+        mybutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PopupMenu popupMenu = new PopupMenu(getContext(), mybutton);
+                popupMenu.getMenuInflater().inflate(R.menu.sort_songs, popupMenu.getMenu());
+                popupMenu.show();
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        Toast.makeText(
+                                getContext(),
+                                "You Clicked : " + menuItem.getTitle(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        if (menuItem.getTitle().equals("Sort by artist")) {
+                            sorter = new SortByArtist();
+                        }
+                        if (menuItem.getTitle().equals("Sort by title")) {
+                            sorter = new SortByTitle();
+                        }
+                        if (menuItem.getTitle().equals("Sort by favorite")) {
+                            sorter = new SortByFavorite();
+                        }
+                        if (menuItem.getTitle().equals("Sort by recent play")) {
+                            sorter = new SortByRecentPlay();
+                        }
+                        sorter.sort(songs);
+                        return true;
+                    }
+                });
             }
         });
 
