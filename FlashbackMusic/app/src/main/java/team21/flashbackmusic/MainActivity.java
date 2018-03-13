@@ -905,7 +905,7 @@ public class MainActivity extends AppCompatActivity {
         myRef.child("Songs").child(song.getName()).setValue(thisSong);
     }
 
-    /*public void getPlayInfomation(final Song s) {
+    public void getPlayInfomation(final Song s) {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
 
         myRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -917,7 +917,6 @@ public class MainActivity extends AppCompatActivity {
                     longitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("longitude").getValue(long.class);
                     lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
                     user = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
-                    update(user);
                     //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
                     //finished.callback(dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class));
                 }
@@ -928,7 +927,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("TAG1", "Failed to read value.", databaseError.toException());
             }
         });
-    }*/
+    }
 
 
     public Location getLastLocation() {
