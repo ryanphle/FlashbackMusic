@@ -14,6 +14,10 @@
     <string name="client_secret">ky_qpRl2lwqOSWfPD0Mzz7rU</string>
     <string name="redirect_url">https://cse110project-ff1b8.firebaseapp.com/__/auth/handler</string>
     <string name="sort_favorite">Sort by favorite</string>
+    <string name="sort_album">Sort by album</string>
     <string name="sort_title">Sort by title</string>
     <string name="sort_artist">Sort by artist</string>
+    <string name="set_time">Set</string>
+    <string name="reset_time">Reset Time</string>
+    <string name="time_prompt">Set your date and time below.</string>
 </resources>
