@@ -41,7 +41,7 @@ import java.util.TimeZone;
  * Created by ryanle on 2/8/18.
  */
 
-git addpublic class SongsFragment extends Fragment {
+public class SongsFragment extends Fragment {
 
     private SongAdapter adapter;
     public View rootView;
