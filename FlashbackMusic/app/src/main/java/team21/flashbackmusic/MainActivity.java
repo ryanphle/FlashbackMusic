@@ -1356,15 +1356,28 @@ public class MainActivity extends AppCompatActivity {
                     songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Plays").child(sName).child("last_play_time").getValue(long.class))));
                     //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
                     String user = dataSnapshot.child("Plays").child(sName).child("last_play_user").getValue(String.class);
+                    Log.i("connection_user",user);
                     boolean isFriend = false;
                     if (connections!=null){
-                        for (Person connection : connections) {
-                          for (EmailAddress address : connection.getEmailAddresses()){
-                              if (hashFunction(address.getValue()).equals(user)){
+                        Log.i("connections", connections.toString());
+                        for (int i = 0;i< connections.size();i++) {
+                            Person curr = connections.get(i);
+                            Log.i("connections_friends", curr.toString());
+                            if(curr.getEmailAddresses() != null){
+                            for (int j = 0;j< curr.getEmailAddresses().size();j++){
+                                    EmailAddress address= curr.getEmailAddresses().get(j);
+                                    Log.i("connections_email_address", address.getValue());
+                                    if(address.getValue().equals(user))
+                                        isFriend = true;
+                                }
+                            }
+
+                          /*for (EmailAddress address : connection.getEmailAddresses()){
+                             if (hashFunction(address.getValue()).equals(user)){
                                   isFriend = true;
                               }
-                         }
-                     }
+                         }*/
+                      }
                     }
                     if (isFriend){
                         lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
