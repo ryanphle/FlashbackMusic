@@ -13,8 +13,7 @@
     <string name="client_id">898035120337-jjnfd25j6cf237r5pm3vaao3dgrg1uq0.apps.googleusercontent.com</string>
     <string name="client_secret">ky_qpRl2lwqOSWfPD0Mzz7rU</string>
     <string name="redirect_url">https://cse110project-ff1b8.firebaseapp.com/__/auth/handler</string>
-    <string name="favorite">Sort by favorite</string>
-    <string name="recent_play">Sort by recent play</string>
-    <string name="title">Sort by title</string>
-    <string name="artist">Sort by artist</string>
+    <string name="sort_favorite">Sort by favorite</string>
+    <string name="sort_title">Sort by title</string>
+    <string name="sort_artist">Sort by artist</string>
 </resources>

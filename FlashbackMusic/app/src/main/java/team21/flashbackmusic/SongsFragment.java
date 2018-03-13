@@ -135,21 +135,32 @@ public class SongsFragment extends Fragment {
                                 "You Clicked : " + menuItem.getTitle(),
                                 Toast.LENGTH_SHORT
                         ).show();
-                        if (menuItem.getTitle().equals("Sort by artist")) {
-                            sorter = new SortByArtist();
+
+                        switch (menuItem.getItemId()) {
+                            case R.id.sort_artist:
+                                sorter = new SortByArtist();
+                                break;
+                            case R.id.sort_title:
+                                sorter = new SortByTitle();
+                                break;
+                            case R.id.sort_favorite:
+                                sorter = new SortByFavorite();
+                                break;
                         }
-                        if (menuItem.getTitle().equals("Sort by title")) {
-                            sorter = new SortByTitle();
-                        }
-                        if (menuItem.getTitle().equals("Sort by favorite")) {
-                            sorter = new SortByFavorite();
-                        }
-                        if (menuItem.getTitle().equals("Sort by recent play")) {
-                            sorter = new SortByRecentPlay();
-                        }
+
+                        Song currSong = ((MainActivity) getActivity()).mediaPlayerWrapper.getSong();
+
                         sorter.sort(songs);
                         updateListView();
                         listView.invalidate();
+
+                        // Reset mediaplayer to reflect new order
+                        ((MainActivity) getActivity()).mediaPlayerWrapper.setSongs(songs);
+                        for (int i = 0; i < songs.size(); i++) {
+                            if (songs.get(i) == currSong)
+                                ((MainActivity) getActivity()).mediaPlayerWrapper.setIndex(i);
+                        }
+
                         return true;
                     }
                 });
