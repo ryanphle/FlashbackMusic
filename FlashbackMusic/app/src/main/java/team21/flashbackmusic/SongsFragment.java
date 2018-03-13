@@ -1,6 +1,7 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
@@ -13,12 +14,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +54,7 @@ public class SongsFragment extends Fragment {
     public TextView artistAlbumInfo;
     private ArrayList<Song> songs;
     private boolean isAlbum;
+    Sorter sorter;
 
     public SongsFragment(){
     }
@@ -91,7 +97,7 @@ public class SongsFragment extends Fragment {
                     ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(songs);
                     ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(position);
 
-                    Timestamp time = new Timestamp(System.currentTimeMillis());
+                    Timestamp time = ((MainActivity) getActivity()).getTime();
                     updateSongUI(s);
                     ((MainActivity) getActivity()).storePlayInformation(
                             ((MainActivity) getActivity()).mediaPlayerWrapper.getSong(),
@@ -110,11 +116,64 @@ public class SongsFragment extends Fragment {
             }
         });
 
-        if(isAlbum && ((MainActivity)getActivity()).currSong != null){
-
+        if (isAlbum && ((MainActivity)getActivity()).currSong != null) {
             updateSongUI(((MainActivity)getActivity()).currSong);
-
         }
+
+        final ImageButton mybutton = rootView.findViewById(R.id.sorting);
+        mybutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PopupMenu popupMenu = new PopupMenu(getContext(), mybutton);
+                popupMenu.getMenuInflater().inflate(R.menu.sort_songs, popupMenu.getMenu());
+                popupMenu.show();
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        Toast.makeText(
+                                getContext(),
+                                "You Clicked : " + menuItem.getTitle(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        switch (menuItem.getItemId()) {
+                            case R.id.sort_artist:
+                                sorter = new SortByArtist();
+                                break;
+                            case R.id.sort_title:
+                                sorter = new SortByTitle();
+                                break;
+                            case R.id.sort_favorite:
+                                sorter = new SortByFavorite();
+                                break;
+                        }
+
+                        Song currSong = ((MainActivity) getActivity()).mediaPlayerWrapper.getSong();
+
+                        sorter.sort(songs);
+                        updateListView();
+                        listView.invalidate();
+
+                        // Reset mediaplayer to reflect new order
+                        ((MainActivity) getActivity()).mediaPlayerWrapper.setSongs(songs);
+                        for (int i = 0; i < songs.size(); i++) {
+                            if (songs.get(i) == currSong)
+                                ((MainActivity) getActivity()).mediaPlayerWrapper.setIndex(i);
+                        }
+
+                        return true;
+                    }
+                });
+            }
+        });
+
+        Button timeButton = rootView.findViewById(R.id.time_btn);
+        timeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showTimeDialog();
+            }
+        });
 
         return rootView;
     }
@@ -142,15 +201,6 @@ public class SongsFragment extends Fragment {
        calendar.setTimeInMillis(s.getTimeStamp().getTime());
        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-       /*Address address = s.getLocation();
-       String addressStr = "";
-       addressStr += address.getAddressLine(0) + ", ";
-       addressStr += address.getAddressLine(1) + ", ";
-       addressStr += address.getAddressLine(2);
-
-       songLocation.setText(addressStr);
-       songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
-*/
        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
    }
 
