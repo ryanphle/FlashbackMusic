@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -105,6 +106,8 @@ public class SongsFragment extends Fragment {
                             sorter = new SortByRecentPlay();
                         }
                         sorter.sort(songs);
+                        ((BaseAdapter) listView.getAdapter()).notifyDataSetChanged();
+                        listView.invalidate();
                         return true;
                     }
                 });
