@@ -1,6 +1,7 @@
 package team21.flashbackmusic;
 
 //import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
@@ -13,12 +14,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +54,7 @@ public class SongsFragment extends Fragment {
     public TextView artistAlbumInfo;
     private ArrayList<Song> songs;
     private boolean isAlbum;
+    Sorter sorter;
 
     public SongsFragment(){
     }
@@ -110,48 +116,74 @@ public class SongsFragment extends Fragment {
             }
         });
 
-        if(isAlbum && ((MainActivity)getActivity()).currSong != null){
-
+        if (isAlbum && ((MainActivity)getActivity()).currSong != null){
             updateSongUI(((MainActivity)getActivity()).currSong);
-
         }
+
+        final ImageButton mybutton = rootView.findViewById(R.id.sorting);
+        mybutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PopupMenu popupMenu = new PopupMenu(getContext(), mybutton);
+                popupMenu.getMenuInflater().inflate(R.menu.sort_songs, popupMenu.getMenu());
+                popupMenu.show();
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        Toast.makeText(
+                                getContext(),
+                                "You Clicked : " + menuItem.getTitle(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        if (menuItem.getTitle().equals("Sort by artist")) {
+                            sorter = new SortByArtist();
+                        }
+                        if (menuItem.getTitle().equals("Sort by title")) {
+                            sorter = new SortByTitle();
+                        }
+                        if (menuItem.getTitle().equals("Sort by favorite")) {
+                            sorter = new SortByFavorite();
+                        }
+                        if (menuItem.getTitle().equals("Sort by recent play")) {
+                            sorter = new SortByRecentPlay();
+                        }
+                        sorter.sort(songs);
+                        updateListView();
+                        listView.invalidate();
+                        return true;
+                    }
+                });
+            }
+        });
 
         return rootView;
     }
 
-    public void updateSongUI(Song s) {
+   public void updateSongUI(Song s) {
 
-        adapter.notifyDataSetChanged();
+       adapter.notifyDataSetChanged();
 
-        ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
-        TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
-        TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
-        final TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
-        final TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
-        final TextView lastPlayedBy = (TextView) rootView.findViewById(R.id.last_played_by);
-        Calendar calendar;
+       ImageView albumImage = (ImageView) rootView.findViewById(R.id.large_album_art);
+       TextView songName = (TextView) rootView.findViewById(R.id.big_song_name);
+       TextView artistAlbumInfo = (TextView) rootView.findViewById(R.id.big_song_artist);
+       final TextView songLocation = (TextView) rootView.findViewById(R.id.big_song_location);
+       final TextView songTime = (TextView) rootView.findViewById(R.id.big_song_time);
+       final TextView lastPlayedBy = (TextView) rootView.findViewById(R.id.last_played_by);
+       Calendar calendar;
 
-        Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
-        albumImage.setImageBitmap(bmp);
+       Bitmap bmp = BitmapFactory.decodeByteArray(s.getImg(), 0, s.getImg().length);
+       albumImage.setImageBitmap(bmp);
 
-        songName.setText(s.getName());
-        String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
-        artistAlbumInfo.setText(artistAndAlbumStr);
+       songName.setText(s.getName());
+       String artistAndAlbumStr = s.getArtist() + " - " + s.getAlbum();
+       artistAlbumInfo.setText(artistAndAlbumStr);
 
-        calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(s.getTimeStamp().getTime());
-        calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+       calendar = Calendar.getInstance();
+       calendar.setTimeInMillis(s.getTimeStamp().getTime());
+       calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-       /*Address address = s.getLocation();
-       String addressStr = "";
-       addressStr += address.getAddressLine(0) + ", ";
-       addressStr += address.getAddressLine(1) + ", ";
-       addressStr += address.getAddressLine(2);
-       songLocation.setText(addressStr);
-       songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
-*/
-        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
-    }
+       ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
+   }
 
     public void updateListView(){
 

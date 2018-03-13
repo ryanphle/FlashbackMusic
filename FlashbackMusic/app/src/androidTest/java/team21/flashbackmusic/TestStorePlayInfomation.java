@@ -18,6 +18,6 @@ public class TestStorePlayInfomation {
     @Test
     public void test1() {
         Song s = new Song ("baby", null, null, null, null);
-       // mainActivity.getActivity().storePlayInformation(s, null, null, "Jay", "proxy");
+        mainActivity.getActivity().storePlayInformation(s, null, null);
     }
 }
