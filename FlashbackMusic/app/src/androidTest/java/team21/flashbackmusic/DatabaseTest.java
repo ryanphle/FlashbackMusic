@@ -67,6 +67,7 @@ public class DatabaseTest {
         assertEquals("Last played by: you" , lastPlayedBy.getText().toString());
         //assertEquals(mainActivity.getActivity().getCurrentTime(time), songTime.getText().toString());
 
+
     }
 
 

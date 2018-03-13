@@ -706,7 +706,7 @@ public class MainActivity extends AppCompatActivity {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null)
             user = account.getEmail();
-            user = HashFunction(user);
+        user = HashFunction(user);
         return user;
     }
 
@@ -1001,7 +1001,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("LoadSongs", "Album picture loaded");
         }
         else{
-             img = default_album;
+            img = default_album;
             Log.i("LoadSongs", "No album picture for this song");
         }
 
@@ -1028,13 +1028,13 @@ public class MainActivity extends AppCompatActivity {
         String json = sharedPreferences.getString(title,"");
         play = gson.fromJson(json,Play.class);
         if(play != null){
-        song.setTimeStamp(play.getTime());
-        List<Address> mylist = new ArrayList<>();
-        try{
-            Geocoder mylocation = new Geocoder(this, Locale.getDefault());
-            mylist = mylocation.getFromLocation(play.getLatitude(),play.getLongitude(),1);
+            song.setTimeStamp(play.getTime());
+            List<Address> mylist = new ArrayList<>();
+            try{
+                Geocoder mylocation = new Geocoder(this, Locale.getDefault());
+                mylist = mylocation.getFromLocation(play.getLatitude(),play.getLongitude(),1);
 
-        }catch (IOException e){}
+            }catch (IOException e){}
         }
 
 
@@ -1332,11 +1332,11 @@ public class MainActivity extends AppCompatActivity {
         boolean isFriend = false;
         if (connections!=null){
             for (Person connection : connections) {
-                  for (EmailAddress address : connection.getEmailAddresses()){
-                      if (HashFunction(address.getValue()).equals(user)){
-                          isFriend = true;
-                      }
-                  }
+                for (EmailAddress address : connection.getEmailAddresses()){
+                    if (HashFunction(address.getValue()).equals(user)){
+                        isFriend = true;
+                    }
+                }
 
             }
         }
@@ -1366,5 +1366,6 @@ public class MainActivity extends AppCompatActivity {
     public List<Person> getTestConnections() {
         return connections;
     }
+
 
 }
