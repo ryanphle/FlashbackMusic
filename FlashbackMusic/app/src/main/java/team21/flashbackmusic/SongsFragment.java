@@ -97,7 +97,7 @@ public class SongsFragment extends Fragment {
                     ((MainActivity)getActivity()).mediaPlayerWrapper.setSongs(songs);
                     ((MainActivity)getActivity()).mediaPlayerWrapper.newSong(position);
 
-                    Timestamp time = new Timestamp(System.currentTimeMillis());
+                    Timestamp time = ((MainActivity) getActivity()).getTime();
                     updateSongUI(s);
                     ((MainActivity) getActivity()).storePlayInformation(
                             ((MainActivity) getActivity()).mediaPlayerWrapper.getSong(),
@@ -116,7 +116,7 @@ public class SongsFragment extends Fragment {
             }
         });
 
-        if (isAlbum && ((MainActivity)getActivity()).currSong != null){
+        if (isAlbum && ((MainActivity)getActivity()).currSong != null) {
             updateSongUI(((MainActivity)getActivity()).currSong);
         }
 
@@ -164,6 +164,14 @@ public class SongsFragment extends Fragment {
                         return true;
                     }
                 });
+            }
+        });
+
+        Button timeButton = rootView.findViewById(R.id.time_btn);
+        timeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).showTimeDialog();
             }
         });
 

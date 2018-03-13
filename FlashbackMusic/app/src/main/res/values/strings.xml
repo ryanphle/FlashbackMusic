@@ -16,4 +16,7 @@
     <string name="sort_favorite">Sort by favorite</string>
     <string name="sort_title">Sort by title</string>
     <string name="sort_artist">Sort by artist</string>
+    <string name="set_time">Set</string>
+    <string name="reset_time">Reset Time</string>
+    <string name="time_prompt">Set your date and time below.</string>
 </resources>
