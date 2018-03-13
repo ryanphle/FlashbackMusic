@@ -1,18 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/artist"
-        android:title="@string/artist"/>
+        android:id="@+id/sort_artist"
+        android:title="@string/sort_artist"/>
 
     <item
-        android:id="@+id/title"
-        android:title="@string/title"/>
+        android:id="@+id/sort_favorite"
+        android:title="@string/sort_favorite"/>
 
     <item
-        android:id="@+id/recent_play"
-        android:title="@string/recent_play"/>
+        android:id="@+id/sort_title"
+        android:title="@string/sort_title"/>
 
-    <item
-        android:id="@+id/favorite"
-        android:title="@string/favorite"/>
 </menu>

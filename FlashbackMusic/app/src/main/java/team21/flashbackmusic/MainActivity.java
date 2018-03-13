@@ -401,7 +401,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-
                 songLoaded = true;
                 if (mediaPlayerWrapper.isPlaying()) {
                     view.setBackgroundResource(R.drawable.ic_stopping);
