@@ -8,6 +8,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.provider.Telephony;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -50,7 +51,9 @@ public class FlashbackFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_flashback, container, false);
         listView = rootView.findViewById(R.id.flashback_list);
 
-        final ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
+        updateSongList(new SortVibe());
+
+        /*final ArrayList<Song> songs = getArguments().getParcelableArrayList("songs");
         if( songs == null) {
             Log.i("Song size", "songs is null");
         }
@@ -62,12 +65,29 @@ public class FlashbackFragment extends Fragment {
 
         //updateSongUI(((MainActivity)getActivity()).currSong);
 
-        updateSongUI(songs.get(0));
+        updateSongUI(songs.get(0));*/
 
 
         ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).FLASHBACK_FRAG;
 
         return rootView;
+    }
+
+    public void updateSongList(final @NonNull SimpleCallback finished) {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child("Songs").exists()) {
+                    finished.callback(dataSnapshot.child("Songs"), listView, getActivity());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG1", "Failed to read value.", databaseError.toException());
+            }
+        });
     }
 
     public void updateSongUI(Song s) {

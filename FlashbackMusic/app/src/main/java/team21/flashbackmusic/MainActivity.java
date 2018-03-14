@@ -131,6 +131,7 @@ import com.google.api.services.people.v1.PeopleService;
 import com.google.api.services.people.v1.model.ListConnectionsResponse;
 import com.google.api.services.people.v1.model.Person;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 0;
@@ -905,20 +906,83 @@ public class MainActivity extends AppCompatActivity {
         myRef.child("Songs").child(song.getName()).setValue(thisSong);
     }
 
-    public void getPlayInfomation(final Song s) {
+    /*final class MyThread implements Runnable {
+        Song song;
+        public MyThread(Song s) {
+            this.song = s;
+        }
+
+        @Override
+        public void run() {
+            getPlayInfomation(song);
+        }
+    }*/
+
+   /* public class AsyncTaskRunner extends AsyncTask<String, String, String> {
+        public OnTaskCompleted listener;
+        public String result;
+
+        public AsyncTaskRunner(OnTaskCompleted listener) {
+            this.listener = listener;
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
+
+                myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
+                            latitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("latitude").getValue(long.class);
+                            longitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("longitude").getValue(long.class);
+                            lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
+                            user = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                            //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
+                            //finished.callback(dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class));
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w("TAG1", "Failed to read value.", databaseError.toException());
+                    }
+                });
+
+            } catch (Exception e) {
+
+            }
+            return null;
+        }
+        @Override
+        protected void onPostExecute (String result) {
+
+        }
+        @Override
+        protected void onPreExecute() {
+
+        }
+        @Override
+        protected void onProgressUpdate(String... text) {
+
+        }
+    }*/
+
+
+   /* public void getPlayInfomation(final Song s, @NonNull final SimpleCallback finished) {
+
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
 
         myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            String user;
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
-                    latitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("latitude").getValue(long.class);
-                    longitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("longitude").getValue(long.class);
-                    lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
-                    user = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                    //latitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("latitude").getValue(long.class);
+                    //longitude = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").child("longitude").getValue(long.class);
+                    //lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
+                    //lastPlayUser = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
                     //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
-                    //finished.callback(dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class));
+                    //finished.callback(dataSnapshot.child("Songs").child(s.getName()));
                 }
             }
 
@@ -927,7 +991,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("TAG1", "Failed to read value.", databaseError.toException());
             }
         });
-    }
+    }*/
 
 
     public Location getLastLocation() {
