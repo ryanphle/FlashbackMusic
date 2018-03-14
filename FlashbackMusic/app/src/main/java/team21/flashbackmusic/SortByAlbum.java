@@ -5,19 +5,17 @@ import java.util.Collections;
 import java.util.Comparator;
 
 /**
- * Created by jerryliu on 3/11/18.
+ * Created by brian on 3/12/2018.
  */
 
-public class SortByFavorite implements Sorter {
+public class SortByAlbum implements Sorter {
     public void sort(ArrayList<Song> s) {
         Collections.sort(s, new Comparator<Song>() {
             @Override
             public int compare(Song song, Song t1) {
-                if (song.getFavorite() == t1.getFavorite())
+                if (song.getAlbum().equalsIgnoreCase(t1.getAlbum()))
                     return song.getName().compareTo(t1.getName());
-                if (song.getFavorite() > t1.getFavorite())
-                    return -1;
-                return 1;
+                return song.getAlbum().compareTo(t1.getAlbum());
             }
         });
     }

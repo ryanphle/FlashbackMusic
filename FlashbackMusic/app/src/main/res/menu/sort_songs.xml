@@ -5,11 +5,15 @@
         android:title="@string/sort_artist"/>
 
     <item
-        android:id="@+id/sort_favorite"
-        android:title="@string/sort_favorite"/>
+        android:id="@+id/sort_album"
+        android:title="@string/sort_album"/>
 
     <item
         android:id="@+id/sort_title"
         android:title="@string/sort_title"/>
+
+    <item
+        android:id="@+id/sort_favorite"
+        android:title="@string/sort_favorite"/>
 
 </menu>
