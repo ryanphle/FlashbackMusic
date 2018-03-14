@@ -492,6 +492,15 @@ public class MainActivity extends AppCompatActivity {
 
         if (GoogleSignIn.getLastSignedInAccount(this) != null) {
             // signed in. Show the "sign out" button and explanation.
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.client_id))
+                    .requestScopes(new Scope("https://www.googleapis.com/auth/contacts"))
+                    .requestServerAuthCode(getString(R.string.client_id), false)
+                    .requestEmail()
+                    .build();
+
+            mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+            signIn();
             signIn.setVisibility(View.GONE);
         }
 
