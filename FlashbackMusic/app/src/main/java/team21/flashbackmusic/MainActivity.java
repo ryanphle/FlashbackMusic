@@ -1398,5 +1398,3 @@ public class MainActivity extends AppCompatActivity {
         isCustomTime = false;
         time = new Timestamp(System.currentTimeMillis());
     }
-
-}
