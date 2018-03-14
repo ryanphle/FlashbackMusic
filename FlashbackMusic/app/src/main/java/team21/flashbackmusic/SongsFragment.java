@@ -142,6 +142,7 @@ public class SongsFragment extends Fragment {
                                 break;
                             case R.id.sort_album:
                                 sorter = new SortByAlbum();
+                                break;
                             case R.id.sort_title:
                                 sorter = new SortByTitle();
                                 break;
