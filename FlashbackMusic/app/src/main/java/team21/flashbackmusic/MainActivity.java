@@ -1276,7 +1276,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if(allPlays.child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
-                score+=3;
+                score+=12;
             }
 
             if (allPlays.child(ID).exists()) {
@@ -1285,7 +1285,7 @@ public class MainActivity extends AppCompatActivity {
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
                 Calendar cal = Calendar.getInstance();
             if (cal.getTimeInMillis()<=c.getTimeInMillis()+604800000){
-                score+=2;
+                score+=11;
             }
             }
             String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
@@ -1297,7 +1297,7 @@ public class MainActivity extends AppCompatActivity {
                             EmailAddress address = curr.getEmailAddresses().get(j);
                             Log.i("connections_email_address", address.getValue());
                             if (user.equals(hashFunction(address.getValue()))) {
-                                score++;
+                                score+=10;
                             }
 
                         }
