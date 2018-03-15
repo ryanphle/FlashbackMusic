@@ -476,6 +476,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* RYAN */
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        readData(ref, new GetDataListener() {
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+                allPlays = dataSnapshot;
+                Log.i("All plays: ", allPlays.toString());
+            }
+
+            @Override
+            public void onStart() {
+                Log.d("ON START", "Started");
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d("ON FAIL", "Failed fam :(");
+            }
+        });
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -534,8 +554,7 @@ public class MainActivity extends AppCompatActivity {
         myUserID = getMyID();
         myUserEmail = getMyEmail();
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        /*ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 allPlays = dataSnapshot;
@@ -544,6 +563,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
+            }
+        });*/
+
+    }
+
+    /* RYAN ALSO NOTE THERE IS A NEW INTERFACE CALLED GETDATALISTENER */
+    public void readData(DatabaseReference ref, final GetDataListener listener) {
+        listener.onStart();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                listener.onSuccess(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onFailure();
             }
         });
     }
