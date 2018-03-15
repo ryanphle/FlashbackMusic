@@ -1165,7 +1165,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void setFlashbackFragment() {
-
         fragmentFlashback = new FlashbackFragment();
         Bundle bundle = new Bundle();
 
