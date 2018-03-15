@@ -378,6 +378,7 @@ public class MainActivity extends AppCompatActivity {
         prevButton = (Button) findViewById(R.id.prev);
         stopButton = (Button) findViewById(R.id.play);
 
+        readData();
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -391,6 +392,7 @@ public class MainActivity extends AppCompatActivity {
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
                         time);
+                readData();
             }
         });
 
@@ -406,6 +408,7 @@ public class MainActivity extends AppCompatActivity {
                 updateSongMetaData(mediaPlayerWrapper.getIndex(), songPlayingFrag, true);
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
                         time);
+                readData();
             }
         });
 
@@ -425,6 +428,7 @@ public class MainActivity extends AppCompatActivity {
                 storePlayInformation(mediaPlayerWrapper.getSong(), lastLocation,
                         time);
                 mediaPlayerWrapper.stopAndStart();
+                readData();
             }
         });
 
@@ -542,6 +546,42 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
             setUpFragAndMedia();
         }
+    }
+
+    public void readData() {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        readData(ref, new GetDataListener() {
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+                allPlays = dataSnapshot;
+                Log.i("All plays: ", allPlays.toString());
+            }
+
+            @Override
+            public void onStart() {
+                Log.d("Starting: ", "STARTED");
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d("Failing: ", "FAILED");
+            }
+        });
+    }
+
+    public void readData(DatabaseReference ref, final GetDataListener listener) {
+        listener.onStart();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                listener.onSuccess(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onFailure();
+            }
+        });
     }
 
     public String getFileName(Uri uri) {
@@ -1131,16 +1171,16 @@ public class MainActivity extends AppCompatActivity {
 
         updateTime();
         sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
-        while (!songs.get(0).isDownloaded()){
-            startDownload(songs.get(0).getUrl(),"Song");
-            songs.get(0).setIsDownloaded(true);
-            Song song = songs.get(0);
-            songs.remove(0);
-            songs.add(1,song);
+        while (!sorted_songs.get(0).isDownloaded()){
+            startDownload(sorted_songs.get(0).getUrl(),"Song");
+            sorted_songs.get(0).setIsDownloaded(true);
+            Song song = sorted_songs.get(0);
+            sorted_songs.remove(0);
+            sorted_songs.add(1,song);
         }
-        if (!songs.get(1).isDownloaded()){
-            startDownload(songs.get(1).getUrl(),"Song");
-            songs.get(1).setIsDownloaded(true);
+        if (!sorted_songs.get(1).isDownloaded()){
+            startDownload(sorted_songs.get(1).getUrl(),"Song");
+            sorted_songs.get(1).setIsDownloaded(true);
         }
 
         bundle.putParcelableArrayList("songs", sorted_songs);
@@ -1171,19 +1211,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
         Log.i("check","check");
-        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        final Activity activity = this;
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                allPlays = dataSnapshot;
-            }
+        readData();
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
         for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
@@ -1276,11 +1305,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
     public List<Song> getSortedSongs(){
         return sorted_songs;
     }
+
     public void proxyGenerator() {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
@@ -1325,7 +1353,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).child("last_play_time").exists()) {
-                    allPlays = dataSnapshot;
                     songLocation.setText(dataSnapshot.child("Plays").child(sName).child("last_play_location_string").getValue(String.class));
                     songTime.setText(getCurrentTime((new Timestamp(dataSnapshot.child("Plays").child(sName).child("last_play_time").getValue(long.class)))));
                     String user = dataSnapshot.child("Plays").child(sName).child("last_play_user").getValue(String.class);
