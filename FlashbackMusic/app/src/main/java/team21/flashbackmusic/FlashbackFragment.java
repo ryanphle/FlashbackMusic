@@ -57,10 +57,12 @@ public class FlashbackFragment extends Fragment {
         else {
             Log.i("song size", "" + songs.size());
         }
+
+
         adapter = new SongAdapter(getActivity(), R.layout.activity_listview, songs);
         listView.setAdapter(adapter);
 
-        updateSongUI(songs.get(0));
+            updateSongUI(songs.get(0));
 
 
         ((MainActivity)getActivity()).songPlayingFrag = ((MainActivity)getActivity()).FLASHBACK_FRAG;
@@ -90,16 +92,8 @@ public class FlashbackFragment extends Fragment {
         calendar.setTimeInMillis(s.getTimeStamp().getTime());
         calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-       /* Address address = s.getLocation();
-        String addressStr = "";
-        addressStr += address.getAddressLine(0) + ", ";
-        addressStr += address.getAddressLine(1) + ", ";
-        addressStr += address.getAddressLine(2);*/
 
-        //songLocation.setText(addressStr);
-        //songTime.setText(calendar.get(Calendar.MONTH) + 1 + "/" +  calendar.get(Calendar.DATE) + " " + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
-
-        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
+        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getID());
 
     }
 }
