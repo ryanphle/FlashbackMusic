@@ -378,7 +378,8 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                /* RYAN you can call readData to update allPlays */
+                readData();
 
                 songLoaded = true;
                 if (mediaPlayerWrapper.isPlaying()) {
@@ -477,24 +478,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /* RYAN */
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        readData(ref, new GetDataListener() {
-            @Override
-            public void onSuccess(DataSnapshot dataSnapshot) {
-                allPlays = dataSnapshot;
-                Log.i("All plays: ", allPlays.toString());
-            }
-
-            @Override
-            public void onStart() {
-                Log.d("ON START", "Started");
-            }
-
-            @Override
-            public void onFailure() {
-                Log.d("ON FAIL", "Failed fam :(");
-            }
-        });
+        readData();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -566,6 +550,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });*/
 
+    }
+
+    /* RYAN calls the readdata below which is where the magic happens*/
+    public void readData() {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        readData(ref, new GetDataListener() {
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+                allPlays = dataSnapshot;
+                Log.i("All plays: ", allPlays.toString());
+            }
+
+            @Override
+            public void onStart() {
+                Log.d("ON START", "Started");
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d("ON FAIL", "Failed fam :(");
+            }
+        });
     }
 
     /* RYAN ALSO NOTE THERE IS A NEW INTERFACE CALLED GETDATALISTENER */
@@ -1256,19 +1262,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
         Log.i("check","check");
-        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        final Activity activity = this;
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                allPlays = dataSnapshot;
-            }
+        readData();
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
         for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
