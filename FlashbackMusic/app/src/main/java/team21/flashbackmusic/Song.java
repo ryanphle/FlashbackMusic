@@ -7,6 +7,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.net.Uri;
 
+import com.google.api.services.people.v1.model.Url;
+
 import java.sql.Timestamp;
 import java.util.Locale;
 
@@ -24,8 +26,11 @@ public class Song implements Parcelable {
     private int favorite;
     private Timestamp timeStamp;
     private Address location;
+    private String ID;
+    private boolean downloaded;
+    private String url;
 
-    public Song(String name, String artist,Uri uri, byte[] img, String album){
+    public Song(String ID, String name, String artist, Uri uri, byte[] img, String album, boolean downloaded, String url){
         this.name = name;
         this.artist = artist;
         this.img = img;
@@ -35,6 +40,9 @@ public class Song implements Parcelable {
         this.favorite = 0;
         this.timeStamp = new Timestamp(0);
         this.location = new Address(Locale.getDefault());
+        this.ID = ID;
+        this.downloaded = downloaded;
+        this.url = url;
     }
 
     public String getName(){
@@ -55,6 +63,7 @@ public class Song implements Parcelable {
     public Address getLocation() {
         return this.location;
     }
+    public String getUrl(){return  this.url;}
 
     public void setLocation(Address location) {
         this.location = location;
@@ -68,6 +77,7 @@ public class Song implements Parcelable {
     public void setTimeStamp(Timestamp timeStemp){
         this.timeStamp = timeStemp;
     }
+    public void setIsDownloaded(boolean isDownloaded){this.downloaded = isDownloaded;}
 
     @Override
     public int describeContents() {
@@ -80,6 +90,10 @@ public class Song implements Parcelable {
     }
 
     public Uri getUri() {return this.uri;}
+
+    public String getID() {return this.ID;}
+
+    public boolean isDownloaded(){return this.downloaded;}
 
 
 

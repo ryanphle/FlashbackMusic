@@ -113,7 +113,7 @@ public class AlbumsFragment extends Fragment {
         calendar.setTimeInMillis(s.getTimeStamp().getTime());
         calendar.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
 
-        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getName());
+        ((MainActivity) getActivity()).setData(songLocation,songTime,lastPlayedBy,s.getID());
     }
 
 

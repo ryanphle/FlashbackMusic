@@ -43,9 +43,12 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.LocalBroadcastManager;
 
 import android.support.v7.app.AppCompatActivity;
+import android.telecom.Call;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -132,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, Album> albums;
     private ArrayList<Album> albumList;
     protected ArrayList<Song> songs;
+    private Iterable<DataSnapshot> databaseSongs;
+    public DataSnapshot allPlays;
 
     protected Fragment fragmentSong;
     protected Fragment fragmentAlbums;
@@ -307,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
                     case FLASHBACK_FRAG:
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
-                            mediaPlayerWrapper.setSongs(songs);
+                            mediaPlayerWrapper.setSongs(sorted_songs);
                             mediaPlayerWrapper.setIndex(-1);
                             mediaPlayerWrapper.next();
                             mediaPlayerWrapper.forcePause();
@@ -656,6 +661,18 @@ public class MainActivity extends AppCompatActivity {
         contentDownloadManager.download(url);
     }
 
+    public void storeSong(String url, String name, String artist,Uri uri, byte[] img, String album){
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
+        String ID = hashFunction(name + artist);
+
+        myRef.child("TestSongs").child(ID).child("Title").setValue(name);
+        myRef.child("TestSongs").child(ID).child("Url").setValue(url);
+        myRef.child("TestSongs").child(ID).child("Artist").setValue(artist);
+        myRef.child("TestSongs").child(ID).child("Uri").setValue(uri.toString());
+        myRef.child("TestSongs").child(ID).child("Img").setValue(img.toString());
+        myRef.child("TestSongs").child(ID).child("Album").setValue(album);
+    }
+
     public void initialFragSetup(int frag) {
         setSongFragment();
         setAlbumFragment();
@@ -721,11 +738,11 @@ public class MainActivity extends AppCompatActivity {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null)
             user = account.getEmail();
-        user = HashFunction(user);
+            user = hashFunction(user);
         return user;
     }
 
-    public String HashFunction(String email){
+    public String hashFunction(String email){
         String res;
         int hash;
         res = email.split("@")[0];
@@ -865,8 +882,8 @@ public class MainActivity extends AppCompatActivity {
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
         addressStr += address.getAddressLine(2);
-        myRef.child("Songs").child(song.getName()).setValue(thisSong);
-        myRef.child("Songs").child(song.getName()).child("last_play_location_string").setValue(addressStr);
+        myRef.child("Plays").child(song.getID()).setValue(thisSong);
+        myRef.child("Plays").child(song.getID()).child("last_play_location_string").setValue(addressStr);
     }
 
 
@@ -875,10 +892,10 @@ public class MainActivity extends AppCompatActivity {
         myRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(s.getName()).exists()) {
-                    lastPlayLocation = dataSnapshot.child("Songs").child(s.getName()).child("last_play_location").getValue(Location.class);
-                    lastPlayTime = dataSnapshot.child("Songs").child(s.getName()).child("last_play_time").getValue(long.class);
-                    lastPlayUser = dataSnapshot.child("Songs").child(s.getName()).child("last_play_user").getValue(String.class);
+                if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(s.getID()).exists()) {
+                    lastPlayLocation = dataSnapshot.child("Plays").child(s.getID()).child("last_play_location").getValue(Location.class);
+                    lastPlayTime = dataSnapshot.child("Plays").child(s.getID()).child("last_play_time").getValue(long.class);
+                    lastPlayUser = dataSnapshot.child("Plays").child(s.getID()).child("last_play_user").getValue(String.class);
                     //FBSongInfo lastPlay = dataSnapshot.child("Songs").child(s.getName()).getValue(FBSongInfo.class);
 
                 }
@@ -1042,7 +1059,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Album a = albums.get(album);
-        Song song = new Song(title, artist, uri, img, a.getName());
+        Song song = new Song(hashFunction(title + artist),title, artist, uri, img, a.getName(), true, null);
 
 
         String json = sharedPreferences.getString(title,"");
@@ -1077,6 +1094,10 @@ public class MainActivity extends AppCompatActivity {
         res_uri.add(uri);
 
         random_songs.add(song);
+        if (download_uri!=null){
+            storeSong(download_uri, title, artist, uri, img, a.getName());
+            download_uri = null;
+        }
     }
 
 
@@ -1110,6 +1131,17 @@ public class MainActivity extends AppCompatActivity {
 
         updateTime();
         sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
+        while (!songs.get(0).isDownloaded()){
+            startDownload(songs.get(0).getUrl(),"Song");
+            songs.get(0).setIsDownloaded(true);
+            Song song = songs.get(0);
+            songs.remove(0);
+            songs.add(1,song);
+        }
+        if (!songs.get(1).isDownloaded()){
+            startDownload(songs.get(1).getUrl(),"Song");
+            songs.get(1).setIsDownloaded(true);
+        }
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
@@ -1137,71 +1169,49 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(List<Song> songs,String prefName, int currentDay, int currentHour, Location location ) {
-
-        SharedPreferences sharedPreferences = getSharedPreferences(prefName, MODE_PRIVATE);
-        Play play;
-        Gson gson = new Gson();
-        boolean AnySongsPlayed = false;
-        Location location_song = new Location(lastLocation);
-
-        sorted_songs = new ArrayList<Song>();
-
-        int sorted_song_index = 0;
-        for(int i =0; i< songs.size();i++){
-            if(songs.get(i).getFavorite() == -1)
-                continue;
-
-            String json = sharedPreferences.getString(songs.get(i).getName(), "");
-            play = gson.fromJson(json, Play.class);
-            if(!(songs.get(i).getTimeStamp().equals(new Timestamp(0))))
-                AnySongsPlayed = true;
-
-
-            sorted_songs.add(songs.get(i));
-            if (play != null) {
-                sorted_songs.get(sorted_song_index).setTimeStamp(play.getTime());
-                List<Address> myList = new ArrayList<>();
-
-                try {
-                    Geocoder myLocation = new Geocoder(this, Locale.getDefault());
-                    myList = myLocation.getFromLocation(play.getLatitude(), play.getLongitude(), 1);
-                }catch (IOException e) {
-
-                }
-
-                Address address;
-
-                try {
-                    address = (Address) myList.get(0);
-                }catch(IndexOutOfBoundsException e){
-
-                    address = new Address(US);
-                    address.setAddressLine(0,"Unknown");
-                    address.setAddressLine(1,"Unknown");
-                    address.setAddressLine(2,"Unknown");
-                    address.setCountryName("Unknown");
-
-                }
-
-
-
-                sorted_songs.get(sorted_song_index).setLocation(address);
+    public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
+        Log.i("check","check");
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        final Activity activity = this;
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                allPlays = dataSnapshot;
             }
-            sorted_song_index++;
-        }
 
-        if(AnySongsPlayed == false){
-            sorted_songs = new ArrayList<Song>();
-            sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
-            return;
-        }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
+            }
+        });
+        sorted_songs = new ArrayList<>();
+        Location location_song = new Location(lastLocation);
+        for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
+            boolean added = false;
+            String ID = song.getKey();
+            for (Song existingSong : songs){
+                if (existingSong.getID().equals(ID)){
+                    sorted_songs.add(existingSong);
+                    added = true;
+                    break;
+                }
+            }
+            if (!added){
+                String title = song.child("Title").getValue(String.class);
+                String artist = song.child("Artist").getValue(String.class);
+                String album = song.child("Album").getValue(String.class);
+                String url = song.child("Url").getValue(String.class);
+                Uri uri = Uri.parse(song.child("Uri").getValue(String.class));
+                byte[] img = song.child("Img").getValue(String.class).getBytes();
+                sorted_songs.add(new Song(ID,title,artist,uri,img,album,false,url));
+            }
+
+        }
+        Log.i("Sorted songs", Integer.toString(sorted_songs.size()));
         for (int i = 0; i < sorted_songs.size(); i++) {
 
-            String name = sorted_songs.get(i).getName();
-            String json = sharedPreferences.getString(name,"");
-            play = gson.fromJson(json,Play.class);
+            String ID = sorted_songs.get(i).getID();
+
 
             int score = 0;
 
@@ -1210,34 +1220,33 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Raw Songs name: ",location.toString());
             }
 
-            if(play != null) {
-                location_song.setLatitude(play.getLatitude());
-                location_song.setLongitude(play.getLongitude());
+            if(allPlays.child(ID).exists()) {
+
+                location_song.setLatitude(allPlays.child("Plays").child(ID).child("last_play_location").child("latitude").getValue(double.class));
+                location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
-            if(play != null && location != null && location_song.distanceTo(location)  < 304.8 ){
-                score++;
+            if(allPlays.child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
+                score+=12;
             }
 
-            if (play != null) {
+            if (allPlays.child(ID).exists()) {
                 Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(play.getTime().getTime());
+                c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-                int dayofWeek = c.get(Calendar.DAY_OF_WEEK);
-                int hour = c.get(Calendar.HOUR_OF_DAY);
-
-                if (hour <= 10 && hour > 2 && currentHour <= 10 && currentHour > 2) {
-                    score++;
-                } else if (hour <= 18 && hour > 10 && currentHour <= 18 && currentHour > 10) {
-                    score++;
-                } else if ((hour <= 2 && hour > 18) && (currentHour <= 2 && currentHour > 18)) {
-                    score++;
-                }
-                if (dayofWeek == currentDay) {
-                    score++;
-                }
-
+                Calendar cal = Calendar.getInstance();
+            if (cal.getTimeInMillis()<=c.getTimeInMillis()+604800000){
+                score+=11;
             }
+            }
+            String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
+            if (allPlays.child(ID).exists()) {
+                if (isFriend(user,connections)){score+=10;}
+            }
+
+
+
+
             sorted_songs.get(i).setScore(score);
 
             Log.i("Raw Songs name: ", sorted_songs.get(i).getName()+ " score "+ sorted_songs.get(i).getScore());
@@ -1315,12 +1324,12 @@ public class MainActivity extends AppCompatActivity {
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Songs").exists() && dataSnapshot.child("Songs").child(sName).exists()) {
-                    songLocation.setText(dataSnapshot.child("Songs").child(sName).child("last_play_location_string").getValue(String.class));
-                    songTime.setText(getCurrentTime(new Timestamp(dataSnapshot.child("Songs").child(sName).child("last_play_time").getValue(long.class))));
-                    //if (dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class)
-                    String user = dataSnapshot.child("Songs").child(sName).child("last_play_user").getValue(String.class);
-
+                if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).child("last_play_time").exists()) {
+                    allPlays = dataSnapshot;
+                    songLocation.setText(dataSnapshot.child("Plays").child(sName).child("last_play_location_string").getValue(String.class));
+                    songTime.setText(getCurrentTime((new Timestamp(dataSnapshot.child("Plays").child(sName).child("last_play_time").getValue(long.class)))));
+                    String user = dataSnapshot.child("Plays").child(sName).child("last_play_user").getValue(String.class);
+                    Log.i("connection_user",user);
                     boolean isFriend = isFriend(user, connections);
 
                     if (isFriend){
@@ -1353,7 +1362,7 @@ public class MainActivity extends AppCompatActivity {
         if (connections!=null){
             for (Person connection : connections) {
                 for (EmailAddress address : connection.getEmailAddresses()){
-                    if (HashFunction(address.getValue()).equals(user)){
+                    if (hashFunction(address.getValue()).equals(user)){
                         isFriend = true;
                     }
                 }

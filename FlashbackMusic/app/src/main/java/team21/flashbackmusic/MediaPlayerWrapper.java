@@ -40,6 +40,12 @@ public class MediaPlayerWrapper {
             public void onCompletion(MediaPlayer mediaPlayer) {
                 mediaPlayer.reset();
                 index = (index + 1) % getSongs().size();
+                if (getSongs().size()-1>=index+2) {
+                    if (!getSongs().get(index + 2).isDownloaded()) {
+                        activity.startDownload(getSongs().get(index + 2).getUrl(), "Song");
+                        getSongs().get(1).setIsDownloaded(true);
+                    }
+                }
                 loadMedia(getSongs().get(index), mediaPlayer);
                 updateAndStore(index, activity.songPlayingFrag, true);
                 mediaPlayer.start();
