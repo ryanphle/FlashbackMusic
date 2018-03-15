@@ -542,6 +542,26 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
             setUpFragAndMedia();
         }
+
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                allPlays = dataSnapshot;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
+
     }
 
     public String getFileName(Uri uri) {
@@ -635,12 +655,6 @@ public class MainActivity extends AppCompatActivity {
 
             mediaPlayerWrapper.forcePause();
         }
-
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
