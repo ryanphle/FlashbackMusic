@@ -705,12 +705,12 @@ public class MainActivity extends AppCompatActivity {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("TestSongs").child(ID).child("Title").setValue(name);
-        myRef.child("TestSongs").child(ID).child("Url").setValue(url);
-        myRef.child("TestSongs").child(ID).child("Artist").setValue(artist);
-        myRef.child("TestSongs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("TestSongs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("TestSongs").child(ID).child("Album").setValue(album);
+        myRef.child("Songs").child(ID).child("Title").setValue(name);
+        myRef.child("Songs").child(ID).child("Url").setValue(url);
+        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
+        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
+        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
+        myRef.child("Songs").child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -1214,7 +1214,7 @@ public class MainActivity extends AppCompatActivity {
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
+        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
