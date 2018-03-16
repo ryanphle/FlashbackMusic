@@ -1267,11 +1267,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (allPlays.child(ID).exists()) {
-                Calendar c = Calendar.getInstance();
+                /*Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-                Calendar cal = Calendar.getInstance();
-                if (cal.getTimeInMillis() <= c.getTimeInMillis() + 604800000) {
+                Calendar cal = Calendar.getInstance();*/
+                if (getTime().getTime() <= getTime().getTime() + 604800000) {
                     score += 11;
                 }
             }

@@ -42,11 +42,11 @@ public class M2DatabaseTest {
         final TextView songLocation = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_location);
         final TextView songTime = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_time);
         final TextView lastPlayedBy = (TextView) mainActivity.getActivity().findViewById(R.id.last_played_by);
-        mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"Whammy");
+        mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"0");
         while (songLocation.getText().toString().equals("Location") || lastPlayedBy.getText().toString().equals("Last played by:") ){}
-        assertEquals("3390 Voigt Drive, San Diego, CA 92121, USA", songLocation.getText());
+        assertEquals("402w Broadway, San Diego, CA 92101, USA", songLocation.getText());
         assertEquals("Last played by: you", lastPlayedBy.getText().toString());
-        assertEquals("3/15 19:49", songTime.getText().toString());
+        assertEquals("3/15 22:10", songTime.getText().toString());
     }
 
     @Test
