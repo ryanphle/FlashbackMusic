@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotEquals;
  * Created by petternarvhus on 07/03/2018.
  */
 
-public class DatabaseTest {
+public class M2DatabaseTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
@@ -42,16 +42,17 @@ public class DatabaseTest {
         final TextView songLocation = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_location);
         final TextView songTime = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_time);
         final TextView lastPlayedBy = (TextView) mainActivity.getActivity().findViewById(R.id.last_played_by);
-        mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"Hello");
+        mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"Whammy");
         while (songLocation.getText().toString().equals("Location") || lastPlayedBy.getText().toString().equals("Last played by:") ){}
-        assertEquals("402w Broadway, San Diego, CA 92101, USA", songLocation.getText());
+        assertEquals("3390 Voigt Drive, San Diego, CA 92121, USA", songLocation.getText());
         assertEquals("Last played by: you", lastPlayedBy.getText().toString());
-        assertEquals("3/9 19:50", songTime.getText().toString());
+        assertEquals("3/15 19:49", songTime.getText().toString());
     }
 
     @Test
     public void storePlayDataTest(){
-        Song song = new Song("title", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
+        Song song = new Song("0", "title", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
+                "byte".getBytes(), "album", false, "url");
         Timestamp time = new Timestamp(System.currentTimeMillis());
         Location location = new Location("");
         location.setLatitude(32.715736);
@@ -61,12 +62,11 @@ public class DatabaseTest {
         final TextView songLocation = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_location);
         final TextView songTime = (TextView) mainActivity.getActivity().findViewById(R.id.big_song_time);
         final TextView lastPlayedBy = (TextView) mainActivity.getActivity().findViewById(R.id.last_played_by);
-        mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"title");
+        mainActivity.getActivity().setData(songLocation,songTime,lastPlayedBy,"0");
         while (songLocation.getText().toString().equals("Location") || lastPlayedBy.getText().toString().equals("Last played by:") ){}
         assertEquals("402w Broadway, San Diego, CA 92101, USA", songLocation.getText());
         assertEquals("Last played by: you" , lastPlayedBy.getText().toString());
-        //assertEquals(mainActivity.getActivity().getCurrentTime(time), songTime.getText().toString());
-
+        assertEquals(mainActivity.getActivity().getCurrentTime(time), songTime.getText().toString());
 
     }
 

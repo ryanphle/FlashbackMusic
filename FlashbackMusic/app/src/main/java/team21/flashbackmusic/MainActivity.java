@@ -355,14 +355,14 @@ public class MainActivity extends AppCompatActivity {
                             frag = FLASHBACK_FRAG;
 
                             setFlashbackFragment();
+                            transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
+                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                             mediaPlayerWrapper.setSongs(sorted_songs);
                             mediaPlayerWrapper.setIndex(0);
                             mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
 
                             prevButton.setVisibility(View.INVISIBLE);
                             stopButton.setBackgroundResource(R.drawable.ic_playing);
-                            transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
-                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                         }
                         frag = FLASHBACK_FRAG;
                         songPlayingFrag = FLASHBACK_FRAG;
@@ -412,6 +412,8 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /* RYAN you can call readData to update allPlays */
+                readData();
 
                 songLoaded = true;
                 if (mediaPlayerWrapper.isPlaying()) {
@@ -525,6 +527,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* RYAN */
+        readData();
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -542,6 +547,53 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
             setUpFragAndMedia();
         }
+
+        readData();
+
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
+
+    }
+
+    /* RYAN calls the readdata below which is where the magic happens*/
+    public void readData() {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        readData(ref, new GetDataListener() {
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+                allPlays = dataSnapshot;
+                Log.i("All plays: ", allPlays.toString());
+            }
+
+            @Override
+            public void onStart() {
+                Log.d("ON START", "Started");
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d("ON FAIL", "Failed fam :(");
+            }
+        });
+    }
+
+    /* RYAN ALSO NOTE THERE IS A NEW INTERFACE CALLED GETDATALISTENER */
+    public void readData(DatabaseReference ref, final GetDataListener listener) {
+        listener.onStart();
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                listener.onSuccess(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onFailure();
+            }
+        });
     }
 
     public String getFileName(Uri uri) {
@@ -556,7 +608,6 @@ public class MainActivity extends AppCompatActivity {
                 cursor.close();
             }
         }
-
         if (result == null) {
             result = uri.getPath();
             int cut = result.lastIndexOf('/');
@@ -635,12 +686,6 @@ public class MainActivity extends AppCompatActivity {
 
             mediaPlayerWrapper.forcePause();
         }
-
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
@@ -665,12 +710,12 @@ public class MainActivity extends AppCompatActivity {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("TestSongs").child(ID).child("Title").setValue(name);
-        myRef.child("TestSongs").child(ID).child("Url").setValue(url);
-        myRef.child("TestSongs").child(ID).child("Artist").setValue(artist);
-        myRef.child("TestSongs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("TestSongs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("TestSongs").child(ID).child("Album").setValue(album);
+        myRef.child("Songs").child(ID).child("Title").setValue(name);
+        myRef.child("Songs").child(ID).child("Url").setValue(url);
+        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
+        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
+        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
+        myRef.child("Songs").child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -979,7 +1024,7 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.putInt("frag_mode",frag);
         pre_editor.apply();
         super.onDestroy();
-        mediaPlayerWrapper.release();
+        //mediaPlayerWrapper.release();
     }
 
     protected void loadSongs(File path) throws IllegalArgumentException, IllegalAccessException {
@@ -1131,16 +1176,16 @@ public class MainActivity extends AppCompatActivity {
 
         updateTime();
         sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
-        while (!songs.get(0).isDownloaded()){
-            startDownload(songs.get(0).getUrl(),"Song");
-            songs.get(0).setIsDownloaded(true);
+        while (!sorted_songs.get(0).isDownloaded()){
+            startDownload(sorted_songs.get(0).getUrl(),"Song");
+            sorted_songs.get(0).setIsDownloaded(true);
             Song song = songs.get(0);
-            songs.remove(0);
-            songs.add(1,song);
+            sorted_songs.remove(0);
+            sorted_songs.add(1,song);
         }
-        if (!songs.get(1).isDownloaded()){
-            startDownload(songs.get(1).getUrl(),"Song");
-            songs.get(1).setIsDownloaded(true);
+        if (!sorted_songs.get(1).isDownloaded()){
+            startDownload(sorted_songs.get(1).getUrl(),"Song");
+            sorted_songs.get(1).setIsDownloaded(true);
         }
 
         bundle.putParcelableArrayList("songs", sorted_songs);
@@ -1169,24 +1214,15 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
+
+
     public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
         Log.i("check","check");
-        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
-        final Activity activity = this;
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                allPlays = dataSnapshot;
-            }
+        readData();
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
+        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
@@ -1217,17 +1253,17 @@ public class MainActivity extends AppCompatActivity {
 
 
             if (location != null) {
-                Log.i("Raw Songs name: ",location.toString());
+                Log.i("Raw Songs name: ", location.toString());
             }
 
-            if(allPlays.child(ID).exists()) {
+            if (allPlays.child(ID).exists()) {
 
                 location_song.setLatitude(allPlays.child("Plays").child(ID).child("last_play_location").child("latitude").getValue(double.class));
                 location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
-            if(allPlays.child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
-                score+=12;
+            if (allPlays.child(ID).exists() && location != null && location_song.distanceTo(location) < 304.8) {
+                score += 12;
             }
 
             if (allPlays.child(ID).exists()) {
@@ -1235,23 +1271,22 @@ public class MainActivity extends AppCompatActivity {
                 c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
                 Calendar cal = Calendar.getInstance();
-            if (cal.getTimeInMillis()<=c.getTimeInMillis()+604800000){
-                score+=11;
-            }
+                if (cal.getTimeInMillis() <= c.getTimeInMillis() + 604800000) {
+                    score += 11;
+                }
             }
             String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
             if (allPlays.child(ID).exists()) {
-                if (isFriend(user,connections)){score+=10;}
+                if (isFriend(user, connections)) {
+                    score += 10;
+                }
             }
-
-
-
 
             sorted_songs.get(i).setScore(score);
 
-            Log.i("Raw Songs name: ", sorted_songs.get(i).getName()+ " score "+ sorted_songs.get(i).getScore());
-
+            Log.i("Raw Songs name: ", sorted_songs.get(i).getName() + " score " + sorted_songs.get(i).getScore());
         }
+
 
         Collections.sort(sorted_songs, new Comparator<Song>() {
             @Override
@@ -1274,6 +1309,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
     }
 
 
@@ -1281,6 +1317,7 @@ public class MainActivity extends AppCompatActivity {
     public List<Song> getSortedSongs(){
         return sorted_songs;
     }
+
     public void proxyGenerator() {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
@@ -1292,13 +1329,13 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSnapshot.child("Users").child(myUserID).exists()){
                     myProxyName = dataSnapshot.child("Users").child(myUserID).child("Proxy").getValue(String.class);
                 } else {
-                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("proxy").getChildren();
                     for (DataSnapshot proxy : proxies) {
                         //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
                         myProxyName = proxy.getValue(String.class);
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Proxy").setValue(proxy.getValue(String.class));
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Username").setValue(myUserName);
-                        ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
+                        ref.child("proxy").child(proxy.getValue(String.class)).removeValue();
                         break;
                     }
                 }

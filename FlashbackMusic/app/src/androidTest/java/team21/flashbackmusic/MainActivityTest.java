@@ -48,7 +48,7 @@ public class MainActivityTest {
 
     }
 
-    @Test
+    /*@Test
     public void storePlayInfoTest(){
 
         Song song = new Song("hey", "hello", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),  "byte".getBytes(), "album");
@@ -179,5 +179,5 @@ public class MainActivityTest {
         assertEquals(song2.getName(),mainActivity.getActivity().getSortedSongs().get(1).getName());
         assertEquals(song3.getName(),mainActivity.getActivity().getSortedSongs().get(2).getName());
         assertEquals(song4.getName(),mainActivity.getActivity().getSortedSongs().get(3).getName());
-    }
+    }*/
 }
