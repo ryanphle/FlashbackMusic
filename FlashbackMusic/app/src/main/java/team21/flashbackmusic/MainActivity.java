@@ -1239,14 +1239,16 @@ public class MainActivity extends AppCompatActivity {
         updateTime();
         sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
         while (!sorted_songs.get(0).isDownloaded()){
-            startDownload(sorted_songs.get(0).getUrl(),"Song");
+            String type = fileExtension(sorted_songs.get(0).getUrl());
+            startDownload(sorted_songs.get(0).getUrl(),type);
             sorted_songs.get(0).setIsDownloaded(true);
             Song song = songs.get(0);
             sorted_songs.remove(0);
             sorted_songs.add(1,song);
         }
         if (!sorted_songs.get(1).isDownloaded()){
-            startDownload(sorted_songs.get(1).getUrl(),"Song");
+            String type = fileExtension(sorted_songs.get(0).getUrl());
+            startDownload(sorted_songs.get(1).getUrl(),type);
             sorted_songs.get(1).setIsDownloaded(true);
         }
 
