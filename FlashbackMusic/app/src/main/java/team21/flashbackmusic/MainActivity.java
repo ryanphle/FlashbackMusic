@@ -701,7 +701,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startDownload(String url, String download_type){
+
         download_uri = url;
+
+        Log.i("downloading url", url);
 
         /*
         new GetFileName(new GetFileName.GetFileNameListener() {
@@ -733,7 +736,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("downloading type extension", fileextension);
 
 
-            if(fileextension.length() > 6) {
+            if(fileextension.length() >= 5) {
                 contentDownloadManager = new UnknownContentDownload(this);
                 Log.i("downloading type", "Unknown");
 
@@ -1518,5 +1521,35 @@ public class MainActivity extends AppCompatActivity {
         isCustomTime = false;
         time = new Timestamp(System.currentTimeMillis());
     }
+
+    protected String fileExtension(String url){
+
+        String fileextension = url.substring( url.lastIndexOf('.')+1,
+                url.length() );
+        String type;
+
+        Log.i("Song extension",fileextension);
+
+
+        if(fileextension.equals("zip")){
+            type = "Album";
+
+        }
+        else if(fileextension.equals("mp3")||fileextension.equals("m4a")||fileextension.equals("flac")||fileextension.equals("ape")
+                ||fileextension.equals("aac")||fileextension.equals("m4p")||fileextension.equals("wav")||fileextension.equals("wma"))  {
+
+            type = "Song";
+        }
+        else{
+
+            type = "Unknown";
+        }
+
+
+
+        return type;
+    }
+
+
 }
 
