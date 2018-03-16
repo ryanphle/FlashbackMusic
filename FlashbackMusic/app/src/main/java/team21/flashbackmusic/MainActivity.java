@@ -530,6 +530,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+       final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        final GetDataListener dataListener = new GetDataListener() {
+            ProgressDialog mProgressDialog;
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onStart() {
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d("Failing: ", "FAILED");
+            }
+        };
+
+        ref.addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                readData(ref,dataListener);
+            }
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                dataListener.onFailure();
+            }
+        });
+
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
                 (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -540,6 +573,7 @@ public class MainActivity extends AppCompatActivity {
                     permissions.toArray(new String[permissions.size()]),
                     PERMISSION_CONSTANT);
             Log.d("permission","requested");
+            readData(false);
             return;
         }
         else {
@@ -590,9 +624,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void readData(DatabaseReference ref, final GetDataListener listener) {
         listener.onStart();
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.i("test", "test");
                 listener.onSuccess(dataSnapshot);
             }
 
