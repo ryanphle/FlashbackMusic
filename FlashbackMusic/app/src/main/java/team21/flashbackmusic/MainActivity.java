@@ -237,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        readData();
 
         albums = new HashMap<>();
         songs = new ArrayList<>();
@@ -705,12 +706,12 @@ public class MainActivity extends AppCompatActivity {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("TestSongs").child(ID).child("Title").setValue(name);
-        myRef.child("TestSongs").child(ID).child("Url").setValue(url);
-        myRef.child("TestSongs").child(ID).child("Artist").setValue(artist);
-        myRef.child("TestSongs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("TestSongs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("TestSongs").child(ID).child("Album").setValue(album);
+        myRef.child("Songs").child(ID).child("Title").setValue(name);
+        myRef.child("Songs").child(ID).child("Url").setValue(url);
+        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
+        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
+        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
+        myRef.child("Songs").child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -1132,6 +1133,14 @@ public class MainActivity extends AppCompatActivity {
         albums.get(album).addSong(song);
         songs.add(song);
         res_uri.add(uri);
+        if (!sorted_songs.isEmpty() && download_uri!=null){
+            for (Song sorted_song : sorted_songs){
+                if (download_uri.equals(sorted_song.getUrl())){
+                    sorted_song.setUri(uri);
+
+                }
+            }
+        }
 
         random_songs.add(song);
         if (download_uri!=null){
@@ -1211,10 +1220,9 @@ public class MainActivity extends AppCompatActivity {
     public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
         Log.i("check","check");
         readData();
-
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
+        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
@@ -1229,9 +1237,8 @@ public class MainActivity extends AppCompatActivity {
                 String artist = song.child("Artist").getValue(String.class);
                 String album = song.child("Album").getValue(String.class);
                 String url = song.child("Url").getValue(String.class);
-                Uri uri = Uri.parse(song.child("Uri").getValue(String.class));
                 byte[] img = song.child("Img").getValue(String.class).getBytes();
-                sorted_songs.add(new Song(ID,title,artist,uri,img,album,false,url));
+                sorted_songs.add(new Song(ID,title,artist,null,img,album,false,url));
             }
 
         }
@@ -1319,13 +1326,13 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSnapshot.child("Users").child(myUserID).exists()){
                     myProxyName = dataSnapshot.child("Users").child(myUserID).child("Proxy").getValue(String.class);
                 } else {
-                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy").getChildren();
                     for (DataSnapshot proxy : proxies) {
                         //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
                         myProxyName = proxy.getValue(String.class);
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Proxy").setValue(proxy.getValue(String.class));
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Username").setValue(myUserName);
-                        ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
+                        ref.child("Proxy").child(proxy.getValue(String.class)).removeValue();
                         break;
                     }
                 }

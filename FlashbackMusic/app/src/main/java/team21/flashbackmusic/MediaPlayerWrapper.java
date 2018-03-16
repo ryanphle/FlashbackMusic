@@ -40,10 +40,10 @@ public class MediaPlayerWrapper {
             public void onCompletion(MediaPlayer mediaPlayer) {
                 mediaPlayer.reset();
                 index = (index + 1) % getSongs().size();
-                if (getSongs().size()-1>=index+2) {
-                    if (!getSongs().get(index + 2).isDownloaded()) {
-                        activity.startDownload(getSongs().get(index + 2).getUrl(), "Song");
-                        getSongs().get(1).setIsDownloaded(true);
+                if (getSongs().size()-1>=index+1) {
+                    if (!getSongs().get(index + 1).isDownloaded()) {
+                        activity.startDownload(getSongs().get(index + 1).getUrl(), "Song");
+                        getSongs().get(index+1).setIsDownloaded(true);
                     }
                 }
                 loadMedia(getSongs().get(index), mediaPlayer);
@@ -71,6 +71,12 @@ public class MediaPlayerWrapper {
         while (s.getFavorite() == -1) {
             nextSongIdx = (nextSongIdx + 1) % songs.size();
             s = songs.get(nextSongIdx);
+        }
+        if (getSongs().size()-1>=nextSongIdx+1) {
+            if (!getSongs().get(nextSongIdx + 1).isDownloaded()) {
+                activity.startDownload(getSongs().get(nextSongIdx + 1).getUrl(), "Song");
+                getSongs().get(nextSongIdx+1).setIsDownloaded(true);
+            }
         }
 
         index = nextSongIdx;

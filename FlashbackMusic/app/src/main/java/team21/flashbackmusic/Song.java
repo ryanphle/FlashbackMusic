@@ -64,6 +64,7 @@ public class Song implements Parcelable {
         return this.location;
     }
     public String getUrl(){return  this.url;}
+    public void setUri(Uri uri){this.uri=uri;}
 
     public void setLocation(Address location) {
         this.location = location;
