@@ -14,7 +14,7 @@ import java.util.List;
 
 public class MediaPlayerWrapper {
 
-    private MediaPlayer mediaPlayer;
+    public MediaPlayer mediaPlayer;
     private List<Song> songs;
     private Context context;
     private boolean playing;
@@ -76,6 +76,12 @@ public class MediaPlayerWrapper {
             if (!getSongs().get(nextSongIdx + 1).isDownloaded()) {
                 activity.startDownload(getSongs().get(nextSongIdx + 1).getUrl(), "Song");
                 getSongs().get(nextSongIdx+1).setIsDownloaded(true);
+            }
+        }
+        if (getSongs().size()-1>=nextSongIdx+2) {
+            if (!getSongs().get(nextSongIdx + 2).isDownloaded()) {
+                activity.startDownload(getSongs().get(nextSongIdx + 2).getUrl(), "Song");
+                getSongs().get(nextSongIdx+2).setIsDownloaded(true);
             }
         }
 
