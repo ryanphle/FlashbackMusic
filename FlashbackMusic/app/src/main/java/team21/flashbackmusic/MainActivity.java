@@ -103,6 +103,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -184,6 +185,10 @@ public class MainActivity extends AppCompatActivity {
     protected SharedPreferences like_setting;
     protected SharedPreferences.Editor like_editor;
 
+    protected  SharedPreferences download_history;
+    protected SharedPreferences.Editor download_editor;
+
+
     private int null_title_offset = 0;
     protected int album_dislike = 0;
 
@@ -251,6 +256,8 @@ public class MainActivity extends AppCompatActivity {
 
         pre_setting = getSharedPreferences("pre_setting",MODE_PRIVATE);
         pre_editor = pre_setting.edit();
+
+        download_history = getSharedPreferences("download_history", MODE_PRIVATE);
 
         try{
             frag = pre_setting.getInt("frag_mode",0);
@@ -462,6 +469,7 @@ public class MainActivity extends AppCompatActivity {
                     contentDownloadManager.updateList();
 
 
+
                 Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
 
@@ -640,20 +648,43 @@ public class MainActivity extends AppCompatActivity {
 
     public void startDownload(String url, String download_type){
         download_uri = url;
+
+        /*
+        new GetFileName(new GetFileName.GetFileNameListener() {
+            @Override
+            public void onTaskCompleted(String fileName) {
+                Log.i("FileName", "real filename is " + fileName);
+            }
+        }).execute(url);
+        */
+
+
         if(download_type.equals("Song") ) {
 
             contentDownloadManager = new SongDownloadManager(this);
+            //contentDownloadManager = new UnknownContentDownload(this);
             Log.i("downloading type", "Song");
+        }
+        else if(download_type.equals("Album") ) {
+
+            contentDownloadManager = new AlbumDownloadManager(this);
+            //contentDownloadManager = new UnknownContentDownload(this);
+            Log.i("downloading type", "Album");
         }
         else{
 
-            contentDownloadManager = new AlbumDownloadManager(this);
-            Log.i("downloading type", "Album");
+            //contentDownloadManager = new SongDownloadManager(this);
+
+            contentDownloadManager = new UnknownContentDownload(this);
+            Log.i("downloading type", "Unknown");
 
         }
 
         List<String> permissions = new ArrayList<String>();
         contentDownloadManager.download(url);
+
+
+
     }
 
     public void initialFragSetup(int frag) {
@@ -865,8 +896,8 @@ public class MainActivity extends AppCompatActivity {
         addressStr += address.getAddressLine(0) + ", ";
         addressStr += address.getAddressLine(1) + ", ";
         addressStr += address.getAddressLine(2);
-        myRef.child("Songs").child(song.getName()).setValue(thisSong);
-        myRef.child("Songs").child(song.getName()).child("last_play_location_string").setValue(addressStr);
+        myRef.child("Plays").child(song.getName()).setValue(thisSong);
+        myRef.child("Plays").child(song.getName()).child("last_play_location_string").setValue(addressStr);
     }
 
 
@@ -981,7 +1012,57 @@ public class MainActivity extends AppCompatActivity {
         Play play;
         Gson gson = new Gson();
         loadListofFiles(songFiles, sharedPreferences, gson);
+
+        //loadDownloadHistory(sharedPreferences, gson);
     }
+
+    protected void loadDownloadHistory(SharedPreferences sharedPreferences, Gson gson){
+
+
+        Set<String> downloadset = download_history.getStringSet("download_history", null);
+
+
+        Log.i("access download sharedpreference size", ""+ downloadset.size());
+
+        if(downloadset != null) {
+
+            ArrayList<String> downloads = new ArrayList<>(downloadset);
+            ArrayList<Uri> fileuris = new ArrayList<>();
+            File[] download_files = new File[downloads.size()];
+
+            Log.i("access download array size", ""+ downloads.size());
+
+            for (int count = 0; count < downloads.size(); count++) {
+
+                fileuris.add(Uri.parse(downloads.get(count)));
+                download_files[count] = new File((Uri.parse(downloads.get(count))).toString());
+
+                addSong(sharedPreferences,gson,Uri.parse(downloads.get(count)));
+                Log.i("access download sharedpreference", ""+ Uri.parse(downloads.get(count)));
+            }
+
+            /*
+            try {
+
+                loadListofFiles(download_files, sharedPreferences, gson);
+
+                Log.i("access download sharedpreference", ""+ download_files.length);
+                Log.i("access download sharedpreference", "accessing");
+
+            }
+            catch(IllegalAccessException e){
+
+                Log.i("access download sharedpreference", "access failed");
+
+            }
+            */
+
+        }
+
+
+
+    }
+
 
     protected void loadListofFiles(File[] songFiles, SharedPreferences sharedPreferences, Gson gson) throws IllegalAccessException {
         for(int count=0; count < songFiles.length; count++){
@@ -1007,6 +1088,7 @@ public class MainActivity extends AppCompatActivity {
             retriever.setDataSource(this, uri);
         }catch(RuntimeException e){
 
+            Log.i("LoadSongs", "setDataSourcefail"+ uri.toString());
             return;
 
         }
