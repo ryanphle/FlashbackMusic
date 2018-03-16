@@ -106,6 +106,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -189,6 +190,10 @@ public class MainActivity extends AppCompatActivity {
     protected SharedPreferences like_setting;
     protected SharedPreferences.Editor like_editor;
 
+    protected  SharedPreferences download_history;
+    protected SharedPreferences.Editor download_editor;
+
+
     private int null_title_offset = 0;
     protected int album_dislike = 0;
 
@@ -257,6 +262,8 @@ public class MainActivity extends AppCompatActivity {
         pre_setting = getSharedPreferences("pre_setting",MODE_PRIVATE);
         pre_editor = pre_setting.edit();
 
+        download_history = getSharedPreferences("download_history", MODE_PRIVATE);
+
         try{
             frag = pre_setting.getInt("frag_mode",0);
         } catch (NullPointerException e){
@@ -312,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
                     case FLASHBACK_FRAG:
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
-                            mediaPlayerWrapper.setSongs(sorted_songs);
+                            mediaPlayerWrapper.setSongs(songs);
                             mediaPlayerWrapper.setIndex(-1);
                             mediaPlayerWrapper.next();
                             mediaPlayerWrapper.forcePause();
@@ -355,14 +362,14 @@ public class MainActivity extends AppCompatActivity {
                             frag = FLASHBACK_FRAG;
 
                             setFlashbackFragment();
-                            transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
-                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                             mediaPlayerWrapper.setSongs(sorted_songs);
                             mediaPlayerWrapper.setIndex(0);
                             mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
 
                             prevButton.setVisibility(View.INVISIBLE);
                             stopButton.setBackgroundResource(R.drawable.ic_playing);
+                            transaction.add(R.id.main_container, fragmentFlashback, "flash_songs");
+                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                         }
                         frag = FLASHBACK_FRAG;
                         songPlayingFrag = FLASHBACK_FRAG;
@@ -412,8 +419,6 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /* RYAN you can call readData to update allPlays */
-                readData();
 
                 songLoaded = true;
                 if (mediaPlayerWrapper.isPlaying()) {
@@ -608,6 +613,7 @@ public class MainActivity extends AppCompatActivity {
                 cursor.close();
             }
         }
+
         if (result == null) {
             result = uri.getPath();
             int cut = result.lastIndexOf('/');
@@ -686,19 +692,66 @@ public class MainActivity extends AppCompatActivity {
 
             mediaPlayerWrapper.forcePause();
         }
+
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
         download_uri = url;
+
+        /*
+        new GetFileName(new GetFileName.GetFileNameListener() {
+            @Override
+            public void onTaskCompleted(String fileName) {
+                Log.i("FileName", "real filename is " + fileName);
+            }
+        }).execute(url);
+        */
+
+
         if(download_type.equals("Song") ) {
 
             contentDownloadManager = new SongDownloadManager(this);
+            //contentDownloadManager = new UnknownContentDownload(this);
             Log.i("downloading type", "Song");
+        }
+        else if(download_type.equals("Album") ) {
+
+            contentDownloadManager = new AlbumDownloadManager(this);
+            //contentDownloadManager = new UnknownContentDownload(this);
+            Log.i("downloading type", "Album");
         }
         else{
 
-            contentDownloadManager = new AlbumDownloadManager(this);
-            Log.i("downloading type", "Album");
+            String fileextension = url.substring( url.lastIndexOf('.')+1,
+                                                  url.lastIndexOf('?'));
+
+            Log.i("downloading type extension", fileextension);
+
+
+            if(fileextension.length() > 6) {
+                contentDownloadManager = new UnknownContentDownload(this);
+                Log.i("downloading type", "Unknown");
+
+            }
+            else if(fileextension.equals("zip")){
+                contentDownloadManager = new AlbumDownloadManager(this);
+                Log.i("downloading type", "Album");
+
+            }
+            else if(fileextension.equals("mp3")||fileextension.equals("m4a")||fileextension.equals("flac")||fileextension.equals("ape")
+                    ||fileextension.equals("aac")||fileextension.equals("m4p")||fileextension.equals("wav")||fileextension.equals("wma"))  {
+                contentDownloadManager = new SongDownloadManager(this);
+                Log.i("downloading type", "Song");
+            }
+            else{return;}
+
+            //contentDownloadManager = new SongDownloadManager(this);
+
 
         }
 
@@ -710,12 +763,12 @@ public class MainActivity extends AppCompatActivity {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("Songs").child(ID).child("Title").setValue(name);
-        myRef.child("Songs").child(ID).child("Url").setValue(url);
-        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
-        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("Songs").child(ID).child("Album").setValue(album);
+        myRef.child("TestSongs").child(ID).child("Title").setValue(name);
+        myRef.child("TestSongs").child(ID).child("Url").setValue(url);
+        myRef.child("TestSongs").child(ID).child("Artist").setValue(artist);
+        myRef.child("TestSongs").child(ID).child("Uri").setValue(uri.toString());
+        myRef.child("TestSongs").child(ID).child("Img").setValue(img.toString());
+        myRef.child("TestSongs").child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -1069,6 +1122,7 @@ public class MainActivity extends AppCompatActivity {
             retriever.setDataSource(this, uri);
         }catch(RuntimeException e){
 
+            Log.i("LoadSongs", "setDataSourcefail"+ uri.toString());
             return;
 
         }
@@ -1215,14 +1269,13 @@ public class MainActivity extends AppCompatActivity {
     public List<Song> getSongs(){return songs;}
 
 
-
     public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
         Log.i("check","check");
         readData();
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
+        for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
@@ -1241,8 +1294,16 @@ public class MainActivity extends AppCompatActivity {
                 byte[] img = song.child("Img").getValue(String.class).getBytes();
                 sorted_songs.add(new Song(ID,title,artist,uri,img,album,false,url));
             }
-
+            //sorted_song_index++;
         }
+
+        /*
+        if(AnySongsPlayed == false){
+            sorted_songs = new ArrayList<Song>();
+            sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
+            return;
+        }*/
+
         Log.i("Sorted songs", Integer.toString(sorted_songs.size()));
         for (int i = 0; i < sorted_songs.size(); i++) {
 
@@ -1280,6 +1341,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isFriend(user, connections)) {
                     score += 10;
                 }
+
             }
 
             sorted_songs.get(i).setScore(score);
@@ -1309,7 +1371,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
 
 
@@ -1317,7 +1378,6 @@ public class MainActivity extends AppCompatActivity {
     public List<Song> getSortedSongs(){
         return sorted_songs;
     }
-
     public void proxyGenerator() {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 

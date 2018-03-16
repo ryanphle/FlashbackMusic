@@ -59,16 +59,21 @@ public class DownloadFragment extends android.support.v4.app.DialogFragment {
 
                         String type;
 
-                        if(fileextension.equals("zip"))
+                        Log.i("Song extension",fileextension);
+
+
+                        if(fileextension.length() > 6)
+                            type = "Unknown";
+                        else if(fileextension.equals("zip"))
                             type = "Album";
                         else
                             type = "Song";
 
 
+                        Log.i("download type",type);
 
                         ((MainActivity) getActivity()).startDownload(url.getText().toString(), type);
 
-                        Log.i("download type",type);
 
                         // DOWNLOAD
                     }
