@@ -18,7 +18,7 @@ import java.util.List;
  * Created by ryanle on 3/11/18.
  */
 
-public class FriendsTest {
+public class M2FriendsTest {
 
     // Mock Friends List
     private List<Person> friendsList;
@@ -80,13 +80,13 @@ public class FriendsTest {
     public void retrievingFriendsListTest() {
 
         for (String s : friendEmails) {
-            String user = mainActivity.getActivity().HashFunction(s);
+            String user = mainActivity.getActivity().hashFunction(s);
             boolean isFriend = (mainActivity.getActivity().isFriend(user, friendsList));
             assertEquals(true, isFriend );
         }
 
         for (String s : notFriendsEmails) {
-            String user = mainActivity.getActivity().HashFunction(s);
+            String user = mainActivity.getActivity().hashFunction(s);
             boolean isFriend = (mainActivity.getActivity().isFriend(user, friendsList));
             assertEquals(false, isFriend );
         }

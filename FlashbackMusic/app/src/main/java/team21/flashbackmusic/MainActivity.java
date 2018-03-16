@@ -1024,7 +1024,7 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.putInt("frag_mode",frag);
         pre_editor.apply();
         super.onDestroy();
-        mediaPlayerWrapper.release();
+        //mediaPlayerWrapper.release();
     }
 
     protected void loadSongs(File path) throws IllegalArgumentException, IllegalAccessException {
