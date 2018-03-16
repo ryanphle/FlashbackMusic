@@ -748,7 +748,12 @@ public class MainActivity extends AppCompatActivity {
                 contentDownloadManager = new SongDownloadManager(this);
                 Log.i("downloading type", "Song");
             }
-            else{return;}
+            else{
+
+                Log.i("downloading type check fail", fileextension);
+
+                return;
+            }
 
             //contentDownloadManager = new SongDownloadManager(this);
 
