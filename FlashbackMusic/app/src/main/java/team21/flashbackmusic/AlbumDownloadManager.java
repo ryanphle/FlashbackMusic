@@ -105,6 +105,8 @@ public class AlbumDownloadManager implements ContentDownload {
 
         }
 
+        activity.downloadAlbum = false;
+
         Log.i("DownloadZIp","unzip success");
 
 

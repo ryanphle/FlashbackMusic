@@ -79,6 +79,8 @@ public class UnknownContentDownload implements ContentDownload {
 
             if(fileextension.equals("zip")){
 
+                activity.downloadAlbum = true;
+
                 Log.i("file extension checked",""+fileextension);
 
 
@@ -121,6 +123,7 @@ public class UnknownContentDownload implements ContentDownload {
 
                 }
 
+                activity.downloadAlbum = false;
                 Log.i("DownloadZIp","unzip success");
 
             }
