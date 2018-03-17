@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
     protected static int album_index = 0;
     private ArrayList<Song> random_songs;
     private Fragment random_fragmentFlashback;
-    private ArrayList<Song> sorted_songs;
+    protected ArrayList<Song> sorted_songs;
     protected Fragment fragmentFlashback;
 
     protected static final int SONG_FRAG = 0;
@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
     private int currentDay;
     private int currentHour;
     private Calendar calendar;
+    private boolean firstFlash = true;
 
     protected boolean songLoaded;
     protected boolean songListEmpty;
@@ -212,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
     private Path target;
 
     private ContentDownload contentDownloadManager;
+    ProgressDialog mProgressDialog;
 
     private String myUserName;
     private String myUserID;
@@ -357,9 +359,6 @@ public class MainActivity extends AppCompatActivity {
 
                             setFlashbackFragment();
                             //readData();
-                            mediaPlayerWrapper.setSongs(sorted_songs);
-                            mediaPlayerWrapper.setIndex(0);
-                            mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
 
                             prevButton.setVisibility(View.INVISIBLE);
                             stopButton.setBackgroundResource(R.drawable.ic_playing);
@@ -468,12 +467,26 @@ public class MainActivity extends AppCompatActivity {
                     songListEmpty = false;
                     mediaPlayerWrapper = new MediaPlayerWrapper(songs, mainContext,MainActivity.this);
                 }
-                else
+                else {
                     contentDownloadManager.updateList();
+                }
 
 
                 Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
+
+
+                if (songPlayingFrag==FLASHBACK_FRAG && firstFlash) {
+                    firstFlash = false;
+                    mediaPlayerWrapper.setSongs(sorted_songs);
+                    mediaPlayerWrapper.setIndex(0);
+                    mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
+                    if (sorted_songs.size()>1 && !sorted_songs.get(1).isDownloaded()){
+                        startDownload(sorted_songs.get(1).getUrl(),"Song");
+                        sorted_songs.get(1).setIsDownloaded(true);
+                    }
+                }
+
 
 
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
@@ -588,7 +601,6 @@ public class MainActivity extends AppCompatActivity {
     public void readData(final Boolean beforeSetup) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         readData(ref, new GetDataListener() {
-            ProgressDialog mProgressDialog;
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
                 allPlays = dataSnapshot;
@@ -792,7 +804,6 @@ public class MainActivity extends AppCompatActivity {
             initTransaction.hide(fragmentSong);
             initTransaction.hide(fragmentAlbums);
             setFlashbackFragment();
-
 
             prevButton.setVisibility(View.INVISIBLE);
             stopButton.setBackgroundResource(R.drawable.ic_playing);
@@ -1187,6 +1198,14 @@ public class MainActivity extends AppCompatActivity {
         albums.get(album).addSong(song);
         songs.add(song);
         res_uri.add(uri);
+        if (!sorted_songs.isEmpty() && download_uri!=null){
+            for (Song sorted_song : sorted_songs){
+                if (download_uri.equals(sorted_song.getUrl())){
+                    sorted_song.setUri(uri);
+
+                }
+            }
+        }
 
         random_songs.add(song);
         if (download_uri!=null){
@@ -1221,25 +1240,40 @@ public class MainActivity extends AppCompatActivity {
 
     protected void setFlashbackFragment() {
         fragmentFlashback = new FlashbackFragment();
-        Bundle bundle = new Bundle();
+        final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
+        sort_songs(songs, lastLocation);
 
         while (!sorted_songs.get(0).isDownloaded()){
             startDownload(sorted_songs.get(0).getUrl(),"Song");
             sorted_songs.get(0).setIsDownloaded(true);
-            Song song = sorted_songs.get(0);
-            sorted_songs.remove(0);
-            sorted_songs.add(1,song);
         }
-        if (!sorted_songs.get(1).isDownloaded()){
-            startDownload(sorted_songs.get(1).getUrl(),"Song");
-            sorted_songs.get(1).setIsDownloaded(true);
+
+        new Download_Async(this,sorted_songs.get(0).getUrl(), fragmentFlashback).execute();
+
+
+        if (songListEmpty){
+            songListEmpty = false;
+            mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, mainContext,MainActivity.this);
         }
+
+
+        Bundle bundle = new Bundle();
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
+
+
+
+
+
+
+
+
+
+
+
     }
 
     private void updateTime(){
@@ -1264,9 +1298,10 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location) {
         Log.i("check","check");
-        //readData();
+        readData(false);
+
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
@@ -1285,9 +1320,8 @@ public class MainActivity extends AppCompatActivity {
                 String artist = song.child("Artist").getValue(String.class);
                 String album = song.child("Album").getValue(String.class);
                 String url = song.child("Url").getValue(String.class);
-                Uri uri = Uri.parse(song.child("Uri").getValue(String.class));
                 byte[] img = song.child("Img").getValue(String.class).getBytes();
-                sorted_songs.add(new Song(ID,title,artist,uri,img,album,false,url));
+                sorted_songs.add(new Song(ID,title,artist,null,img,album,false,url));
             }
 
         }
@@ -1310,13 +1344,13 @@ public class MainActivity extends AppCompatActivity {
                 location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
-            if(allPlays.child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
+            if(allPlays.child("Plays").child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
                 score+=12;
             }
 
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
                 Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
+                c.setTimeInMillis(allPlays.child("Plays").child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
                 Calendar cal = Calendar.getInstance();
             if (cal.getTimeInMillis()<=c.getTimeInMillis()+604800000){
@@ -1324,7 +1358,7 @@ public class MainActivity extends AppCompatActivity {
             }
             }
             String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
                 if (isFriend(user,connections)){score+=10;}
             }
 
@@ -1360,6 +1394,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
     public List<Song> getSortedSongs(){
         return sorted_songs;
     }
@@ -1375,13 +1410,13 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSnapshot.child("Users").child(myUserID).exists()){
                     myProxyName = dataSnapshot.child("Users").child(myUserID).child("Proxy").getValue(String.class);
                 } else {
-                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy Test").getChildren();
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy").getChildren();
                     for (DataSnapshot proxy : proxies) {
                         //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
                         myProxyName = proxy.getValue(String.class);
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Proxy").setValue(proxy.getValue(String.class));
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Username").setValue(myUserName);
-                        ref.child("Proxy Test").child(proxy.getValue(String.class)).removeValue();
+                        ref.child("Proxy").child(proxy.getValue(String.class)).removeValue();
                         break;
                     }
                 }
