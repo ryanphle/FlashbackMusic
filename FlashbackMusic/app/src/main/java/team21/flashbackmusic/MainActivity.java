@@ -586,7 +586,6 @@ public class MainActivity extends AppCompatActivity {
                     permissions.toArray(new String[permissions.size()]),
                     PERMISSION_CONSTANT);
             Log.d("permission","requested");
-            readData(false);
             return;
         }
         else {
@@ -598,16 +597,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void readData(final Boolean beforeSetup) {
+    public void readData(final boolean beforeSetUp) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         readData(ref, new GetDataListener() {
+            boolean firstSetup = beforeSetUp;
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
                 allPlays = dataSnapshot;
                 Log.i("All plays: ", allPlays.toString());
-                if( beforeSetup){
+                if(firstSetup ){
                     Log.i("setup","setup");
                     setUpFragAndMedia();
+                    firstSetup = false;
                 }
                 if (mProgressDialog != null && mProgressDialog.isShowing()) {
                     mProgressDialog.dismiss();
@@ -691,6 +692,7 @@ public class MainActivity extends AppCompatActivity {
 
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+                    readData(false);
                     setUpFragAndMedia();
 
 
