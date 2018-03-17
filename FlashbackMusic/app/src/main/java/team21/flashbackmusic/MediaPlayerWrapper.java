@@ -78,12 +78,6 @@ public class MediaPlayerWrapper {
                 getSongs().get(nextSongIdx+1).setIsDownloaded(true);
             }
         }
-        if (getSongs().size()-1>=nextSongIdx+2) {
-            if (!getSongs().get(nextSongIdx + 2).isDownloaded()) {
-                activity.startDownload(getSongs().get(nextSongIdx + 2).getUrl(), "Song");
-                getSongs().get(nextSongIdx+2).setIsDownloaded(true);
-            }
-        }
 
         index = nextSongIdx;
         newSong(nextSongIdx);

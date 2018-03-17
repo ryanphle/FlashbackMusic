@@ -1095,7 +1095,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             retriever.setDataSource(this, uri);
         }catch(RuntimeException e){
-
+            Log.i("Loadsongs ", "Setdata source fail " + uri.toString());
             return;
 
         }
@@ -1323,7 +1323,7 @@ public class MainActivity extends AppCompatActivity {
                 score+=11;
             }
             }
-            String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
+            String user = allPlays.child("Plays").child(ID).child("last_play_user").getValue(String.class);
             if (allPlays.child("Plays").child(ID).exists()) {
                 if (isFriend(user,connections)){score+=10;}
             }
