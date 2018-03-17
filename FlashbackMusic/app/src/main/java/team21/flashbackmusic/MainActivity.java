@@ -709,6 +709,12 @@ public class MainActivity extends AppCompatActivity {
                     readData(false);
                     setUpFragAndMedia();
 
+                    proxyGenerator();
+
+                    myUserName = getMyUserName();
+                    myUserID = getMyID();
+                    myUserEmail = getMyEmail();
+
 
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
