@@ -989,7 +989,19 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         }
+
+        @Override
+        public void onPostExecute(String result){
+
+            proxyGenerator();
+
+            myUserName = getMyUserName();
+            myUserID = getMyID();
+            myUserEmail = getMyEmail();
+
+        }
     }
+
 
     public void onStart() {
         super.onStart();
