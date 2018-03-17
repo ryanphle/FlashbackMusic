@@ -1324,7 +1324,7 @@ public class MainActivity extends AppCompatActivity {
         final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, lastLocation);
+        sort_songs(songs, lastLocation, "Songs");
 
         while (!sorted_songs.get(0).isDownloaded()){
             String type = fileExtension(sorted_songs.get(0).getUrl());
@@ -1369,14 +1369,14 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(final List<Song> songs, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location, String Branch) {
         Log.i("check","check");
         //readData(false);
 
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
+        for (DataSnapshot song : allPlays.child(Branch).getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
