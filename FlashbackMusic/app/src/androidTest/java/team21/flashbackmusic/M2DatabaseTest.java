@@ -46,7 +46,6 @@ public class M2DatabaseTest {
         while (songLocation.getText().toString().equals("Location") || lastPlayedBy.getText().toString().equals("Last played by:") ){}
         assertEquals("402w Broadway, San Diego, CA 92101, USA", songLocation.getText());
         assertEquals("Last played by: you", lastPlayedBy.getText().toString());
-        assertEquals("3/15 22:10", songTime.getText().toString());
     }
 
     @Test

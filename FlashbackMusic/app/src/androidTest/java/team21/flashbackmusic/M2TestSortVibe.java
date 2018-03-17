@@ -55,12 +55,17 @@ public class M2TestSortVibe {
         time2 = new Timestamp(TIME2);
         time3 = new Timestamp(TIME3);
 
-        song1 = new Song("1", "title1", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
-                "byte".getBytes(), "album", false, "url");
-        song2 = new Song("2", "title2", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
-                "byte".getBytes(), "album", false, "url");
-        song3 = new Song("3", "title3", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
-                "byte".getBytes(), "album", false, "url");
+        song1 = new Song("-1805827744", "title1", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
+                "byte".getBytes(), "album", true, "url");
+        song2 = new Song("-918324063", "title2", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
+                "byte".getBytes(), "album", true, "url");
+        song3 = new Song("-30820382", "title3", "artist", Uri.parse("android.resource://team21.flashbackmusic/2131558400"),
+                "byte".getBytes(), "album", true, "url");
+
+        mainActivity.getActivity().storeSong("", song1.getName(), "artist", song1.getUri(), song1.getImg(), song1.getAlbum());
+        mainActivity.getActivity().storeSong("", song2.getName(), "artist", song2.getUri(), song2.getImg(), song1.getAlbum());
+        mainActivity.getActivity().storeSong("", song3.getName(), "artist", song3.getUri(), song3.getImg(), song1.getAlbum());
+
 
         mainActivity.getActivity().storePlayInformation(song1, loc1, time1);
         mainActivity.getActivity().storePlayInformation(song2, loc2, time2);
@@ -70,8 +75,8 @@ public class M2TestSortVibe {
     @Test
     public void testSong1First() {
         mainActivity.getActivity().lastLocation = loc1;
-        mainActivity.getActivity().sort_songs(songs, loc1);
         mainActivity.getActivity().setCustomTime(time1);
+        mainActivity.getActivity().sort_songs(songs, loc1);
 
         List<Song> sorted_songs = mainActivity.getActivity().getSortedSongs();
         assertEquals(song1.getName(), sorted_songs.get(0).getName());
@@ -80,16 +85,20 @@ public class M2TestSortVibe {
     @Test
     public void testSong2First() {
         mainActivity.getActivity().lastLocation = loc2;
+        mainActivity.getActivity().setCustomTime(time2);
         mainActivity.getActivity().sort_songs(songs, loc2);
-        mainActivity.getActivity().setCustomTime(time1);
 
         List<Song> sorted_songs = mainActivity.getActivity().getSortedSongs();
         assertEquals(song2.getName(), sorted_songs.get(0).getName());
-
     }
 
     @Test
     public void testSong3First() {
+        mainActivity.getActivity().lastLocation = loc3;
+        mainActivity.getActivity().setCustomTime(time3);
+        mainActivity.getActivity().sort_songs(songs, loc3);
 
+        List<Song> sorted_songs = mainActivity.getActivity().getSortedSongs();
+        assertEquals(song3.getName(), sorted_songs.get(0).getName());
     }
 }
