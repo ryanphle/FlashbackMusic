@@ -101,12 +101,14 @@ import com.google.gson.Gson;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -214,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
     private Path target;
 
     private ContentDownload contentDownloadManager;
+    private Queue<ContentDownload> contentDownloadManagerQueue;
     ProgressDialog mProgressDialog;
 
     private String myUserName;
@@ -236,11 +239,15 @@ public class MainActivity extends AppCompatActivity {
     private boolean isCustomTime;
     private Timestamp time;
 
+    protected boolean downloadAlbum = false;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        contentDownloadManagerQueue = new LinkedList<ContentDownload>();
 
         albums = new HashMap<>();
         songs = new ArrayList<>();
@@ -464,12 +471,12 @@ public class MainActivity extends AppCompatActivity {
                 contentDownloadManager.checkStatus();
 
                 if(songListEmpty){
-                    contentDownloadManager.updateList();
+                    contentDownloadManagerQueue.poll().updateList();
                     songListEmpty = false;
                     mediaPlayerWrapper = new MediaPlayerWrapper(songs, mainContext,MainActivity.this);
                 }
                 else {
-                    contentDownloadManager.updateList();
+                    contentDownloadManagerQueue.poll().updateList();
                 }
 
 
@@ -596,6 +603,11 @@ public class MainActivity extends AppCompatActivity {
             //setUpFragAndMedia();
             readData(true);
         }
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
 
@@ -746,12 +758,6 @@ public class MainActivity extends AppCompatActivity {
 
             mediaPlayerWrapper.forcePause();
         }
-
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
@@ -772,12 +778,19 @@ public class MainActivity extends AppCompatActivity {
 
         if(download_type.equals("Song") ) {
 
+            downloadAlbum = false;
             contentDownloadManager = new SongDownloadManager(this);
+
+            contentDownloadManagerQueue.offer(contentDownloadManager);
+
             Log.i("downloading type", "Song");
         }
         else if(download_type.equals("Album") ) {
 
+            downloadAlbum = true;
             contentDownloadManager = new AlbumDownloadManager(this);
+            contentDownloadManagerQueue.offer(contentDownloadManager);
+
             //contentDownloadManager = new UnknownContentDownload(this);
             Log.i("downloading type", "Album");
         }
@@ -791,17 +804,25 @@ public class MainActivity extends AppCompatActivity {
 
             if(fileextension.length() >= 5) {
                 contentDownloadManager = new UnknownContentDownload(this);
+                contentDownloadManagerQueue.offer(contentDownloadManager);
+
                 Log.i("downloading type", "Unknown");
 
             }
             else if(fileextension.equals("zip")){
+                downloadAlbum = true;
                 contentDownloadManager = new AlbumDownloadManager(this);
+                contentDownloadManagerQueue.offer(contentDownloadManager);
+
                 Log.i("downloading type", "Album");
 
             }
             else if(fileextension.equals("mp3")||fileextension.equals("m4a")||fileextension.equals("flac")||fileextension.equals("ape")
                     ||fileextension.equals("aac")||fileextension.equals("m4p")||fileextension.equals("wav")||fileextension.equals("wma"))  {
+                downloadAlbum = false;
                 contentDownloadManager = new SongDownloadManager(this);
+                contentDownloadManagerQueue.offer(contentDownloadManager);
+
                 Log.i("downloading type", "Song");
             }
             else{
@@ -820,16 +841,16 @@ public class MainActivity extends AppCompatActivity {
         contentDownloadManager.download(url);
     }
 
-    public void storeSong(String url, String name, String artist,Uri uri, byte[] img, String album){
+    public void storeSong(String url, String name, String artist,Uri uri, byte[] img, String album, String branch){
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("Songs").child(ID).child("Title").setValue(name);
-        myRef.child("Songs").child(ID).child("Url").setValue(url);
-        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
-        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("Songs").child(ID).child("Album").setValue(album);
+        myRef.child(branch).child(ID).child("Title").setValue(name);
+        myRef.child(branch).child(ID).child("Url").setValue(url);
+        myRef.child(branch).child(ID).child("Artist").setValue(artist);
+        myRef.child(branch).child(ID).child("Uri").setValue(uri.toString());
+        myRef.child(branch).child(ID).child("Img").setValue(img.toString());
+        myRef.child(branch).child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -1034,13 +1055,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
 
         }
+        if (myList!=null) {
+            address = myList.get(0);
+            song.setLocation(address);
 
-        address = myList.get(0);
-        song.setLocation(address);
-
-        addressStr += address.getAddressLine(0) + ", ";
-        addressStr += address.getAddressLine(1) + ", ";
-        addressStr += address.getAddressLine(2);
+            addressStr += address.getAddressLine(0) + ", ";
+            addressStr += address.getAddressLine(1) + ", ";
+            addressStr += address.getAddressLine(2);
+        } else {
+            addressStr = "Could not find address";
+        }
         myRef.child("Plays").child(song.getID()).setValue(thisSong);
         myRef.child("Plays").child(song.getID()).child("last_play_location_string").setValue(addressStr);
     }
@@ -1138,7 +1162,8 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.putInt("frag_mode",frag);
         pre_editor.apply();
         super.onDestroy();
-        mediaPlayerWrapper.release();
+        if (mediaPlayerWrapper != null)
+            mediaPlayerWrapper.release();
     }
 
     protected void loadSongs(File path) throws IllegalArgumentException, IllegalAccessException {
@@ -1254,7 +1279,7 @@ public class MainActivity extends AppCompatActivity {
         res_uri.add(uri);
         if (!sorted_songs.isEmpty() && download_uri!=null){
             for (Song sorted_song : sorted_songs){
-                if (download_uri.equals(sorted_song.getUrl())){
+                if (download_uri.equals(sorted_song.getUrl()) && title.equals(sorted_song.getName())){
                     sorted_song.setUri(uri);
 
                 }
@@ -1263,8 +1288,10 @@ public class MainActivity extends AppCompatActivity {
 
         random_songs.add(song);
         if (download_uri!=null){
-            storeSong(download_uri, title, artist, uri, img, a.getName());
-            download_uri = null;
+            storeSong(download_uri, title, artist, uri, img, a.getName(), "Songs");
+            if(!downloadAlbum) {
+                download_uri = null;
+            }
         }
     }
 
@@ -1298,7 +1325,7 @@ public class MainActivity extends AppCompatActivity {
         final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, lastLocation);
+        sort_songs(songs, lastLocation, "Songs");
 
         while (!sorted_songs.get(0).isDownloaded()){
             String type = fileExtension(sorted_songs.get(0).getUrl());
@@ -1343,14 +1370,14 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(final List<Song> songs, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location, String branch) {
         Log.i("check","check");
         //readData(false);
 
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
+        for (DataSnapshot song : allPlays.child(branch).getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
@@ -1383,7 +1410,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Raw Songs name: ", location.toString());
             }
 
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
 
                 location_song.setLatitude(allPlays.child("Plays").child(ID).child("last_play_location").child("latitude").getValue(double.class));
                 location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
@@ -1406,7 +1433,6 @@ public class MainActivity extends AppCompatActivity {
             if (allPlays.child("Plays").child(ID).exists()) {
                 if (isFriend(user,connections)){score+=10;}
             }
-
 
 
 
@@ -1488,7 +1514,7 @@ public class MainActivity extends AppCompatActivity {
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).child("last_play_time").exists()) {
+                if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).exists()) {
                     songLocation.setText(dataSnapshot.child("Plays").child(sName).child("last_play_location_string").getValue(String.class));
                     songTime.setText(getCurrentTime((new Timestamp(dataSnapshot.child("Plays").child(sName).child("last_play_time").getValue(long.class)))));
                     String user = dataSnapshot.child("Plays").child(sName).child("last_play_user").getValue(String.class);

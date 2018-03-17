@@ -65,6 +65,11 @@ public class AlbumDownloadManager implements ContentDownload {
 
 
         Uri fileuri = downloadManager.getUriForDownloadedFile(downloadRef);
+
+        Log.i("download file uri",""+fileuri);
+        Log.i("download file ID",""+downloadRef);
+
+
         String fileName = activity.getFileName(fileuri);
         SharedPreferences sharedPreferences = activity.getSharedPreferences("plays", MODE_PRIVATE);
         Gson gson = new Gson();
@@ -99,6 +104,8 @@ public class AlbumDownloadManager implements ContentDownload {
 
 
         }
+
+        activity.downloadAlbum = false;
 
         Log.i("DownloadZIp","unzip success");
 
@@ -158,7 +165,12 @@ public class AlbumDownloadManager implements ContentDownload {
         Log.i("download set destination","storage/emulated/0/Music");
 
 
+
+
         downloadRef = downloadManager.enqueue(request);
+
+        Log.i("download file ID",""+downloadRef+"url"+url);
+
         Log.i("download enque",request.toString());
 
         Toast toast = Toast.makeText(activity, "Download start", Toast.LENGTH_LONG);
