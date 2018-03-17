@@ -1410,6 +1410,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
             sorted_songs.get(i).setScore(score);
 
             Log.i("Raw Songs name: ", sorted_songs.get(i).getName() + " score " + sorted_songs.get(i).getScore());
