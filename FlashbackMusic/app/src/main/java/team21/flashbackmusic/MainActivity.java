@@ -1209,7 +1209,7 @@ public class MainActivity extends AppCompatActivity {
         final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
+        sort_songs(songs, lastLocation);
 
         while (!sorted_songs.get(0).isDownloaded()){
             startDownload(sorted_songs.get(0).getUrl(),"Song");
@@ -1264,7 +1264,7 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location) {
         Log.i("check","check");
         readData(false);
 
@@ -1310,13 +1310,13 @@ public class MainActivity extends AppCompatActivity {
                 location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
-            if(allPlays.child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
+            if(allPlays.child("Plays").child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
                 score+=12;
             }
 
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
                 Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
+                c.setTimeInMillis(allPlays.child("Plays").child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
                 Calendar cal = Calendar.getInstance();
             if (cal.getTimeInMillis()<=c.getTimeInMillis()+604800000){
@@ -1324,7 +1324,7 @@ public class MainActivity extends AppCompatActivity {
             }
             }
             String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
                 if (isFriend(user,connections)){score+=10;}
             }
 
