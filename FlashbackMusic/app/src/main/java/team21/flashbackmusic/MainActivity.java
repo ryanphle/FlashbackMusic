@@ -101,12 +101,14 @@ import com.google.gson.Gson;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -214,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
     private Path target;
 
     private ContentDownload contentDownloadManager;
+    private Queue<ContentDownload> contentDownloadManagerQueue;
     ProgressDialog mProgressDialog;
 
     private String myUserName;
@@ -241,6 +244,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        contentDownloadManagerQueue = new LinkedList<ContentDownload>();
 
         albums = new HashMap<>();
         songs = new ArrayList<>();
@@ -464,12 +469,12 @@ public class MainActivity extends AppCompatActivity {
                 contentDownloadManager.checkStatus();
 
                 if(songListEmpty){
-                    contentDownloadManager.updateList();
+                    contentDownloadManagerQueue.poll().updateList();
                     songListEmpty = false;
                     mediaPlayerWrapper = new MediaPlayerWrapper(songs, mainContext,MainActivity.this);
                 }
                 else {
-                    contentDownloadManager.updateList();
+                    contentDownloadManagerQueue.poll().updateList();
                 }
 
 
@@ -596,6 +601,12 @@ public class MainActivity extends AppCompatActivity {
             //setUpFragAndMedia();
             readData(true);
         }
+
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
 
@@ -747,11 +758,7 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayerWrapper.forcePause();
         }
 
-        proxyGenerator();
 
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
@@ -773,11 +780,16 @@ public class MainActivity extends AppCompatActivity {
         if(download_type.equals("Song") ) {
 
             contentDownloadManager = new SongDownloadManager(this);
+
+            contentDownloadManagerQueue.offer(contentDownloadManager);
+
             Log.i("downloading type", "Song");
         }
         else if(download_type.equals("Album") ) {
 
             contentDownloadManager = new AlbumDownloadManager(this);
+            contentDownloadManagerQueue.offer(contentDownloadManager);
+
             //contentDownloadManager = new UnknownContentDownload(this);
             Log.i("downloading type", "Album");
         }
@@ -791,17 +803,24 @@ public class MainActivity extends AppCompatActivity {
 
             if(fileextension.length() >= 5) {
                 contentDownloadManager = new UnknownContentDownload(this);
+                contentDownloadManagerQueue.offer(contentDownloadManager);
+
                 Log.i("downloading type", "Unknown");
 
             }
             else if(fileextension.equals("zip")){
                 contentDownloadManager = new AlbumDownloadManager(this);
+                contentDownloadManagerQueue.offer(contentDownloadManager);
+
                 Log.i("downloading type", "Album");
 
             }
             else if(fileextension.equals("mp3")||fileextension.equals("m4a")||fileextension.equals("flac")||fileextension.equals("ape")
                     ||fileextension.equals("aac")||fileextension.equals("m4p")||fileextension.equals("wav")||fileextension.equals("wma"))  {
+
                 contentDownloadManager = new SongDownloadManager(this);
+                contentDownloadManagerQueue.offer(contentDownloadManager);
+
                 Log.i("downloading type", "Song");
             }
             else{
@@ -1487,7 +1506,7 @@ public class MainActivity extends AppCompatActivity {
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).child("last_play_time").exists()) {
+                if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).exists()) {
                     songLocation.setText(dataSnapshot.child("Plays").child(sName).child("last_play_location_string").getValue(String.class));
                     songTime.setText(getCurrentTime((new Timestamp(dataSnapshot.child("Plays").child(sName).child("last_play_time").getValue(long.class)))));
                     String user = dataSnapshot.child("Plays").child(sName).child("last_play_user").getValue(String.class);
