@@ -1175,7 +1175,7 @@ public class MainActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
 
         updateTime();
-        sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
+        sort_songs(songs, lastLocation);
         while (!sorted_songs.get(0).isDownloaded()){
             startDownload(sorted_songs.get(0).getUrl(),"Song");
             sorted_songs.get(0).setIsDownloaded(true);
@@ -1216,7 +1216,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location) {
         Log.i("check","check");
         readData();
 
@@ -1237,9 +1237,8 @@ public class MainActivity extends AppCompatActivity {
                 String artist = song.child("Artist").getValue(String.class);
                 String album = song.child("Album").getValue(String.class);
                 String url = song.child("Url").getValue(String.class);
-                Uri uri = Uri.parse(song.child("Uri").getValue(String.class));
                 byte[] img = song.child("Img").getValue(String.class).getBytes();
-                sorted_songs.add(new Song(ID,title,artist,uri,img,album,false,url));
+                sorted_songs.add(new Song(ID,title,artist,null,img,album,false,url));
             }
 
         }
@@ -1256,26 +1255,26 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Raw Songs name: ", location.toString());
             }
 
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
 
                 location_song.setLatitude(allPlays.child("Plays").child(ID).child("last_play_location").child("latitude").getValue(double.class));
                 location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
-            if (allPlays.child(ID).exists() && location != null && location_song.distanceTo(location) < 304.8) {
+            if (allPlays.child("Plays").child(ID).exists() && location != null && location_song.distanceTo(location) < 304.8) {
                 score += 12;
             }
 
-            if (allPlays.child(ID).exists()) {
-                Calendar c = Calendar.getInstance();
+            if (allPlays.child("Plays").child(ID).exists()) {
+                /*Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-                Calendar cal = Calendar.getInstance();
-                if (cal.getTimeInMillis() <= c.getTimeInMillis() + 604800000) {
+                Calendar cal = Calendar.getInstance();*/
+                if (getTime().getTime() <= getTime().getTime() + 604800000) {
                     score += 11;
                 }
             }
-            String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
+            String user = allPlays.child("Plays").child(ID).child("last_play_user").getValue(String.class);
             if (allPlays.child(ID).exists()) {
                 if (isFriend(user, connections)) {
                     score += 10;
