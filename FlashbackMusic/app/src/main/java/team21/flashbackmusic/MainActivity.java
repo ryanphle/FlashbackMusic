@@ -820,16 +820,16 @@ public class MainActivity extends AppCompatActivity {
         contentDownloadManager.download(url);
     }
 
-    public void storeSong(String url, String name, String artist,Uri uri, byte[] img, String album){
+    public void storeSong(String url, String name, String artist,Uri uri, byte[] img, String album, String branch){
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("Songs").child(ID).child("Title").setValue(name);
-        myRef.child("Songs").child(ID).child("Url").setValue(url);
-        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
-        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("Songs").child(ID).child("Album").setValue(album);
+        myRef.child(branch).child(ID).child("Title").setValue(name);
+        myRef.child(branch).child(ID).child("Url").setValue(url);
+        myRef.child(branch).child(ID).child("Artist").setValue(artist);
+        myRef.child(branch).child(ID).child("Uri").setValue(uri.toString());
+        myRef.child(branch).child(ID).child("Img").setValue(img.toString());
+        myRef.child(branch).child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -1138,7 +1138,8 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.putInt("frag_mode",frag);
         pre_editor.apply();
         super.onDestroy();
-        mediaPlayerWrapper.release();
+        if (mediaPlayerWrapper != null)
+            mediaPlayerWrapper.release();
     }
 
     protected void loadSongs(File path) throws IllegalArgumentException, IllegalAccessException {
@@ -1263,7 +1264,7 @@ public class MainActivity extends AppCompatActivity {
 
         random_songs.add(song);
         if (download_uri!=null){
-            storeSong(download_uri, title, artist, uri, img, a.getName());
+            storeSong(download_uri, title, artist, uri, img, a.getName(), "Songs");
             download_uri = null;
         }
     }
@@ -1298,7 +1299,7 @@ public class MainActivity extends AppCompatActivity {
         final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, lastLocation);
+        sort_songs(songs, lastLocation, "Songs");
 
         while (!sorted_songs.get(0).isDownloaded()){
             String type = fileExtension(sorted_songs.get(0).getUrl());
@@ -1343,14 +1344,14 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(final List<Song> songs, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location, String branch) {
         Log.i("check","check");
         //readData(false);
 
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
+        for (DataSnapshot song : allPlays.child(branch).getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
