@@ -708,6 +708,10 @@ public class MainActivity extends AppCompatActivity {
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
                     readData(false);
                     setUpFragAndMedia();
+                    proxyGenerator();
+                    myUserName = getMyUserName();
+                    myUserID = getMyID();
+                    myUserEmail = getMyEmail();
 
 
                     // permission was granted, yay! Do the
