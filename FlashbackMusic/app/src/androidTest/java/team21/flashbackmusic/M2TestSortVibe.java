@@ -70,7 +70,7 @@ public class M2TestSortVibe {
     @Test
     public void testSong1First() {
         mainActivity.getActivity().lastLocation = loc1;
-        mainActivity.getActivity().sort_songs(songs, "", 0, 0, loc1);
+        mainActivity.getActivity().sort_songs(songs, loc1);
         mainActivity.getActivity().setCustomTime(time1);
 
         List<Song> sorted_songs = mainActivity.getActivity().getSortedSongs();
@@ -79,6 +79,12 @@ public class M2TestSortVibe {
 
     @Test
     public void testSong2First() {
+        mainActivity.getActivity().lastLocation = loc2;
+        mainActivity.getActivity().sort_songs(songs, loc2);
+        mainActivity.getActivity().setCustomTime(time1);
+
+        List<Song> sorted_songs = mainActivity.getActivity().getSortedSongs();
+        assertEquals(song2.getName(), sorted_songs.get(0).getName());
 
     }
 
