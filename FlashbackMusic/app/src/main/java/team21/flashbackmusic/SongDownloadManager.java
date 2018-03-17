@@ -83,6 +83,8 @@ class SongDownloadManager implements ContentDownload {
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, URLUtil.guessFileName(url, null,null));
 
         Log.i("download set destination","storage/emulated/0/Music");
+        Log.i("download guess file name",URLUtil.guessFileName(url, null,null));
+
 
         downloadRef = downloadManager.enqueue(request);
         Log.i("download enque",request.toString());
