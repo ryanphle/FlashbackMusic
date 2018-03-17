@@ -236,6 +236,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isCustomTime;
     private Timestamp time;
 
+    protected boolean downloadAlbum = false;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -596,6 +598,11 @@ public class MainActivity extends AppCompatActivity {
             //setUpFragAndMedia();
             readData(true);
         }
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
 
@@ -746,17 +753,21 @@ public class MainActivity extends AppCompatActivity {
 
             mediaPlayerWrapper.forcePause();
         }
-
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
 
         download_uri = url;
+
+        try{
+            url.toString();
+        }
+        catch(NullPointerException e){
+
+            Log.i("downloading url", " is null");
+            return;
+
+        }
 
         Log.i("downloading url", url);
 
@@ -772,11 +783,13 @@ public class MainActivity extends AppCompatActivity {
 
         if(download_type.equals("Song") ) {
 
+            downloadAlbum = false;
             contentDownloadManager = new SongDownloadManager(this);
             Log.i("downloading type", "Song");
         }
         else if(download_type.equals("Album") ) {
 
+            downloadAlbum = true;
             contentDownloadManager = new AlbumDownloadManager(this);
             //contentDownloadManager = new UnknownContentDownload(this);
             Log.i("downloading type", "Album");
@@ -795,12 +808,14 @@ public class MainActivity extends AppCompatActivity {
 
             }
             else if(fileextension.equals("zip")){
+                downloadAlbum = true;
                 contentDownloadManager = new AlbumDownloadManager(this);
                 Log.i("downloading type", "Album");
 
             }
             else if(fileextension.equals("mp3")||fileextension.equals("m4a")||fileextension.equals("flac")||fileextension.equals("ape")
                     ||fileextension.equals("aac")||fileextension.equals("m4p")||fileextension.equals("wav")||fileextension.equals("wma"))  {
+                downloadAlbum = false;
                 contentDownloadManager = new SongDownloadManager(this);
                 Log.i("downloading type", "Song");
             }
@@ -1034,13 +1049,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
 
         }
+        if (myList!=null) {
+            address = myList.get(0);
+            song.setLocation(address);
 
-        address = myList.get(0);
-        song.setLocation(address);
-
-        addressStr += address.getAddressLine(0) + ", ";
-        addressStr += address.getAddressLine(1) + ", ";
-        addressStr += address.getAddressLine(2);
+            addressStr += address.getAddressLine(0) + ", ";
+            addressStr += address.getAddressLine(1) + ", ";
+            addressStr += address.getAddressLine(2);
+        } else {
+            addressStr = "Could not find address";
+        }
         myRef.child("Plays").child(song.getID()).setValue(thisSong);
         myRef.child("Plays").child(song.getID()).child("last_play_location_string").setValue(addressStr);
     }
@@ -1254,7 +1272,7 @@ public class MainActivity extends AppCompatActivity {
         res_uri.add(uri);
         if (!sorted_songs.isEmpty() && download_uri!=null){
             for (Song sorted_song : sorted_songs){
-                if (download_uri.equals(sorted_song.getUrl())){
+                if (download_uri.equals(sorted_song.getUrl()) && title.equals(sorted_song.getName())){
                     sorted_song.setUri(uri);
 
                 }
@@ -1264,7 +1282,9 @@ public class MainActivity extends AppCompatActivity {
         random_songs.add(song);
         if (download_uri!=null){
             storeSong(download_uri, title, artist, uri, img, a.getName());
-            download_uri = null;
+            if(!downloadAlbum) {
+                download_uri = null;
+            }
         }
     }
 
