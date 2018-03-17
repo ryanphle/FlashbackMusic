@@ -70,35 +70,45 @@
                             android:layout_height="wrap_content"
                             android:text="Title"
                             android:layout_gravity="left"
-                            android:textSize="20dp"/>
+                            android:textSize="20dp"
+                            android:singleLine="true"
+                            android:ellipsize="end"/>
                         <TextView
                             android:id="@+id/big_song_artist"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Artist"
                             android:layout_gravity="left"
-                            android:textSize="15dp" />
+                            android:textSize="15dp"
+                            android:singleLine="true"
+                            android:ellipsize="end"/>
                         <TextView
                             android:id="@+id/big_song_location"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Location"
                             android:textSize="15dp"
-                            android:layout_gravity="left"/>
+                            android:layout_gravity="left"
+                            android:singleLine="true"
+                            android:ellipsize="end"/>
                         <TextView
                             android:id="@+id/big_song_time"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Time"
                             android:textSize="15dp"
-                            android:layout_gravity="left"/>
+                            android:layout_gravity="left"
+                            android:singleLine="true"
+                            android:ellipsize="end"/>
                         <TextView
                             android:id="@+id/last_played_by"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Last played by:"
                             android:textSize="15dp"
-                            android:layout_gravity="left"/>
+                            android:layout_gravity="left"
+                            android:singleLine="true"
+                            android:ellipsize="end"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

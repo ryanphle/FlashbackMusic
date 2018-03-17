@@ -596,6 +596,11 @@ public class MainActivity extends AppCompatActivity {
             //setUpFragAndMedia();
             readData(true);
         }
+        proxyGenerator();
+
+        myUserName = getMyUserName();
+        myUserID = getMyID();
+        myUserEmail = getMyEmail();
     }
 
 
@@ -746,12 +751,6 @@ public class MainActivity extends AppCompatActivity {
 
             mediaPlayerWrapper.forcePause();
         }
-
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
     }
 
     public void startDownload(String url, String download_type){
@@ -1035,12 +1034,18 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        address = myList.get(0);
-        song.setLocation(address);
+        if (myList!=null) {
 
-        addressStr += address.getAddressLine(0) + ", ";
-        addressStr += address.getAddressLine(1) + ", ";
-        addressStr += address.getAddressLine(2);
+            address = myList.get(0);
+            song.setLocation(address);
+
+            addressStr += address.getAddressLine(0) + ", ";
+            addressStr += address.getAddressLine(1) + ", ";
+            addressStr += address.getAddressLine(2);
+        } else {
+            addressStr = "Could not find address";
+        }
+
         myRef.child("Plays").child(song.getID()).setValue(thisSong);
         myRef.child("Plays").child(song.getID()).child("last_play_location_string").setValue(addressStr);
     }
@@ -1298,7 +1303,7 @@ public class MainActivity extends AppCompatActivity {
         final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, lastLocation);
+        sort_songs(songs, lastLocation, "Songs");
 
         while (!sorted_songs.get(0).isDownloaded()){
             String type = fileExtension(sorted_songs.get(0).getUrl());
@@ -1343,14 +1348,14 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-    public void sort_songs(final List<Song> songs, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location, String Branch) {
         Log.i("check","check");
         //readData(false);
 
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
+        for (DataSnapshot song : allPlays.child(Branch).getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
