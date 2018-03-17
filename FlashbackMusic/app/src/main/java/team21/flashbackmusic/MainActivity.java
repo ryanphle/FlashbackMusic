@@ -606,6 +606,7 @@ public class MainActivity extends AppCompatActivity {
                 allPlays = dataSnapshot;
                 Log.i("All plays: ", allPlays.toString());
                 if( beforeSetup){
+                    Log.i("setup","setup");
                     setUpFragAndMedia();
                 }
                 if (mProgressDialog != null && mProgressDialog.isShowing()) {
@@ -1271,9 +1272,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-
     }
 
     private void updateTime(){
@@ -1300,7 +1298,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void sort_songs(final List<Song> songs, final Location location) {
         Log.i("check","check");
-        readData(false);
+        //readData(false);
 
 
         sorted_songs = new ArrayList<>();
