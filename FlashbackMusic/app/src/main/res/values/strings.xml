@@ -2,9 +2,9 @@
     <string name="app_name">FlashbackMusic</string>
     <string name="title_songs">Songs</string>
     <string name="title_albums">Albums</string>
-    <string name="title_flashback">Flashback</string>
+    <string name="title_flashback">Vibe Music</string>
     <string name="song_page_title">Songs</string>
-    <string name="flashback_page_title">Flashback</string>
+    <string name="flashback_page_title">Vibe Mode</string>
     <string name="album_page_title">Albums</string>
     <string name="download_prompt">Input the URL of the song/album you want to download: </string>
     <string name="download">Download</string>

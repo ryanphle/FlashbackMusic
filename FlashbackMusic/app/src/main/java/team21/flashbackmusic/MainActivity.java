@@ -6,6 +6,7 @@ import android.app.DownloadManager;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -163,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
     protected static int album_index = 0;
     private ArrayList<Song> random_songs;
     private Fragment random_fragmentFlashback;
-    private ArrayList<Song> sorted_songs;
+    protected ArrayList<Song> sorted_songs;
     protected Fragment fragmentFlashback;
 
     protected static final int SONG_FRAG = 0;
@@ -174,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
     private int currentDay;
     private int currentHour;
     private Calendar calendar;
+    private boolean firstFlash = true;
 
     protected boolean songLoaded;
     protected boolean songListEmpty;
@@ -189,10 +191,6 @@ public class MainActivity extends AppCompatActivity {
     //like dislike status
     protected SharedPreferences like_setting;
     protected SharedPreferences.Editor like_editor;
-
-    protected  SharedPreferences download_history;
-    protected SharedPreferences.Editor download_editor;
-
 
     private int null_title_offset = 0;
     protected int album_dislike = 0;
@@ -216,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
     private Path target;
 
     private ContentDownload contentDownloadManager;
+    ProgressDialog mProgressDialog;
 
     private String myUserName;
     private String myUserID;
@@ -261,8 +260,6 @@ public class MainActivity extends AppCompatActivity {
 
         pre_setting = getSharedPreferences("pre_setting",MODE_PRIVATE);
         pre_editor = pre_setting.edit();
-
-        download_history = getSharedPreferences("download_history", MODE_PRIVATE);
 
         try{
             frag = pre_setting.getInt("frag_mode",0);
@@ -319,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                     case FLASHBACK_FRAG:
                         if(item.getItemId() != R.id.navigation_flashback) {
                             flash_index = 0;
-                            mediaPlayerWrapper.setSongs(songs);
+                            mediaPlayerWrapper.setSongs(sorted_songs);
                             mediaPlayerWrapper.setIndex(-1);
                             mediaPlayerWrapper.next();
                             mediaPlayerWrapper.forcePause();
@@ -362,9 +359,10 @@ public class MainActivity extends AppCompatActivity {
                             frag = FLASHBACK_FRAG;
 
                             setFlashbackFragment();
-                            mediaPlayerWrapper.setSongs(sorted_songs);
-                            mediaPlayerWrapper.setIndex(0);
-                            mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
+                            //TODO: Uncomment if broken
+                            //mediaPlayerWrapper.setSongs(sorted_songs);
+                            //mediaPlayerWrapper.setIndex(0);
+                            //mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
 
                             prevButton.setVisibility(View.INVISIBLE);
                             stopButton.setBackgroundResource(R.drawable.ic_playing);
@@ -470,12 +468,27 @@ public class MainActivity extends AppCompatActivity {
                     songListEmpty = false;
                     mediaPlayerWrapper = new MediaPlayerWrapper(songs, mainContext,MainActivity.this);
                 }
-                else
+                else {
                     contentDownloadManager.updateList();
+                }
 
 
                 Toast toast = Toast.makeText(MainActivity.this, contentDownloadManager.checkType()+" Download Complete", Toast.LENGTH_LONG);
                 toast.show();
+
+
+                if (songPlayingFrag==FLASHBACK_FRAG && firstFlash) {
+                    firstFlash = false;
+                    mediaPlayerWrapper.setSongs(sorted_songs);
+                    mediaPlayerWrapper.setIndex(0);
+                    mediaPlayerWrapper.newSong(mediaPlayerWrapper.getIndex());
+                    if (sorted_songs.size()>1 && !sorted_songs.get(1).isDownloaded()){
+                        String type = fileExtension(sorted_songs.get(1).getUrl());
+                        startDownload(sorted_songs.get(1).getUrl(),type);
+                        sorted_songs.get(1).setIsDownloaded(true);
+                    }
+                }
+
 
 
                 SongsFragment fragmentSong = (SongsFragment) getSupportFragmentManager().findFragmentByTag("songs");
@@ -532,8 +545,38 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        /* RYAN */
-        readData();
+       final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        final GetDataListener dataListener = new GetDataListener() {
+            ProgressDialog mProgressDialog;
+            @Override
+            public void onSuccess(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onStart() {
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d("Failing: ", "FAILED");
+            }
+        };
+
+        ref.addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                readData(ref,dataListener);
+            }
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                dataListener.onFailure();
+            }
+        });
+
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -550,47 +593,57 @@ public class MainActivity extends AppCompatActivity {
         else {
             lastLocation = locationManager.getLastKnownLocation(locationProvider);
             locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
-            setUpFragAndMedia();
+            //setUpFragAndMedia();
+            readData(true);
         }
-
-        readData();
-
-        proxyGenerator();
-
-        myUserName = getMyUserName();
-        myUserID = getMyID();
-        myUserEmail = getMyEmail();
-
     }
 
-    /* RYAN calls the readdata below which is where the magic happens*/
-    public void readData() {
+
+    public void readData(final boolean beforeSetUp) {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         readData(ref, new GetDataListener() {
+            boolean firstSetup = beforeSetUp;
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
                 allPlays = dataSnapshot;
                 Log.i("All plays: ", allPlays.toString());
+                if(firstSetup ){
+                    Log.i("setup","setup");
+                    setUpFragAndMedia();
+                    firstSetup = false;
+                }
+                if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                    mProgressDialog.dismiss();
+                }
             }
 
             @Override
             public void onStart() {
-                Log.d("ON START", "Started");
+                Log.d("Starting: ", "STARTED");
+                if (mProgressDialog == null) {
+                    mProgressDialog = new ProgressDialog((Activity)MainActivity.this);
+                    mProgressDialog.setMessage("loading");
+                    mProgressDialog.setIndeterminate(true);
+                }
+
+                mProgressDialog.show();
             }
 
             @Override
             public void onFailure() {
-                Log.d("ON FAIL", "Failed fam :(");
+                Log.d("Failing: ", "FAILED");
             }
         });
     }
 
-    /* RYAN ALSO NOTE THERE IS A NEW INTERFACE CALLED GETDATALISTENER */
+
+
     public void readData(DatabaseReference ref, final GetDataListener listener) {
         listener.onStart();
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.i("test", "test");
                 listener.onSuccess(dataSnapshot);
             }
 
@@ -641,6 +694,7 @@ public class MainActivity extends AppCompatActivity {
 
                     lastLocation = locationManager.getLastKnownLocation(locationProvider);
                     locationManager.requestLocationUpdates(locationProvider,0,200,locationListener);
+                    readData(false);
                     setUpFragAndMedia();
 
 
@@ -719,7 +773,6 @@ public class MainActivity extends AppCompatActivity {
         if(download_type.equals("Song") ) {
 
             contentDownloadManager = new SongDownloadManager(this);
-            //contentDownloadManager = new UnknownContentDownload(this);
             Log.i("downloading type", "Song");
         }
         else if(download_type.equals("Album") ) {
@@ -771,12 +824,12 @@ public class MainActivity extends AppCompatActivity {
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference();
         String ID = hashFunction(name + artist);
 
-        myRef.child("TestSongs").child(ID).child("Title").setValue(name);
-        myRef.child("TestSongs").child(ID).child("Url").setValue(url);
-        myRef.child("TestSongs").child(ID).child("Artist").setValue(artist);
-        myRef.child("TestSongs").child(ID).child("Uri").setValue(uri.toString());
-        myRef.child("TestSongs").child(ID).child("Img").setValue(img.toString());
-        myRef.child("TestSongs").child(ID).child("Album").setValue(album);
+        myRef.child("Songs").child(ID).child("Title").setValue(name);
+        myRef.child("Songs").child(ID).child("Url").setValue(url);
+        myRef.child("Songs").child(ID).child("Artist").setValue(artist);
+        myRef.child("Songs").child(ID).child("Uri").setValue(uri.toString());
+        myRef.child("Songs").child(ID).child("Img").setValue(img.toString());
+        myRef.child("Songs").child(ID).child("Album").setValue(album);
     }
 
     public void initialFragSetup(int frag) {
@@ -1085,7 +1138,7 @@ public class MainActivity extends AppCompatActivity {
         pre_editor.putInt("frag_mode",frag);
         pre_editor.apply();
         super.onDestroy();
-        //mediaPlayerWrapper.release();
+        mediaPlayerWrapper.release();
     }
 
     protected void loadSongs(File path) throws IllegalArgumentException, IllegalAccessException {
@@ -1199,6 +1252,14 @@ public class MainActivity extends AppCompatActivity {
         albums.get(album).addSong(song);
         songs.add(song);
         res_uri.add(uri);
+        if (!sorted_songs.isEmpty() && download_uri!=null){
+            for (Song sorted_song : sorted_songs){
+                if (download_uri.equals(sorted_song.getUrl())){
+                    sorted_song.setUri(uri);
+
+                }
+            }
+        }
 
         random_songs.add(song);
         if (download_uri!=null){
@@ -1234,23 +1295,27 @@ public class MainActivity extends AppCompatActivity {
     protected void setFlashbackFragment() {
 
         fragmentFlashback = new FlashbackFragment();
-        Bundle bundle = new Bundle();
+        final Context mainContext = this.getApplicationContext();
 
         updateTime();
-        sort_songs(songs, "plays",currentDay,currentHour, lastLocation);
+        sort_songs(songs, lastLocation);
+
         while (!sorted_songs.get(0).isDownloaded()){
             String type = fileExtension(sorted_songs.get(0).getUrl());
             startDownload(sorted_songs.get(0).getUrl(),type);
             sorted_songs.get(0).setIsDownloaded(true);
-            Song song = songs.get(0);
-            sorted_songs.remove(0);
-            sorted_songs.add(1,song);
         }
-        if (!sorted_songs.get(1).isDownloaded()){
-            String type = fileExtension(sorted_songs.get(0).getUrl());
-            startDownload(sorted_songs.get(1).getUrl(),type);
-            sorted_songs.get(1).setIsDownloaded(true);
+
+        new Download_Async(this,sorted_songs.get(0).getUrl(), fragmentFlashback).execute();
+
+
+        if (songListEmpty){
+            songListEmpty = false;
+            mediaPlayerWrapper = new MediaPlayerWrapper(sorted_songs, mainContext,MainActivity.this);
         }
+
+
+        Bundle bundle = new Bundle();
 
         bundle.putParcelableArrayList("songs", sorted_songs);
         fragmentFlashback.setArguments(bundle);
@@ -1278,14 +1343,14 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Song> getSongs(){return songs;}
 
-
-    public void sort_songs(final List<Song> songs, String prefName, final int currentDay, final int currentHour, final Location location) {
+    public void sort_songs(final List<Song> songs, final Location location) {
         Log.i("check","check");
-        readData();
+        //readData(false);
+
 
         sorted_songs = new ArrayList<>();
         Location location_song = new Location(lastLocation);
-        for (DataSnapshot song : allPlays.child("TestSongs").getChildren()){
+        for (DataSnapshot song : allPlays.child("Songs").getChildren()){
             boolean added = false;
             String ID = song.getKey();
             for (Song existingSong : songs){
@@ -1300,20 +1365,11 @@ public class MainActivity extends AppCompatActivity {
                 String artist = song.child("Artist").getValue(String.class);
                 String album = song.child("Album").getValue(String.class);
                 String url = song.child("Url").getValue(String.class);
-                Uri uri = Uri.parse(song.child("Uri").getValue(String.class));
                 byte[] img = song.child("Img").getValue(String.class).getBytes();
-                sorted_songs.add(new Song(ID,title,artist,uri,img,album,false,url));
+                sorted_songs.add(new Song(ID,title,artist,null,img,album,false,url));
             }
-            //sorted_song_index++;
+
         }
-
-        /*
-        if(AnySongsPlayed == false){
-            sorted_songs = new ArrayList<Song>();
-            sorted_songs.add(new Song("No songs played ever before"," Please play some songs", null, default_album,"and come back later"));
-            return;
-        }*/
-
         Log.i("Sorted songs", Integer.toString(sorted_songs.size()));
         for (int i = 0; i < sorted_songs.size(); i++) {
 
@@ -1333,13 +1389,13 @@ public class MainActivity extends AppCompatActivity {
                 location_song.setLongitude(allPlays.child("Plays").child(ID).child("last_play_location").child("longitude").getValue(double.class));
             }
 
-            if (allPlays.child(ID).exists() && location != null && location_song.distanceTo(location) < 304.8) {
-                score += 12;
+            if(allPlays.child("Plays").child(ID).exists() && location != null && location_song.distanceTo(location)  < 304.8 ){
+                score+=12;
             }
 
-            if (allPlays.child(ID).exists()) {
+            if (allPlays.child("Plays").child(ID).exists()) {
                 Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(allPlays.child(ID).child("last_play_time").getValue(long.class));
+                c.setTimeInMillis(allPlays.child("Plays").child(ID).child("last_play_time").getValue(long.class));
                 c.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
                 Calendar cal = Calendar.getInstance();
                 if (cal.getTimeInMillis() <= c.getTimeInMillis() + 604800000) {
@@ -1347,12 +1403,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             String user = allPlays.child(ID).child("last_play_user").getValue(String.class);
-            if (allPlays.child(ID).exists()) {
-                if (isFriend(user, connections)) {
-                    score += 10;
-                }
-
+            if (allPlays.child("Plays").child(ID).exists()) {
+                if (isFriend(user,connections)){score+=10;}
             }
+
+
+
 
             sorted_songs.get(i).setScore(score);
 
@@ -1399,13 +1455,13 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSnapshot.child("Users").child(myUserID).exists()){
                     myProxyName = dataSnapshot.child("Users").child(myUserID).child("Proxy").getValue(String.class);
                 } else {
-                    Iterable<DataSnapshot> proxies = dataSnapshot.child("proxy").getChildren();
+                    Iterable<DataSnapshot> proxies = dataSnapshot.child("Proxy").getChildren();
                     for (DataSnapshot proxy : proxies) {
                         //FirebaseDatabase.getInstance().getReference().child("Users").child(userID).child("Proxy").setValue(proxy.getValue(String.class));
                         myProxyName = proxy.getValue(String.class);
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Proxy").setValue(proxy.getValue(String.class));
                         FirebaseDatabase.getInstance().getReference().child("Users").child(myUserID).child("Username").setValue(myUserName);
-                        ref.child("proxy").child(proxy.getValue(String.class)).removeValue();
+                        ref.child("Proxy").child(proxy.getValue(String.class)).removeValue();
                         break;
                     }
                 }
@@ -1432,7 +1488,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child("Plays").exists() && dataSnapshot.child("Plays").child(sName).child("last_play_time").exists()) {
-                    allPlays = dataSnapshot;
                     songLocation.setText(dataSnapshot.child("Plays").child(sName).child("last_play_location_string").getValue(String.class));
                     songTime.setText(getCurrentTime((new Timestamp(dataSnapshot.child("Plays").child(sName).child("last_play_time").getValue(long.class)))));
                     String user = dataSnapshot.child("Plays").child(sName).child("last_play_user").getValue(String.class);
