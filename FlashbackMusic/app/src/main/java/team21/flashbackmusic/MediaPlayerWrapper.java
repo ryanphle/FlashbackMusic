@@ -42,7 +42,8 @@ public class MediaPlayerWrapper {
                 index = (index + 1) % getSongs().size();
                 if (getSongs().size()-1>=index+1) {
                     if (!getSongs().get(index + 1).isDownloaded()) {
-                        activity.startDownload(getSongs().get(index + 1).getUrl(), "Song");
+                        String type = activity.fileExtension(getSongs().get(index + 1).getUrl());
+                        activity.startDownload(getSongs().get(index + 1).getUrl(), type);
                         getSongs().get(index+1).setIsDownloaded(true);
                     }
                 }
@@ -74,14 +75,9 @@ public class MediaPlayerWrapper {
         }
         if (getSongs().size()-1>=nextSongIdx+1) {
             if (!getSongs().get(nextSongIdx + 1).isDownloaded()) {
-                activity.startDownload(getSongs().get(nextSongIdx + 1).getUrl(), "Song");
+                String type = activity.fileExtension(getSongs().get(nextSongIdx + 1).getUrl());
+                activity.startDownload(getSongs().get(nextSongIdx + 1).getUrl(), type);
                 getSongs().get(nextSongIdx+1).setIsDownloaded(true);
-            }
-        }
-        if (getSongs().size()-1>=nextSongIdx+2) {
-            if (!getSongs().get(nextSongIdx + 2).isDownloaded()) {
-                activity.startDownload(getSongs().get(nextSongIdx + 2).getUrl(), "Song");
-                getSongs().get(nextSongIdx+2).setIsDownloaded(true);
             }
         }
 
