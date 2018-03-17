@@ -468,7 +468,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                contentDownloadManager.checkStatus();
+                if(contentDownloadManager.checkStatus().equals("STATUS_FAILED") ){
+
+                    Log.i("download fail", "Status_failed");
+
+                    return;
+
+                }
 
                 if(songListEmpty){
                     contentDownloadManagerQueue.poll().updateList();
@@ -1002,7 +1008,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public void onStart() {
         super.onStart();
     }
@@ -1295,12 +1300,32 @@ public class MainActivity extends AppCompatActivity {
 
 
         albums.get(album).addSong(song);
-        songs.add(song);
+
+        boolean haveSong = false;
+
+        if (!songs.isEmpty()){
+            for (int count = 0; count < songs.size();count ++){
+                if (uri.equals(songs.get(count).getUri())){
+                    haveSong = true;
+                }
+            }
+        }else{
+            songs.add(song);
+        }
+
+        if(haveSong){
+
+        }
+        else{
+            songs.add(song);
+        }
+
         res_uri.add(uri);
         if (!sorted_songs.isEmpty() && download_uri!=null){
             for (Song sorted_song : sorted_songs){
                 if (download_uri.equals(sorted_song.getUrl()) && title.equals(sorted_song.getName())){
                     sorted_song.setUri(uri);
+                    sorted_song.isDownloaded();
 
                 }
             }
@@ -1544,7 +1569,7 @@ public class MainActivity extends AppCompatActivity {
                     if (isFriend){
                         lastPlayedBy.setText("Last played by: " + dataSnapshot.child("Users").child(user).child("Username").getValue(String.class));
                     }
-                    else if (myUserID.equals(user) && myUserID!=null) {
+                    else if (myUserID!=null && myUserID.equals(user)) {
                         lastPlayedBy.setText("Last played by: you");
                     }
                     else {

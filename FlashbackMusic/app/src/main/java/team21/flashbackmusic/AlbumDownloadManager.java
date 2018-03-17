@@ -281,7 +281,8 @@ public class AlbumDownloadManager implements ContentDownload {
 
 
 
-        return statusText+" " +reasonText;
+        //return statusText+" " +reasonText;
+        return statusText;
 
 
     }
